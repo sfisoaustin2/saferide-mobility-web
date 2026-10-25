@@ -1,0 +1,75 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeRide Mobility — Independent Driver & Passenger Safety Network</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbe6',
+                            100: '#fff3b0',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            900: '#78350f',
+                        },
+                        darkbg: '#0B0F17',
+                        cardbg: '#111827',
+                        borderbg: '#1F2937'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0B0F17; color: #F3F4F6; }
+        .pulse-red { animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        #leaflet-map { height: 100%; min-height: 280px; width: 100%; border-radius: 0.75rem; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-cardbg border-b border-borderbg sticky top-0 z-40 px-4 py-3 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('driver-portal')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid font-bold fa-shield-halved text-darkbg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        SafeRide <span class="text-amber-500 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30">PWA MVP</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Mbombela Driver Safety Net</p>
+                </div>
+            </div>
+
+            <!-- View Navigation Switcher -->
+            <nav class="flex items-center space-x-1 bg-darkbg p-1 rounded-xl border border-borderbg overflow-x-auto text-xs">
+                <button id="btn-driver-portal" onclick="switchTab('driver-portal')" class="px-3 py-2 rounded-lg font-medium transition flex items-center gap-2 text-amber-500 bg-cardbg shadow">
+                    <i class="fa-solid fa-gauge-high"></i> <span class="hidden sm:inline">Driver</span> Portal
+                </button>
+                <button id="btn-passenger-view" onclick="switchTab('passenger-view')" class="px-3 py-2 rounded-lg font-medium transition flex items-center gap-2 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-qrcode"></i> <span class="hidden sm:inline">Passenger</span> Verify
+                </button>
+                <button id="btn-control-room" onclick="switchTab('control-room')" class="px-3 py-2 rounded-lg font-medium transition flex items-center gap-2
