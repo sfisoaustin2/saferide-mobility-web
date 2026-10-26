@@ -63,7 +63,8 @@
             align-items: center;
             gap: 6px;
         }
-        .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
+        .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         /* Main Container */
         main { flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
@@ -248,7 +249,8 @@
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
 
         /* Scanner Display */
-        #qr-reader { width: 100%; max-width: 300px; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -260,7 +262,7 @@
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            Local Engine Active
+            <span id="header-gps-status">GPS Active</span>
         </div>
     </header>
 
@@ -278,7 +280,7 @@
                     </button>
                 </div>
                 
-                <div id="location-text" class="location-status">📍 Geolocation Ready</div>
+                <div id="location-text" class="location-status">📍 Acquiring live GPS coordinates...</div>
 
                 <!-- Emergency Countdown Overlay -->
                 <div id="countdown-box" class="countdown-overlay">
@@ -368,19 +370,17 @@
 
             <div id="trip-history-list">
                 <h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>
-                <!-- Dynamic Logs render here -->
             </div>
         </div>
 
-        <!-- TAB 4: SCANNER -->
+        <!-- TAB 4: SCANNER (Automatic Back Camera) -->
         <div id="tab-scanner" class="tab-section">
             <h3 style="color:#ffffff;">Passenger Badge Scanner</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Scan QR codes for passenger verification.</p>
+            <p style="font-size:0.8rem; color:var(--text-sub);">Rear camera active for instant passenger verification.</p>
 
-            <div class="sos-card">
-                <button class="action-btn" style="width: 100%; justify-content: center;" onclick="startQRScanner()">Start Camera Scanner</button>
+            <div class="sos-card" style="padding: 12px;">
                 <div id="qr-reader"></div>
-                <div id="scanner-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-green); font-weight: 700;"></div>
+                <div id="scanner-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-green); font-weight: 700;">Aim back camera at passenger code...</div>
             </div>
         </div>
 
@@ -450,11 +450,15 @@
     <script>
         let countdownTimer = null;
         let countdownVal = 5;
-        let html5QrcodeScanner = null;
+        let html5QrCode = null;
+        let currentLat = null;
+        let currentLng = null;
+        let watchId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderLocalTrips();
             loadProfile();
+            startLiveGPSWatch();
         });
 
         function switchTab(tabId, el) {
@@ -463,8 +467,35 @@
             document.getElementById(tabId).classList.add('active');
             if(el) el.classList.add('active');
 
-            if (tabId !== 'tab-scanner' && html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(e => console.log(e));
+            // Handle scanner lifecycle automatically
+            if (tabId === 'tab-scanner') {
+                initAutoBackCameraScanner();
+            } else {
+                stopScanner();
+            }
+        }
+
+        /* Live Continuous GPS Watcher */
+        function startLiveGPSWatch() {
+            const locText = document.getElementById('location-text');
+            const headerStatus = document.getElementById('header-gps-status');
+
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        currentLat = position.coords.latitude;
+                        currentLng = position.coords.longitude;
+                        locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                        headerStatus.innerText = "GPS Live";
+                    },
+                    (error) => {
+                        locText.innerText = "⚠️ GPS Signal Lost. Check device location settings.";
+                        headerStatus.innerText = "GPS Error";
+                    },
+                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+                );
+            } else {
+                locText.innerText = "⚠️ Geolocation not supported.";
             }
         }
 
@@ -492,31 +523,19 @@
 
         function dispatchEmergencySOS() {
             const statusDiv = document.getElementById('location-text');
-            statusDiv.innerText = "⏳ Capturing precise GPS...";
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        statusDiv.innerText = `✅ Emergency Dispatched! (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-
-                        const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
-                        const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-                        const driverName = profile.name || 'Mbombela Driver';
-                        const plate = profile.plate || 'N/A';
-                        
-                        const text = encodeURIComponent(`🚨 EMERGENCY SOS! SafeRide Driver Needs Help!\nName: ${driverName}\nPlate: ${plate}\nLocation: ${mapsUrl}`);
-                        window.open(`https://wa.me/?text=${text}`, '_blank');
-                    },
-                    (error) => {
-                        statusDiv.innerText = "⚠️ GPS Capture Failed. Sending alert anyway...";
-                        const text = encodeURIComponent(`🚨 EMERGENCY SOS! SafeRide Driver Needs Help in Mbombela Area!`);
-                        window.open(`https://wa.me/?text=${text}`, '_blank');
-                    },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
+            
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverName = profile.name || 'Mbombela Driver';
+            const plate = profile.plate || 'N/A';
+            
+            let mapsUrl = "https://maps.google.com/?q=Mbombela";
+            if (currentLat && currentLng) {
+                mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             }
+
+            const text = encodeURIComponent(`🚨 EMERGENCY SOS! SafeRide Driver Needs Urgent Help!\nName: ${driverName}\nPlate: ${plate}\nLive Location: ${mapsUrl}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+            statusDiv.innerText = "🚨 EMERGENCY SOS DISPATCHED!";
         }
 
         /* QR Code Generator */
@@ -545,18 +564,35 @@
             document.getElementById('qr-modal').style.display = 'none';
         }
 
-        /* QR Code Scanner */
-        function startQRScanner() {
+        /* Automatic Rear Camera QR Scanner */
+        function initAutoBackCameraScanner() {
             const resultDiv = document.getElementById('scanner-result');
-            resultDiv.innerText = "Starting Camera...";
+            resultDiv.innerText = "Initializing rear camera...";
 
-            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 220 });
-            html5QrcodeScanner.render((decodedText) => {
-                resultDiv.innerText = `✅ Verified Code: ${decodedText}`;
-                html5QrcodeScanner.clear();
-            }, (error) => {
-                // scanning...
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+
+            // Automatically use environment (back) camera
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 15, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    resultDiv.innerText = `✅ Verified Passenger Code: ${decodedText}`;
+                },
+                (errorMessage) => {
+                    // Scanning actively in background
+                }
+            ).catch((err) => {
+                resultDiv.innerText = "⚠️ Camera access denied or unavailable.";
+                console.error(err);
             });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(err => console.log(err));
+            }
         }
 
         /* Local Trip Logs */
@@ -618,4 +654,4 @@
         }
     </script>
 </body>
-</html>
+</html>s
