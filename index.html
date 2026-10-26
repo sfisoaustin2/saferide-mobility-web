@@ -1,653 +1,309 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeRide Mobility PWA MVP - Mbombela Driver Protection</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- QR Code Generator & Scanner Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            bg: '#090d16',
-                            card: '#111827',
-                            border: '#1f2937',
-                            gold: '#f59e0b',
-                            goldHover: '#d97706',
-                            danger: '#ef4444',
-                            success: '#10b981',
-                            accent: '#3b82f6'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <title>SafeRide Mobility - Mbombela Driver Safety Net</title>
+    <!-- Supabase JavaScript Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #050811;
-            color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { 
+            background-color: #0b0f19; 
+            color: #f3f4f6; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            border-left: 1px solid #1f2937; 
+            border-right: 1px solid #1f2937; 
         }
 
-        /* Pulse animation for active SOS state */
-        @keyframes sos-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        /* Top Bar Header */
+        header { 
+            background-color: #111827; 
+            padding: 16px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #1f2937; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        
+        .brand-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title span { color: #f59e0b; }
+        .brand-tag { font-size: 0.72rem; color: #9ca3af; margin-top: 2px; }
+        .status-badge { 
+            background-color: rgba(16, 185, 129, 0.15); 
+            color: #10b981; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; }
+
+        /* Main Content Container */
+        main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* Emergency Panic Button Card */
+        .sos-card { 
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
+            border: 1px solid #374151; 
+            border-radius: 16px; 
+            padding: 24px 20px; 
+            text-align: center; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .sos-title { font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 4px; }
+        .sos-subtitle { font-size: 0.82rem; color: #9ca3af; margin-bottom: 20px; }
+        
+        .panic-btn { 
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+            color: #ffffff; 
+            border: none; 
+            width: 140px; 
+            height: 140px; 
+            border-radius: 50%; 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.2); 
+            transition: all 0.2s ease;
+            margin: 0 auto 16px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            letter-spacing: 0.05em;
+        }
+        .panic-btn:active { transform: scale(0.95); box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.4); }
+        .panic-btn-sub { font-size: 0.65rem; font-weight: 500; opacity: 0.8; margin-top: 2px; }
+
+        .location-status { font-size: 0.78rem; color: #10b981; margin-top: 8px; font-weight: 600; }
+
+        /* Info Grid Cards */
+        .info-card { 
+            background-color: #111827; 
+            border: 1px solid #1f2937; 
+            border-radius: 12px; 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .info-left h3 { font-size: 0.95rem; font-weight: 700; color: #f3f4f6; }
+        .info-left p { font-size: 0.8rem; color: #9ca3af; margin-top: 3px; }
+        .action-btn { 
+            background-color: #1f2937; 
+            color: #f59e0b; 
+            border: 1px solid rgba(245, 158, 11, 0.3); 
+            padding: 8px 14px; 
+            border-radius: 8px; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .animate-sos {
-            animation: sos-pulse 1.8s infinite;
+        /* Modal for QR Code Display */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #111827;
+            border: 1px solid #374151;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+        }
+        .modal-content img { margin: 16px 0; border-radius: 8px; }
+        .close-btn {
+            background: #374151; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: 600;
         }
 
-        /* Hide scrollbars for clean app feel */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Bottom Fixed Navigation Bar */
+        nav { 
+            background-color: #111827; 
+            border-top: 1px solid #1f2937; 
+            padding: 12px 20px; 
+            display: flex; 
+            justify-content: space-around; 
+            position: sticky; 
+            bottom: 0; 
+        }
+        .nav-item { 
+            background: none; 
+            border: none; 
+            color: #9ca3af; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            text-decoration: none;
+        }
+        .nav-item.active { color: #f59e0b; }
     </style>
 </head>
-<body class="min-h-screen flex justify-center items-center bg-black">
+<body>
 
-    <!-- Mobile-First Container -->
-    <div class="w-full max-w-md h-screen md:h-[92vh] md:rounded-3xl bg-brand-bg flex flex-column flex-col relative overflow-hidden border border-brand-border shadow-2xl">
+    <header>
+        <div>
+            <div class="brand-title">Safe<span>Ride</span></div>
+            <div class="brand-tag">Mbombela Driver Safety Net</div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Cloud Connected
+        </div>
+    </header>
 
-        <!-- Top Header -->
-        <header class="bg-brand-card/90 backdrop-blur-md px-5 py-3.5 border-b border-brand-border flex justify-between items-center z-20 shrink-0">
-            <div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xl font-black tracking-tight text-white">Safe<span class="text-brand-gold">Ride</span></span>
-                    <span class="text-[10px] bg-brand-gold/20 text-brand-gold border border-brand-gold/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Mbombela</span>
-                </div>
-                <p class="text-[11px] text-gray-400">Independent Driver Safety Network</p>
-            </div>
+    <main>
+        <!-- SOS Panic Trigger Card -->
+        <div class="sos-card">
+            <div class="sos-title">Emergency Response</div>
+            <div class="sos-subtitle">Independent Uber, Bolt & Maxim Protection</div>
             
-            <div id="connection-badge" class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="connection-text">Live GPS</span>
-            </div>
-        </header>
-
-        <!-- Main Dynamic View Container -->
-        <main class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
+            <button class="panic-btn" onclick="triggerCloudSOS()">
+                SOS
+                <span class="panic-btn-sub">CLOUD DISPATCH</span>
+            </button>
             
-            <!-- VIEW 1: DASHBOARD / PORTAL -->
-            <section id="view-dashboard" class="space-y-4">
-                <!-- Driver Quick Profile Banner -->
-                <div class="bg-gradient-to-r from-brand-card to-gray-900 border border-brand-border rounded-2xl p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-full bg-brand-gold/20 border border-brand-gold flex items-center justify-center text-brand-gold font-bold text-lg" id="avatar-initials">
-                            SR
-                        </div>
-                        <div>
-                            <h2 class="font-bold text-white text-base" id="dash-driver-name">Sibusiso Nkosi</h2>
-                            <p class="text-xs text-gray-400" id="dash-driver-platforms">Uber • Bolt • Maxim</p>
-                            <p class="text-[11px] text-brand-gold font-semibold" id="dash-vehicle-reg">KNP 482 MP (Toyota Quest)</p>
-                        </div>
-                    </div>
-                    <button onclick="switchTab('profile')" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 font-medium">
-                        Edit
-                    </button>
-                </div>
+            <div id="location-text" class="location-status">📍 Tap SOS to sync live GPS to Supabase</div>
+        </div>
 
-                <!-- Emergency SOS Trigger Button -->
-                <div class="bg-gradient-to-b from-gray-900 to-brand-card border border-brand-border rounded-2xl p-5 text-center shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-200">Emergency Dispatch System</h3>
-                    <p class="text-xs text-gray-400 mt-1 mb-4">Instant alert broadcast to Mbombela responder network</p>
+        <!-- Driver Verification Card -->
+        <div class="info-card">
+            <div class="info-left">
+                <h3>QR Driver Verification</h3>
+                <p>Display active badge to passengers</p>
+            </div>
+            <button class="action-btn" onclick="showQRCode()">Show QR</button>
+        </div>
 
-                    <button id="sos-main-btn" onclick="startSOSProcess()" class="panic-btn animate-sos w-36 h-36 rounded-full bg-gradient-to-br from-red-600 to-red-900 text-white font-black text-2xl mx-auto flex flex-col items-center justify-center border-4 border-red-500/40 active:scale-95 transition-transform shadow-2xl">
-                        <span>SOS</span>
-                        <span class="text-[10px] font-medium tracking-widest uppercase opacity-80 mt-1">Tap to Panic</span>
-                    </button>
+        <!-- Direct Emergency Call Card -->
+        <div class="info-card">
+            <div class="info-left">
+                <h3>Direct Hotline</h3>
+                <p>Fast-dial emergency dispatch</p>
+            </div>
+            <a href="tel:10111" class="action-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Call 10111</a>
+        </div>
+    </main>
 
-                    <div class="mt-4 flex justify-center gap-2">
-                        <button onclick="simulateBluetoothClick()" class="text-xs bg-gray-800/80 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 flex items-center gap-1.5">
-                            <i class="fa-brands fa-bluetooth text-blue-400"></i> Sim BT Click
-                        </button>
-                        <button onclick="triggerDirectHotline()" class="text-xs bg-red-950/60 hover:bg-red-900/60 text-red-300 px-3 py-1.5 rounded-lg border border-red-800/50 flex items-center gap-1.5">
-                            <i class="fa-solid fa-phone-flip text-red-400"></i> SAPS 10111
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Quick Action Grid -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div onclick="switchTab('qr')" class="bg-brand-card border border-brand-border rounded-xl p-3.5 cursor-pointer hover:border-brand-gold/50 transition-colors">
-                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-brand-gold mb-2">
-                            <i class="fa-solid fa-qrcode text-sm"></i>
-                        </div>
-                        <h4 class="font-bold text-xs text-gray-200">QR Driver Badge</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">Show verification QR</p>
-                    </div>
-
-                    <div onclick="switchTab('map')" class="bg-brand-card border border-brand-border rounded-xl p-3.5 cursor-pointer hover:border-brand-gold/50 transition-colors">
-                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-2">
-                            <i class="fa-solid fa-shield-halved text-sm"></i>
-                        </div>
-                        <h4 class="font-bold text-xs text-gray-200">Mbombela Zones</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">High-risk route alerts</p>
-                    </div>
-                </div>
-
-                <!-- Active Zone Alert Banner -->
-                <div id="zone-alert-card" class="bg-amber-950/30 border border-amber-600/30 rounded-xl p-3.5 flex items-start gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-brand-gold text-lg mt-0.5"></i>
-                    <div>
-                        <h4 class="text-xs font-bold text-amber-200" id="zone-alert-title">KaNyamazane Route Caution</h4>
-                        <p class="text-[11px] text-amber-300/80 mt-0.5" id="zone-alert-body">Increased night incidents reported along R538 corridor. Keep GPS active.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW 2: SOS PANIC ROOM -->
-            <section id="view-sos" class="hidden space-y-4">
-                <div class="bg-red-950/40 border border-red-800/50 rounded-2xl p-5 text-center space-y-4">
-                    <div class="w-12 h-12 bg-red-600/20 rounded-full border border-red-500 flex items-center justify-center text-red-500 mx-auto text-xl">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-black text-white">Emergency Panic Room</h2>
-                        <p class="text-xs text-red-300/80 mt-1">Direct dispatch to Mbombela SafeRide Monitoring & Contacts</p>
-                    </div>
-
-                    <div id="sos-timer-box" class="hidden bg-black/50 border border-red-600/40 rounded-xl p-4">
-                        <p class="text-xs text-gray-300">DISPATCHING EMERGENCY ALERT IN</p>
-                        <div id="sos-countdown" class="text-5xl font-black text-red-500 my-2">5</div>
-                        <button onclick="cancelSOS()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs px-4 py-2 rounded-lg border border-gray-600 font-bold">
-                            CANCEL EMERGENCY
-                        </button>
-                    </div>
-
-                    <div class="space-y-2">
-                        <button onclick="triggerImmediateSOS('Manual SOS Button')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm border border-red-500 flex items-center justify-center gap-2">
-                            <i class="fa-brands fa-whatsapp text-lg"></i> Dispatch Live WhatsApp SOS
-                        </button>
-                        
-                        <button onclick="playAlarmSound()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-volume-high text-amber-400"></i> Trigger Local Siren Audio
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Recent Emergency Log -->
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4">
-                    <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Incident Dispatch Log</h3>
-                    <div id="incident-log-list" class="space-y-2 text-xs text-gray-400">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW 3: QR VERIFICATION BADGE & SCANNER -->
-            <section id="view-qr" class="hidden space-y-4">
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4 text-center">
-                    <div class="flex justify-center gap-2 mb-4 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
-                        <button id="qr-tab-badge" onclick="switchQRSubTab('badge')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-brand-gold text-black">My Badge</button>
-                        <button id="qr-tab-scanner" onclick="switchQRSubTab('scanner')" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400">Scan Passenger</button>
-                    </div>
-
-                    <!-- SUBTAB 1: DRIVER QR BADGE -->
-                    <div id="qr-sub-badge" class="space-y-3">
-                        <h3 class="font-bold text-sm text-white">Mbombela Verification Badge</h3>
-                        <p class="text-xs text-gray-400">Scan code to verify authentic driver credentials</p>
-
-                        <div class="bg-white p-4 rounded-xl inline-block border-2 border-brand-gold mx-auto shadow-lg" id="qrcode-container">
-                            <!-- QR Code generated here -->
-                        </div>
-
-                        <div class="text-xs text-gray-300 space-y-1 bg-gray-900/60 p-3 rounded-xl border border-brand-border text-left">
-                            <p><span class="text-gray-500">Driver ID:</span> <strong id="qr-driver-id" class="text-white">MBM-9482-SR</strong></p>
-                            <p><span class="text-gray-500">Status:</span> <span class="text-emerald-400 font-bold">● VERIFIED ACTIVE</span></p>
-                            <p><span class="text-gray-500">Vehicle:</span> <span id="qr-vehicle-info" class="text-gray-200">Toyota Quest (KNP 482 MP)</span></p>
-                        </div>
-                    </div>
-
-                    <!-- SUBTAB 2: PASSENGER SCANNER -->
-                    <div id="qr-sub-scanner" class="hidden space-y-3">
-                        <h3 class="font-bold text-sm text-white">Passenger Safety Scanner</h3>
-                        <p class="text-xs text-gray-400">Scan passenger QR or run safety check</p>
-                        
-                        <div id="reader" class="w-full bg-black rounded-xl overflow-hidden border border-gray-700 min-h-[180px]"></div>
-
-                        <div class="flex gap-2">
-                            <button onclick="startCameraScanner()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl">
-                                Launch Camera
-                            </button>
-                            <button onclick="simulatePassengerScan()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold py-2.5 rounded-xl border border-gray-700">
-                                Sim Safe Check
-                            </button>
-                        </div>
-                        <div id="scan-result" class="text-xs font-bold p-2.5 rounded-xl hidden"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW 4: RIDE LOGS & PASSENGER CHECK-IN -->
-            <section id="view-rides" class="hidden space-y-4">
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4">
-                    <h3 class="font-bold text-sm text-white mb-1">Log New Trip</h3>
-                    <p class="text-xs text-gray-400 mb-3">Record pickup & dropoff for live safety pinging</p>
-
-                    <form id="ride-log-form" onsubmit="handleRideSubmit(event)" class="space-y-2.5">
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Platform</label>
-                            <select id="ride-platform" class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                                <option value="Uber">Uber</option>
-                                <option value="Bolt">Bolt</option>
-                                <option value="Maxim">Maxim</option>
-                                <option value="Private Cash">Private Cash Trip</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Pickup Location</label>
-                            <input type="text" id="ride-pickup" required placeholder="e.g. Sonpark Shopping Centre" class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Destination Location</label>
-                            <input type="text" id="ride-dropoff" required placeholder="e.g. KaNyamazane Complex" class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <div class="flex items-center gap-2 pt-1">
-                            <input type="checkbox" id="ride-risk" class="rounded bg-gray-900 border-gray-700 text-brand-gold">
-                            <label for="ride-risk" class="text-xs text-amber-300">Flag as High-Risk Route/Night Trip</label>
-                        </div>
-                        <button type="submit" class="w-full bg-brand-gold hover:bg-brand-goldHover text-black font-bold text-xs py-2.5 rounded-xl transition-colors">
-                            Log Ride & Active Monitor
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Recent Ride Logs -->
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4">
-                    <h3 class="font-bold text-xs text-gray-300 uppercase tracking-wider mb-3">Trip History & Status</h3>
-                    <div id="ride-history-list" class="space-y-2">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW 5: SAFETY NETWORK & MBOMBELA MAP -->
-            <section id="view-map" class="hidden space-y-4">
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4">
-                    <h3 class="font-bold text-sm text-white mb-1">Mbombela Zone Intelligence</h3>
-                    <p class="text-xs text-gray-400 mb-3">Real-time danger zone assessment</p>
-
-                    <div class="space-y-2.5" id="zone-status-list">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW 6: DRIVER PROFILE & SETTINGS -->
-            <section id="view-profile" class="hidden space-y-4">
-                <div class="bg-brand-card border border-brand-border rounded-2xl p-4">
-                    <h3 class="font-bold text-sm text-white mb-3">Driver Profile & Vehicle Specs</h3>
-                    
-                    <form id="profile-form" onsubmit="handleProfileSubmit(event)" class="space-y-3">
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Full Name</label>
-                            <input type="text" id="prof-name" required class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Vehicle Registration & Model</label>
-                            <input type="text" id="prof-vehicle" required class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Active E-hailing Platforms</label>
-                            <input type="text" id="prof-platforms" required class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-gray-400 block mb-1">Emergency WhatsApp Contact Number</label>
-                            <input type="tel" id="prof-phone" required placeholder="+27 82 123 4567" class="w-full bg-gray-900 border border-brand-border text-xs rounded-xl p-2.5 text-white">
-                        </div>
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl">
-                            Save Profile Updates
-                        </button>
-                    </form>
-                </div>
-            </section>
-
-        </main>
-
-        <!-- Fixed Bottom Navigation Bar -->
-        <nav class="absolute bottom-0 left-0 right-0 bg-brand-card/95 backdrop-blur-md border-t border-brand-border px-3 py-2 flex justify-around items-center z-30">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center gap-1 text-brand-gold text-xs font-semibold">
-                <i class="fa-solid fa-shield-cat text-base"></i>
-                <span>Portal</span>
-            </button>
-            <button onclick="switchTab('sos')" id="nav-sos" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-red-400 text-xs font-semibold">
-                <i class="fa-solid fa-circle-exclamation text-base"></i>
-                <span>Panic SOS</span>
-            </button>
-            <button onclick="switchTab('qr')" id="nav-qr" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-brand-gold text-xs font-semibold">
-                <i class="fa-solid fa-qrcode text-base"></i>
-                <span>Verify QR</span>
-            </button>
-            <button onclick="switchTab('rides')" id="nav-rides" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-brand-gold text-xs font-semibold">
-                <i class="fa-solid fa-route text-base"></i>
-                <span>Trips</span>
-            </button>
-            <button onclick="switchTab('map')" id="nav-map" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-brand-gold text-xs font-semibold">
-                <i class="fa-solid fa-map-location-dot text-base"></i>
-                <span>Zones</span>
-            </button>
-        </nav>
-
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#ffffff;">Driver Verification Badge</h3>
+            <p style="font-size:0.8rem; color:#9ca3af; margin-top:4px;">Mbombela Verified Independent Driver</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SafeRide-Mbombela-Driver-Verified-001" alt="Driver QR Code">
+            <br>
+            <button class="close-btn" onclick="closeQRCode()">Close Badge</button>
+        </div>
     </div>
 
-    <!-- Application Script Engine -->
+    <nav>
+        <div class="nav-item active">
+            <span>🛡️ Portal</span>
+        </div>
+        <div class="nav-item" onclick="showQRCode()">
+            <span>🔍 Verify</span>
+        </div>
+        <a href="tel:10111" class="nav-item">
+            <span>📞 Help</span>
+        </a>
+    </nav>
+
+    <!-- Supabase Configuration & App Logic -->
     <script>
-        // Default Storage Seed Data
-        const DEFAULT_STORAGE = {
-            profile: {
-                name: "Sibusiso Nkosi",
-                vehicle: "Toyota Quest (KNP 482 MP)",
-                platforms: "Uber • Bolt • Maxim",
-                phone: "+27820000000",
-                driverId: "MBM-9482-SR"
-            },
-            incidents: [
-                { id: 1, time: "2026-10-25 21:14", type: "WhatsApp Dispatch", location: "-25.4753, 30.9694 (Sonpark)" }
-            ],
-            rides: [
-                { id: 101, platform: "Bolt", pickup: "Riverside Mall", dropoff: "West End", risk: false, status: "Completed", time: "18:30" },
-                { id: 102, platform: "Uber", pickup: "Mbombela Central", dropoff: "KaNyamazane Route", risk: true, status: "Active Pinging", time: "20:15" }
-            ],
-            zones: [
-                { name: "Mbombela Central", status: "Low Danger", level: "green", desc: "High security presence active." },
-                { name: "Sonpark & West End", status: "Moderate Danger", level: "yellow", desc: "Normal evening ride density." },
-                { name: "Riverside Hub", status: "Low Danger", level: "green", desc: "Active mall response patrol." },
-                { name: "KaNyamazane Route (R538)", status: "High Danger", level: "red", desc: "Caution: Night ambush risk flagged." }
-            ]
-        };
+        // Initialize Supabase Client
+        const SUPABASE_URL = 'https://ayeqzayandodpebmxmhp.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_YvMXZsCjjIpKPbaSOS5rIQ_geJlBxUC';
+        
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-        // Initialize Local Storage
-        function getStore() {
-            const data = localStorage.getItem('saferide_db');
-            return data ? JSON.parse(data) : DEFAULT_STORAGE;
-        }
+        async function triggerCloudSOS() {
+            const statusDiv = document.getElementById('location-text');
+            statusDiv.innerHTML = "⏳ Capturing GPS & syncing to Cloud...";
+            statusDiv.style.color = "#f59e0b";
 
-        function saveStore(store) {
-            localStorage.setItem('saferide_db', JSON.stringify(store));
-        }
-
-        let store = getStore();
-        let sosCountdownInterval = null;
-        let qrCodeInstance = null;
-
-        // Tab Navigation Router
-        function switchTab(tabId) {
-            const tabs = ['dashboard', 'sos', 'qr', 'rides', 'map', 'profile'];
-            tabs.forEach(t => {
-                const view = document.getElementById(`view-${t}`);
-                const navBtn = document.getElementById(`nav-${t}`);
-                if (view) view.classList.add('hidden');
-                if (navBtn) {
-                    navBtn.classList.remove('text-brand-gold');
-                    navBtn.classList.add('text-gray-400');
-                }
-            });
-
-            const activeView = document.getElementById(`view-${tabId}`);
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if (activeView) activeView.classList.remove('hidden');
-            if (activeNav) {
-                activeNav.classList.remove('text-gray-400');
-                activeNav.classList.add('text-brand-gold');
-            }
-
-            if (tabId === 'qr') renderQRCode();
-        }
-
-        // Render Dynamic Driver QR Code
-        function renderQRCode() {
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = '';
-            const qrText = `SAFEMBOMBELA:${store.profile.driverId}:${store.profile.name}:${store.profile.vehicle}`;
-            qrCodeInstance = new QRCode(container, {
-                text: qrText,
-                width: 140,
-                height: 140,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
-        function switchQRSubTab(sub) {
-            if (sub === 'badge') {
-                document.getElementById('qr-sub-badge').classList.remove('hidden');
-                document.getElementById('qr-sub-scanner').classList.add('hidden');
-                document.getElementById('qr-tab-badge').className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-brand-gold text-black";
-                document.getElementById('qr-tab-scanner').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400";
-            } else {
-                document.getElementById('qr-sub-badge').classList.add('hidden');
-                document.getElementById('qr-sub-scanner').classList.remove('hidden');
-                document.getElementById('qr-tab-scanner').className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-brand-gold text-black";
-                document.getElementById('qr-tab-badge').className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-gray-400";
-            }
-        }
-
-        // SOS Dispatch Process
-        function startSOSProcess() {
-            switchTab('sos');
-            const timerBox = document.getElementById('sos-timer-box');
-            const countdownEl = document.getElementById('sos-countdown');
-            timerBox.classList.remove('hidden');
-
-            let timeLeft = 5;
-            countdownEl.textContent = timeLeft;
-
-            if (sosCountdownInterval) clearInterval(sosCountdownInterval);
-
-            sosCountdownInterval = setInterval(() => {
-                timeLeft--;
-                countdownEl.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(sosCountdownInterval);
-                    timerBox.classList.add('hidden');
-                    triggerImmediateSOS("Automatic Countdown Trigger");
-                }
-            }, 1000);
-        }
-
-        function cancelSOS() {
-            if (sosCountdownInterval) clearInterval(sosCountdownInterval);
-            document.getElementById('sos-timer-box').classList.add('hidden');
-            alert("SOS Dispatch Cancelled.");
-        }
-
-        function triggerImmediateSOS(triggerType) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => dispatchSOSWithCoords(pos.coords.latitude, pos.coords.longitude, triggerType),
-                    () => dispatchSOSWithCoords(-25.4753, 30.9694, triggerType + " (Default Mbombela GPS)")
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        try {
+                            // Insert emergency alert directly into Supabase cloud table
+                            const { data, error } = await _supabase
+                                .from('sos_alerts')
+                                .insert([
+                                    { 
+                                        driver_name: 'Independent Mbombela Driver', 
+                                        driver_phone: '+27-Mbombela-Net', 
+                                        latitude: lat, 
+                                        longitude: lng, 
+                                        status: 'ACTIVE' 
+                                    }
+                                ]);
+
+                            if (error) throw error;
+
+                            statusDiv.innerHTML = `✅ Cloud Synced! (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                            statusDiv.style.color = "#10b981";
+
+                            // Open WhatsApp emergency dispatch string
+                            const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+                            const message = encodeURIComponent(`🚨 CLOUD SOS ALERT! SafeRide Driver Needs Urgent Assistance in Mbombela.\nLive Coordinates: ${mapsUrl}`);
+                            window.open(`https://wa.me/?text=${message}`, '_blank');
+
+                        } catch (err) {
+                            console.error('Supabase Error:', err);
+                            statusDiv.innerHTML = "⚠️ Saved locally, cloud sync failed.";
+                            statusDiv.style.color = "#ef4444";
+                        }
+                    },
+                    (error) => {
+                        statusDiv.innerHTML = "⚠️ Location permission denied.";
+                        statusDiv.style.color = "#ef4444";
+                    },
+                    { enableHighAccuracy: true }
                 );
             } else {
-                dispatchSOSWithCoords(-25.4753, 30.9694, triggerType + " (Fallback GPS)");
+                alert("Geolocation is not supported by your browser.");
             }
         }
 
-        function dispatchSOSWithCoords(lat, lng, triggerType) {
-            const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
-            const message = encodeURIComponent(`🚨 EMERGENCY PANIC ALERT - SAFETRACK MBOMBELA 🚨\nDriver: ${store.profile.name}\nVehicle: ${store.profile.vehicle}\nTrigger: ${triggerType}\nLIVE GPS LOCATION: ${mapsUrl}`);
-            
-            // Log Incident
-            const newIncident = {
-                id: Date.now(),
-                time: new Date().toLocaleString(),
-                type: triggerType,
-                location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-            };
-            store.incidents.unshift(newIncident);
-            saveStore(store);
-            renderIncidents();
-
-            // Open WhatsApp Dispatch
-            window.open(`https://wa.me/${store.profile.phone}?text=${message}`, '_blank');
+        function showQRCode() {
+            document.getElementById('qr-modal').style.display = 'flex';
         }
 
-        function simulateBluetoothClick() {
-            alert("🔵 Bluetooth Panic Button Click Recognized!");
-            startSOSProcess();
+        function closeQRCode() {
+            document.getElementById('qr-modal').style.display = 'none';
         }
-
-        function triggerDirectHotline() {
-            window.location.href = "tel:10111";
-        }
-
-        function playAlarmSound() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.3, ctx.currentTime);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.5);
-        }
-
-        // Render Data Views
-        function renderUI() {
-            // Dashboard values
-            document.getElementById('dash-driver-name').textContent = store.profile.name;
-            document.getElementById('dash-driver-platforms').textContent = store.profile.platforms;
-            document.getElementById('dash-vehicle-reg').textContent = store.profile.vehicle;
-            document.getElementById('avatar-initials').textContent = store.profile.name.split(' ').map(n=>n[0]).join('');
-
-            // Profile Form
-            document.getElementById('prof-name').value = store.profile.name;
-            document.getElementById('prof-vehicle').value = store.profile.vehicle;
-            document.getElementById('prof-platforms').value = store.profile.platforms;
-            document.getElementById('prof-phone').value = store.profile.phone;
-
-            // QR details
-            document.getElementById('qr-driver-id').textContent = store.profile.driverId;
-            document.getElementById('qr-vehicle-info').textContent = store.profile.vehicle;
-
-            renderIncidents();
-            renderRides();
-            renderZones();
-        }
-
-        function renderIncidents() {
-            const list = document.getElementById('incident-log-list');
-            list.innerHTML = store.incidents.map(inc => `
-                <div class="bg-gray-900/80 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center">
-                    <div>
-                        <p class="font-bold text-gray-200">${inc.type}</p>
-                        <p class="text-[10px] text-gray-400">${inc.location}</p>
-                    </div>
-                    <span class="text-[10px] text-gray-500">${inc.time}</span>
-                </div>
-            `).join('');
-        }
-
-        function renderRides() {
-            const list = document.getElementById('ride-history-list');
-            list.innerHTML = store.rides.map(r => `
-                <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 flex justify-between items-center text-xs">
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-bold text-white">${r.platform}</span>
-                            ${r.risk ? '<span class="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">High-Risk</span>' : ''}
-                        </div>
-                        <p class="text-gray-400 text-[11px] mt-0.5">${r.pickup} ➔ ${r.dropoff}</p>
-                    </div>
-                    <span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">${r.status}</span>
-                </div>
-            `).join('');
-        }
-
-        function renderZones() {
-            const list = document.getElementById('zone-status-list');
-            list.innerHTML = store.zones.map(z => `
-                <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-xs text-white">${z.name}</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">${z.desc}</p>
-                    </div>
-                    <span class="text-[10px] font-bold px-2 py-1 rounded-full border ${
-                        z.level === 'red' ? 'bg-red-500/10 text-red-400 border-red-500/30' : 
-                        z.level === 'yellow' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 
-                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    }">${z.status}</span>
-                </div>
-            `).join('');
-        }
-
-        function handleRideSubmit(e) {
-            e.preventDefault();
-            const newRide = {
-                id: Date.now(),
-                platform: document.getElementById('ride-platform').value,
-                pickup: document.getElementById('ride-pickup').value,
-                dropoff: document.getElementById('ride-dropoff').value,
-                risk: document.getElementById('ride-risk').checked,
-                status: "Active Pinging",
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-            };
-            store.rides.unshift(newRide);
-            saveStore(store);
-            renderRides();
-            e.target.reset();
-            alert("Trip Logged & Safety Network Active.");
-        }
-
-        function handleProfileSubmit(e) {
-            e.preventDefault();
-            store.profile.name = document.getElementById('prof-name').value;
-            store.profile.vehicle = document.getElementById('prof-vehicle').value;
-            store.profile.platforms = document.getElementById('prof-platforms').value;
-            store.profile.phone = document.getElementById('prof-phone').value;
-            saveStore(store);
-            renderUI();
-            alert("Profile successfully saved.");
-        }
-
-        function simulatePassengerScan() {
-            const res = document.getElementById('scan-result');
-            res.classList.remove('hidden');
-            res.className = "text-xs font-bold p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mt-2";
-            res.textContent = "✅ PASSENGER VERIFIED: Low Risk History";
-        }
-
-        function startCameraScanner() {
-            try {
-                const html5QrCode = new Html5Qrcode("reader");
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: 180 },
-                    (decodedText) => {
-                        html5QrCode.stop();
-                        alert(`Scanned: ${decodedText}`);
-                    },
-                    (error) => {}
-                );
-            } catch (err) {
-                alert("Camera access requires HTTPS or device permissions.");
-            }
-        }
-
-        // Window Load
-        window.onload = function() {
-            renderUI();
-        };
     </script>
+
 </body>
 </html>
-```
