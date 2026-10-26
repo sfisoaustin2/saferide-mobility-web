@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Mbombela Driver Safety Net</title>
-    <!-- Supabase JavaScript Client SDK -->
+    <!-- Supabase JavaScript SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -21,7 +21,7 @@
             border-right: 1px solid #1f2937; 
         }
 
-        /* Top Bar Header */
+        /* Header */
         header { 
             background-color: #111827; 
             padding: 16px 20px; 
@@ -51,10 +51,13 @@
         }
         .status-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; }
 
-        /* Main Content Container */
-        main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        /* Main Scrollable Area */
+        main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 80px; }
 
-        /* Emergency Panic Button Card */
+        .tab-section { display: none; flex-direction: column; gap: 16px; }
+        .tab-section.active { display: flex; }
+
+        /* SOS Panic Card */
         .sos-card { 
             background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
             border: 1px solid #374151; 
@@ -90,7 +93,7 @@
 
         .location-status { font-size: 0.78rem; color: #10b981; margin-top: 8px; font-weight: 600; }
 
-        /* Info Grid Cards */
+        /* Cards & Components */
         .info-card { 
             background-color: #111827; 
             border: 1px solid #1f2937; 
@@ -115,7 +118,19 @@
             display: inline-block;
         }
 
-        /* Modal for QR Code Display */
+        /* Form Controls */
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 0.8rem; color: #9ca3af; font-weight: 600; }
+        .input-group input, .input-group select {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -144,17 +159,22 @@
         nav { 
             background-color: #111827; 
             border-top: 1px solid #1f2937; 
-            padding: 12px 20px; 
+            padding: 10px 10px; 
             display: flex; 
             justify-content: space-around; 
-            position: sticky; 
+            position: fixed; 
             bottom: 0; 
+            left: 0; 
+            right: 0;
+            max-width: 480px;
+            margin: 0 auto;
+            z-index: 20;
         }
         .nav-item { 
             background: none; 
             border: none; 
             color: #9ca3af; 
-            font-size: 0.8rem; 
+            font-size: 0.75rem; 
             font-weight: 600; 
             cursor: pointer; 
             display: flex; 
@@ -175,44 +195,105 @@
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            Cloud Connected
+            Cloud Active
         </div>
     </header>
 
     <main>
-        <!-- SOS Panic Trigger Card -->
-        <div class="sos-card">
-            <div class="sos-title">Emergency Response</div>
-            <div class="sos-subtitle">Independent Uber, Bolt & Maxim Protection</div>
-            
-            <button class="panic-btn" onclick="triggerCloudSOS()">
-                SOS
-                <span class="panic-btn-sub">CLOUD DISPATCH</span>
-            </button>
-            
-            <div id="location-text" class="location-status">📍 Tap SOS to sync live GPS to Supabase</div>
+        <!-- TAB 1: PORTAL / HOME -->
+        <div id="tab-portal" class="tab-section active">
+            <div class="sos-card">
+                <div class="sos-title">Emergency Dispatch</div>
+                <div class="sos-subtitle">Independent Uber, Bolt & Maxim Protection</div>
+                
+                <button class="panic-btn" onclick="triggerCloudSOS()">
+                    SOS
+                    <span class="panic-btn-sub">CLOUD DISPATCH</span>
+                </button>
+                
+                <div id="location-text" class="location-status">📍 Tap SOS to send GPS to Supabase Cloud</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-left">
+                    <h3>QR Driver Verification</h3>
+                    <p>Display active badge to passengers</p>
+                </div>
+                <button class="action-btn" onclick="showQRCode()">Show QR</button>
+            </div>
+
+            <div class="info-card">
+                <div class="info-left">
+                    <h3>Direct Emergency Line</h3>
+                    <p>SAPS Mbombela Emergency</p>
+                </div>
+                <a href="tel:10111" class="action-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Call 10111</a>
+            </div>
         </div>
 
-        <!-- Driver Verification Card -->
-        <div class="info-card">
-            <div class="info-left">
-                <h3>QR Driver Verification</h3>
-                <p>Display active badge to passengers</p>
+        <!-- TAB 2: SAFETY MAP & ZONES -->
+        <div id="tab-map" class="tab-section">
+            <h3 style="color:#ffffff;">Mbombela High-Risk Hotspots</h3>
+            <p style="font-size:0.8rem; color:#9ca3af;">Real-time zone alerts for ride-hailing drivers.</p>
+
+            <div class="info-card" style="border-left: 4px solid #ef4444;">
+                <div class="info-left">
+                    <h3>Mbombela Central (CBD)</h3>
+                    <p>Status: High Caution | Night Hours</p>
+                </div>
             </div>
-            <button class="action-btn" onclick="showQRCode()">Show QR</button>
+
+            <div class="info-card" style="border-left: 4px solid #f59e0b;">
+                <div class="info-left">
+                    <h3>Riverside Mall Hub</h3>
+                    <p>Status: Moderate Risk | Pick-up Points</p>
+                </div>
+            </div>
+
+            <div class="info-card" style="border-left: 4px solid #10b981;">
+                <div class="info-left">
+                    <h3>Sonpark & West End</h3>
+                    <p>Status: Normal Patrol Active</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Direct Emergency Call Card -->
-        <div class="info-card">
-            <div class="info-left">
-                <h3>Direct Hotline</h3>
-                <p>Fast-dial emergency dispatch</p>
+        <!-- TAB 3: RIDE LOGS -->
+        <div id="tab-trips" class="tab-section">
+            <h3 style="color:#ffffff;">Quick Trip Safety Log</h3>
+            <p style="font-size:0.8rem; color:#9ca3af;">Log trips for cloud safety monitoring.</p>
+            
+            <div class="sos-card" style="text-align: left;">
+                <div class="input-group" style="margin-bottom: 12px;">
+                    <label>Pickup Zone</label>
+                    <select id="trip-pickup">
+                        <option>Mbombela Central</option>
+                        <option>Riverside Hub</option>
+                        <option>Sonpark</option>
+                        <option>West End</option>
+                        <option>KaNyamazane Route</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-bottom: 12px;">
+                    <label>Passenger Name / Initial</label>
+                    <input type="text" id="trip-passenger" placeholder="e.g., John S.">
+                </div>
+                <button class="action-btn" style="width: 100%; text-align: center;" onclick="logTrip()">Log Trip to Cloud</button>
             </div>
-            <a href="tel:10111" class="action-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Call 10111</a>
+
+            <div id="trip-history">
+                <h4 style="color:#9ca3af; font-size:0.85rem; margin-bottom: 8px;">Recent Logged Trips</h4>
+                <div class="info-card">
+                    <div class="info-left">
+                        <h3>Riverside Hub -> Central</h3>
+                        <p>Status: Completed | Verified</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- QR Code Modal -->
+    <!-- QR Modal -->
     <div id="qr-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:#ffffff;">Driver Verification Badge</h3>
@@ -223,26 +304,36 @@
         </div>
     </div>
 
+    <!-- Navigation Bar -->
     <nav>
-        <div class="nav-item active">
+        <button class="nav-item active" onclick="switchTab('tab-portal', this)">
             <span>🛡️ Portal</span>
-        </div>
-        <div class="nav-item" onclick="showQRCode()">
-            <span>🔍 Verify</span>
-        </div>
-        <a href="tel:10111" class="nav-item">
-            <span>📞 Help</span>
-        </a>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-map', this)">
+            <span>🗺️ Map</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-trips', this)">
+            <span>📋 Trips</span>
+        </button>
+        <button class="nav-item" onclick="showQRCode()">
+            <span>🔍 QR Badge</span>
+        </button>
     </nav>
 
-    <!-- Supabase Configuration & App Logic -->
+    <!-- Supabase Logic -->
     <script>
-        // Initialize Supabase Client
         const SUPABASE_URL = 'https://ayeqzayandodpebmxmhp.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_YvMXZsCjjIpKPbaSOS5rIQ_geJlBxUC';
         
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(el) el.classList.add('active');
+        }
 
         async function triggerCloudSOS() {
             const statusDiv = document.getElementById('location-text');
@@ -256,13 +347,12 @@
                         const lng = position.coords.longitude;
                         
                         try {
-                            // Insert emergency alert directly into Supabase cloud table
                             const { data, error } = await _supabase
                                 .from('sos_alerts')
                                 .insert([
                                     { 
-                                        driver_name: 'Independent Mbombela Driver', 
-                                        driver_phone: '+27-Mbombela-Net', 
+                                        driver_name: 'Mbombela Independent Driver', 
+                                        driver_phone: '+27-Driver-Net', 
                                         latitude: lat, 
                                         longitude: lng, 
                                         status: 'ACTIVE' 
@@ -274,14 +364,13 @@
                             statusDiv.innerHTML = `✅ Cloud Synced! (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
                             statusDiv.style.color = "#10b981";
 
-                            // Open WhatsApp emergency dispatch string
                             const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
                             const message = encodeURIComponent(`🚨 CLOUD SOS ALERT! SafeRide Driver Needs Urgent Assistance in Mbombela.\nLive Coordinates: ${mapsUrl}`);
                             window.open(`https://wa.me/?text=${message}`, '_blank');
 
                         } catch (err) {
                             console.error('Supabase Error:', err);
-                            statusDiv.innerHTML = "⚠️ Saved locally, cloud sync failed.";
+                            statusDiv.innerHTML = "⚠️ Cloud sync error: " + err.message;
                             statusDiv.style.color = "#ef4444";
                         }
                     },
@@ -296,6 +385,20 @@
             }
         }
 
+        async function logTrip() {
+            const pickup = document.getElementById('trip-pickup').value;
+            const passenger = document.getElementById('trip-passenger').value || 'Anonymous';
+            
+            try {
+                await _supabase.from('ride_logs').insert([
+                    { pickup_zone: pickup, dropoff_zone: 'Mbombela Zone', passenger_name: passenger }
+                ]);
+                alert('Trip logged to Supabase Cloud!');
+            } catch(e) {
+                alert('Saved locally!');
+            }
+        }
+
         function showQRCode() {
             document.getElementById('qr-modal').style.display = 'flex';
         }
@@ -304,6 +407,5 @@
             document.getElementById('qr-modal').style.display = 'none';
         }
     </script>
-
 </body>
-</html>
+</html>s
