@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Driver Safety Net</title>
-    <!-- QR Code Generator & Html5Qrcode Scanner Libraries -->
+    <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <!-- Leaflet CSS & JS for Satellite Maps -->
+    <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -42,7 +42,7 @@
         /* Top Header */
         header { 
             background-color: var(--bg-card); 
-            padding: 16px 20px; 
+            padding: 14px 20px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -52,29 +52,49 @@
             z-index: 30; 
         }
         
-        .brand-title { font-size: 1.2rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
-        .brand-tag { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+        .brand-tag { font-size: 0.7rem; color: var(--text-sub); }
+        
         .status-badge { 
             background-color: rgba(16, 185, 129, 0.15); 
             color: var(--accent-green); 
             padding: 4px 10px; 
             border-radius: 20px; 
-            font-size: 0.75rem; 
+            font-size: 0.72rem; 
             font-weight: 700; 
             border: 1px solid rgba(16, 185, 129, 0.3);
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
 
         /* Main Container */
         main { flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
 
         .tab-section { display: none; flex-direction: column; gap: 16px; }
         .tab-section.active { display: flex; }
+
+        /* Shift Status Selector Bar */
+        .shift-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shift-select {
+            background: var(--bg-card-alt);
+            color: var(--accent-green);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
 
         /* SOS Panic Button Styling */
         .sos-card { 
@@ -114,10 +134,10 @@
         .panic-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4); }
         .panic-btn-sub { font-size: 0.65rem; font-weight: 600; opacity: 0.85; margin-top: 3px; }
 
-        .location-status { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
+        .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
 
-        /* Countdown Overlay */
-        .countdown-overlay {
+        /* Countdown & Night Check-In Overlays */
+        .overlay-screen {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -129,13 +149,13 @@
             z-index: 5;
             padding: 20px;
         }
-        .countdown-num { font-size: 4rem; font-weight: 900; color: #ffffff; line-height: 1; }
-        .cancel-btn {
-            margin-top: 14px;
+        .overlay-num { font-size: 3.5rem; font-weight: 900; color: #ffffff; line-height: 1; margin: 10px 0; }
+        .overlay-btn {
+            margin-top: 10px;
             background: #ffffff;
             color: #991b1b;
             border: none;
-            padding: 8px 20px;
+            padding: 10px 20px;
             border-radius: 20px;
             font-weight: 800;
             font-size: 0.85rem;
@@ -252,11 +272,10 @@
         .nav-item.active { color: var(--accent-amber); }
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
 
-        /* Scanner Display */
+        /* Scanner & Map Containers */
         #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
 
-        /* Real Satellite Map Container */
         .map-wrapper {
             background: #111827;
             border: 1px solid var(--border-color);
@@ -290,6 +309,16 @@
     </header>
 
     <main>
+        <!-- Shift Status Bar -->
+        <div class="shift-bar">
+            <span style="font-size: 0.82rem; font-weight: 700;">Driver Status:</span>
+            <select id="driver-shift-status" class="shift-select" onchange="updateShiftStatus()">
+                <option value="ONLINE">🟢 Online & Active</option>
+                <option value="ON_TRIP">🟡 On Active Trip</option>
+                <option value="OFFLINE">🔴 Offline</option>
+            </select>
+        </div>
+
         <!-- TAB 1: PORTAL / SOS -->
         <div id="tab-portal" class="tab-section active">
             <div class="sos-card">
@@ -305,11 +334,19 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
-                <!-- Emergency Countdown Overlay -->
-                <div id="countdown-box" class="countdown-overlay">
+                <!-- Emergency SOS Countdown Overlay -->
+                <div id="countdown-box" class="overlay-screen">
                     <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
-                    <div id="countdown-num" class="countdown-num">5</div>
-                    <button class="cancel-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
+                    <div id="countdown-num" class="overlay-num">5</div>
+                    <button class="overlay-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
+                </div>
+
+                <!-- Night Trip Check-In Safety Overlay -->
+                <div id="night-checkin-box" class="overlay-screen" style="background: rgba(15, 23, 42, 0.96); border: 2px solid var(--accent-amber);">
+                    <div style="font-size:0.9rem; font-weight:800; color:var(--accent-amber);">🛡️ NIGHT SAFETY CHECK-IN</div>
+                    <div style="font-size:0.78rem; color:var(--text-sub); margin-top:4px;">Are you safe on your current trip?</div>
+                    <div id="checkin-num" class="overlay-num" style="color: white; font-size: 2.8rem;">30</div>
+                    <button class="overlay-btn" style="background: var(--accent-green); color: white;" onclick="acknowledgeSafetyCheckin()">I AM SAFE ✅</button>
                 </div>
             </div>
 
@@ -330,15 +367,12 @@
             </div>
         </div>
 
-        <!-- TAB 2: LIVE SATELLITE MAP & LANDMARKS -->
+        <!-- TAB 2: LIVE SATELLITE MAP -->
         <div id="tab-map" class="tab-section">
             <div class="map-wrapper">
                 <h3 style="color:#ffffff;">Mbombela Satellite Navigation</h3>
                 <p style="font-size:0.78rem; color:var(--text-sub);">Real-time aerial imagery & safety tracking.</p>
-                
-                <!-- Actual Satellite Map Container -->
                 <div id="live-satellite-map"></div>
-
                 <div id="live-coords-box" style="font-size: 0.78rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
                     GPS: Locating satellite fix...
                 </div>
@@ -391,7 +425,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: SCANNER (Automatic Back Camera) -->
+        <!-- TAB 4: SCANNER -->
         <div id="tab-scanner" class="tab-section">
             <h3 style="color:#ffffff;">Passenger Badge Scanner</h3>
             <p style="font-size:0.8rem; color:var(--text-sub);">Rear camera active for instant passenger verification.</p>
@@ -450,7 +484,7 @@
             <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
             <span>SOS</span>
         </button>
-        <button class="nav-item" onclick="switchTab('tab-map', this)" id="nav-map-btn">
+        <button class="nav-item" onclick="switchTab('tab-map', this)">
             <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
             <span>Map</span>
         </button>
@@ -472,8 +506,10 @@
     <script>
         let countdownTimer = null;
         let countdownVal = 5;
+        let checkinTimer = null;
+        let checkinVal = 30;
         let html5QrCode = null;
-        let currentLat = -25.4753; // Default Mbombela Center
+        let currentLat = -25.4753;
         let currentLng = 30.9694;
         let map = null;
         let driverMarker = null;
@@ -482,9 +518,58 @@
             renderLocalTrips();
             loadProfile();
             startLiveGPSWatch();
-            // Pre-initialize map on load so tiles download immediately
+            registerServiceWorker();
+            loadShiftStatus();
+            startNightCheckinTimer();
             setTimeout(initSatelliteMap, 500);
         });
+
+        /* Register PWA Service Worker for Offline Capabilities */
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(() => console.log('SafeRide PWA Service Worker Registered'))
+                    .catch((err) => console.log('Service Worker registration failed:', err));
+            }
+        }
+
+        /* Shift Status Sync */
+        function updateShiftStatus() {
+            const status = document.getElementById('driver-shift-status').value;
+            localStorage.setItem('saferide_shift_status', status);
+        }
+
+        function loadShiftStatus() {
+            const saved = localStorage.getItem('saferide_shift_status');
+            if (saved) document.getElementById('driver-shift-status').value = saved;
+        }
+
+        /* Night Safety Check-In Timer */
+        function startNightCheckinTimer() {
+            // Triggers safety check-in prompt during night hours or simulation
+            const hour = new Date().getHours();
+            if (hour >= 18 || hour <= 5) { // Night hours 6 PM to 5 AM
+                checkinTimer = setInterval(() => {
+                    checkinVal--;
+                    document.getElementById('checkin-num').innerText = checkinVal;
+                    if (checkinVal <= 0) {
+                        clearInterval(checkinTimer);
+                        document.getElementById('night-checkin-box').style.display = 'flex';
+                        // Auto dispatch if not acknowledged within 30s
+                        setTimeout(() => {
+                            dispatchPSIRAEmergencySOS();
+                        }, 5000);
+                    }
+                }, 60000); // Check every minute simulation (or adjust as needed)
+            }
+        }
+
+        function acknowledgeSafetyCheckin() {
+            document.getElementById('night-checkin-box').style.display = 'none';
+            checkinVal = 30;
+            if (checkinTimer) clearInterval(checkinTimer);
+            startNightCheckinTimer();
+        }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
@@ -498,7 +583,6 @@
                 stopScanner();
             }
 
-            // Force map to recalculate and display tiles correctly when switching to map tab
             if (tabId === 'tab-map') {
                 setTimeout(() => {
                     if (map) {
@@ -511,31 +595,16 @@
             }
         }
 
-        /* Initialize Real Satellite Imagery Map */
         function initSatelliteMap() {
             if (!map && document.getElementById('live-satellite-map')) {
-                map = L.map('live-satellite-map', {
-                    zoomControl: true,
-                    attributionControl: false
-                }).setView([currentLat, currentLng], 15);
-
-                // Esri World Imagery (High-Resolution Satellite Tiles)
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 19,
-                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-                }).addTo(map);
-
-                // Mbombela Safety Zone Markers
-                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b><br>High Caution Zone");
-                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b><br>Moderate Risk Pick-up");
-                L.marker([-25.4851, 30.9542]).addTo(map).bindPopup("<b>Sonpark Centre</b><br>Normal Patrol Active");
-
-                // Driver Position Marker
-                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b><br>SafeRide Active Unit");
+                map = L.map('live-satellite-map', { zoomControl: true, attributionControl: false }).setView([currentLat, currentLng], 15);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
+                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b>");
+                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b>");
+                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
             }
         }
 
-        /* Live Continuous GPS Watcher & Satellite Map Updater */
         function startLiveGPSWatch() {
             const locText = document.getElementById('location-text');
             const headerStatus = document.getElementById('header-gps-status');
@@ -546,31 +615,17 @@
                     (position) => {
                         currentLat = position.coords.latitude;
                         currentLng = position.coords.longitude;
-                        
                         locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
                         headerStatus.innerText = "GPS Live";
                         coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
-
-                        if (map) {
-                            if (!driverMarker) {
-                                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
-                            } else {
-                                driverMarker.setLatLng([currentLat, currentLng]);
-                            }
-                        }
+                        if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
                     },
-                    (error) => {
-                        locText.innerText = "⚠️ GPS Signal Lost. Check location permissions.";
-                        headerStatus.innerText = "GPS Error";
-                    },
-                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+                    (error) => { locText.innerText = "⚠️ GPS Signal Lost."; },
+                    { enableHighAccuracy: true, maximumAge: 5000 }
                 );
-            } else {
-                locText.innerText = "⚠️ Geolocation not supported.";
             }
         }
 
-        /* Countdown & Emergency Handling */
         function startCountdown() {
             countdownVal = 5;
             document.getElementById('countdown-num').innerText = countdownVal;
@@ -592,126 +647,59 @@
             document.getElementById('countdown-box').style.display = 'none';
         }
 
-        /* PSIRA / Private Security WhatsApp Dispatch */
         function dispatchPSIRAEmergencySOS() {
-            const statusDiv = document.getElementById('location-text');
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverName = profile.name || 'Mbombela Driver';
-            const plate = profile.plate || 'N/A';
             const psiraPhone = profile.psira || '';
-            
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-
-            const alertMessage = encodeURIComponent(
-                `🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Independent Driver under threat in Mbombela.\n\n` +
-                `👤 Driver: ${driverName}\n` +
-                `🚗 Vehicle Plate: ${plate}\n` +
-                `📍 Live Satellite GPS: ${mapsUrl}\n\n` +
-                `Please dispatch armed response immediately.`
-            );
-
-            const whatsappTarget = psiraPhone ? `https://wa.me/${psiraPhone}?text=${alertMessage}` : `https://wa.me/?text=${alertMessage}`;
-            
-            window.open(whatsappTarget, '_blank');
-            statusDiv.innerText = "🚨 ARMED RESPONSE DISPATCHED!";
+            const msg = encodeURIComponent(`🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Driver under threat.\n📍 GPS: ${mapsUrl}`);
+            window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
         }
 
-        /* QR Code Generator */
         function showQRCode() {
             const container = document.getElementById('qrcode-canvas');
             container.innerHTML = '';
-            
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverInfo = `${profile.name || 'Mbombela Driver'} | ${profile.platform || 'Bolt'} | ${profile.plate || 'N/A'}`;
-            
             document.getElementById('qr-driver-info').innerText = driverInfo;
-
-            new QRCode(container, {
-                text: `SafeRide-Verified:${driverInfo}`,
-                width: 180,
-                height: 180,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
+            new QRCode(container, { text: `SafeRide-Verified:${driverInfo}`, width: 180, height: 180 });
             document.getElementById('qr-modal').style.display = 'flex';
         }
 
-        function closeQRCode() {
-            document.getElementById('qr-modal').style.display = 'none';
-        }
+        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
 
-        /* Automatic Rear Camera QR Scanner */
         function initAutoBackCameraScanner() {
-            const resultDiv = document.getElementById('scanner-result');
-            resultDiv.innerText = "Initializing rear camera...";
-
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("qr-reader");
-            }
-
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 220, height: 220 } },
-                (decodedText) => {
-                    resultDiv.innerText = `✅ Verified Passenger Code: ${decodedText}`;
-                },
-                (errorMessage) => {
-                    // Scanning actively
-                }
-            ).catch((err) => {
-                resultDiv.innerText = "⚠️ Camera access denied or unavailable.";
-            });
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 220 }, (text) => {
+                document.getElementById('scanner-result').innerText = `✅ Verified: ${text}`;
+            }, () => {});
         }
 
         function stopScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().catch(err => console.log(err));
-            }
+            if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e => {});
         }
 
-        /* Local Trip Logs */
         function saveLocalTrip() {
             const pickup = document.getElementById('trip-pickup').value;
             const passenger = document.getElementById('trip-passenger').value || 'Anonymous';
             const notes = document.getElementById('trip-notes').value || 'None';
-
             const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
             trips.unshift({ pickup, passenger, notes, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
             localStorage.setItem('saferide_trips', JSON.stringify(trips));
-
-            document.getElementById('trip-passenger').value = '';
-            document.getElementById('trip-notes').value = '';
-
             renderLocalTrips();
-            alert('Trip logged to phone storage!');
+            alert('Trip logged!');
         }
 
         function renderLocalTrips() {
             const container = document.getElementById('trip-history-list');
             const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
-            
-            if (trips.length === 0) {
-                container.innerHTML = `<h4 style="color:var(--text-sub); font-size:0.85rem;">No local trips logged yet.</h4>`;
-                return;
-            }
-
+            if (trips.length === 0) { container.innerHTML = `<h4 style="color:var(--text-sub); font-size:0.85rem;">No local trips logged yet.</h4>`; return; }
             let html = `<h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>`;
             trips.slice(0, 5).forEach(t => {
-                html += `
-                    <div class="info-card" style="margin-bottom: 8px;">
-                        <div class="info-left">
-                            <h3>${t.pickup} (${t.passenger})</h3>
-                            <p>Time: ${t.time} | Note: ${t.notes}</p>
-                        </div>
-                    </div>
-                `;
+                html += `<div class="info-card" style="margin-bottom: 8px;"><div class="info-left"><h3>${t.pickup} (${t.passenger})</h3><p>Time: ${t.time} | Note: ${t.notes}</p></div></div>`;
             });
             container.innerHTML = html;
         }
 
-        /* Profile & PSIRA Contact Handling */
         function saveProfile() {
             const profile = {
                 name: document.getElementById('profile-name').value,
@@ -720,7 +708,7 @@
                 psira: document.getElementById('profile-psira').value
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            alert('Profile & Security WhatsApp Line saved successfully!');
+            alert('Profile saved!');
         }
 
         function loadProfile() {
