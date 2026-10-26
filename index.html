@@ -136,7 +136,7 @@
 
         .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
 
-        /* Countdown & Night Check-In Overlays */
+        /* Overlays */
         .overlay-screen {
             display: none;
             position: absolute;
@@ -205,7 +205,7 @@
         }
         .form-control:focus { outline: none; border-color: var(--accent-amber); }
 
-        /* Modal Screens */
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -287,7 +287,7 @@
         }
         #live-satellite-map {
             width: 100% !important;
-            height: 350px !important;
+            height: 320px !important;
             display: block !important;
             border-radius: 10px;
             border: 1px solid #1f2937;
@@ -367,29 +367,28 @@
             </div>
         </div>
 
-        <!-- TAB 2: LIVE SATELLITE MAP -->
+        <!-- TAB 2: LIVE SATELLITE MAP & NAVIGATION -->
         <div id="tab-map" class="tab-section">
             <div class="map-wrapper">
                 <h3 style="color:#ffffff;">Mbombela Satellite Navigation</h3>
-                <p style="font-size:0.78rem; color:var(--text-sub);">Real-time aerial imagery & safety tracking.</p>
+                <p style="font-size:0.78rem; color:var(--text-sub);">Real-time aerial imagery & routing.</p>
                 <div id="live-satellite-map"></div>
                 <div id="live-coords-box" style="font-size: 0.78rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
                     GPS: Locating satellite fix...
                 </div>
             </div>
 
-            <div class="info-card" style="border-left: 4px solid #ef4444;">
-                <div class="info-left">
-                    <h3>Mbombela Central (CBD)</h3>
-                    <p>Status: High Caution | Night Patrols Active</p>
+            <!-- Start Navigation Quick-Launch Card -->
+            <div class="sos-card" style="text-align: left; padding: 16px;">
+                <h3 style="color:#ffffff; font-size:0.95rem; margin-bottom: 6px;">🧭 Turn-by-Turn Navigation</h3>
+                <p style="font-size:0.78rem; color:var(--text-sub); margin-bottom: 12px;">Launch Google Maps routing to key Mbombela hubs or your live GPS.</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="action-btn" style="flex:1; justify-content:center;" onclick="startNavigation('Riverside Mall Mbombela')">Riverside Mall</button>
+                    <button class="action-btn" style="flex:1; justify-content:center;" onclick="startNavigation('Sonpark Shopping Centre Mbombela')">Sonpark</button>
                 </div>
-            </div>
-
-            <div class="info-card" style="border-left: 4px solid #f59e0b;">
-                <div class="info-left">
-                    <h3>Riverside Mall Hub</h3>
-                    <p>Status: Moderate Risk | Pick-up Drop-off Zone</p>
-                </div>
+                <button class="action-btn" style="width:100%; justify-content:center; margin-top: 8px; background: rgba(16,185,129,0.15); color: var(--accent-green); border-color: rgba(16,185,129,0.3);" onclick="startLiveGPSNavigation()">
+                    📍 Route to My Live GPS Coordinates
+                </button>
             </div>
         </div>
 
@@ -524,19 +523,14 @@
             setTimeout(initSatelliteMap, 500);
         });
 
-        /* Register PWA Service Worker for Offline Capabilities */
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(() => console.log('SafeRide PWA Service Worker Registered'))
-                    .catch((err) => console.log('Service Worker registration failed:', err));
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
             }
         }
 
-        /* Shift Status Sync */
         function updateShiftStatus() {
-            const status = document.getElementById('driver-shift-status').value;
-            localStorage.setItem('saferide_shift_status', status);
+            localStorage.setItem('saferide_shift_status', document.getElementById('driver-shift-status').value);
         }
 
         function loadShiftStatus() {
@@ -544,23 +538,18 @@
             if (saved) document.getElementById('driver-shift-status').value = saved;
         }
 
-        /* Night Safety Check-In Timer */
         function startNightCheckinTimer() {
-            // Triggers safety check-in prompt during night hours or simulation
             const hour = new Date().getHours();
-            if (hour >= 18 || hour <= 5) { // Night hours 6 PM to 5 AM
+            if (hour >= 18 || hour <= 5) {
                 checkinTimer = setInterval(() => {
                     checkinVal--;
                     document.getElementById('checkin-num').innerText = checkinVal;
                     if (checkinVal <= 0) {
                         clearInterval(checkinTimer);
                         document.getElementById('night-checkin-box').style.display = 'flex';
-                        // Auto dispatch if not acknowledged within 30s
-                        setTimeout(() => {
-                            dispatchPSIRAEmergencySOS();
-                        }, 5000);
+                        setTimeout(dispatchPSIRAEmergencySOS, 5000);
                     }
-                }, 60000); // Check every minute simulation (or adjust as needed)
+                }, 60000);
             }
         }
 
@@ -593,6 +582,17 @@
                     }
                 }, 150);
             }
+        }
+
+        /* Turn-by-Turn Navigation Launchers */
+        function startNavigation(destination) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+            window.open(url, '_blank');
+        }
+
+        function startLiveGPSNavigation() {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`;
+            window.open(url, '_blank');
         }
 
         function initSatelliteMap() {
