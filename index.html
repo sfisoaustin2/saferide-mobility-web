@@ -136,6 +136,20 @@
 
         .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
 
+        /* Hardware Bluetooth Status Banner */
+        .ble-status-banner {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
         /* Overlays */
         .overlay-screen {
             display: none;
@@ -334,6 +348,12 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
+                <!-- Hardware BLE Status Badge -->
+                <div class="ble-status-banner">
+                    <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
+                    <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem;" onclick="connectBLEHardwareButton()">Pair Button</button>
+                </div>
+
                 <!-- Emergency SOS Countdown Overlay -->
                 <div id="countdown-box" class="overlay-screen">
                     <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
@@ -463,7 +483,7 @@
                 </div>
                 <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Security Line</button>
                 
-                <!-- Official Legal Link Added Here -->
+                <!-- Official Legal Link -->
                 <div style="text-align: center; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;">
                     <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
                 </div>
@@ -517,6 +537,7 @@
         let currentLng = 30.9694;
         let map = null;
         let driverMarker = null;
+        let bleDevice = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderLocalTrips();
@@ -527,6 +548,54 @@
             startNightCheckinTimer();
             setTimeout(initSatelliteMap, 500);
         });
+
+        /* Web Bluetooth (BLE) Hardware Panic Button Integration */
+        async function connectBLEHardwareButton() {
+            const bleStatusLabel = document.getElementById('ble-device-name');
+            try {
+                if (!navigator.bluetooth) {
+                    alert('Web Bluetooth is not supported on this device/browser.');
+                    return;
+                }
+                
+                bleStatusLabel.innerText = "Scanning for BLE button...";
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['generic_access', 'battery_service', 0xFFE0, 0x1802]
+                });
+
+                const server = await bleDevice.gatt.connect();
+                bleStatusLabel.innerText = `🟢 BLE Connected: ${bleDevice.name || 'Panic Button'}`;
+                bleStatusLabel.style.color = "var(--accent-green)";
+
+                // Listen for physical button disconnect
+                bleDevice.addEventListener('gattserverdisconnected', onBLEDisconnected);
+
+                // Setup notification listener on GATT service
+                const services = await server.getPrimaryServices();
+                for (const service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    for (const char of characteristics) {
+                        if (char.properties.notify || char.properties.indicate) {
+                            await char.startNotifications();
+                            char.addEventListener('characteristicvaluechanged', (event) => {
+                                // Hardware button pressed! Trigger Emergency SOS!
+                                startCountdown();
+                            });
+                        }
+                    }
+                }
+                alert(`Successfully paired physical button: ${bleDevice.name || 'BLE Panic Button'}`);
+            } catch (error) {
+                console.log('Bluetooth error:', error);
+                bleStatusLabel.innerText = "🔘 BLE Panic Button: Not Connected";
+            }
+        }
+
+        function onBLEDisconnected() {
+            document.getElementById('ble-device-name').innerText = "⚠️ BLE Panic Button Disconnected!";
+            document.getElementById('ble-device-name').style.color = "var(--accent-red)";
+        }
 
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
