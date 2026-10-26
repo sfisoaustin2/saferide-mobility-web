@@ -7,6 +7,10 @@
     <!-- QR Code Generator & Html5Qrcode Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Leaflet CSS & JS for Satellite Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <style>
         :root {
             --bg-main: #0b0f19;
@@ -252,48 +256,23 @@
         #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
 
-        /* Real-time Map Radar Styling */
-        .map-container {
+        /* Real Satellite Map Container */
+        .map-wrapper {
             background: #111827;
             border: 1px solid var(--border-color);
             border-radius: 14px;
-            padding: 16px;
-            text-align: center;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .radar-screen {
-            width: 100%;
-            height: 220px;
-            background: #0b0f19;
+        #live-satellite-map {
+            width: 100% !important;
+            height: 350px !important;
+            display: block !important;
             border-radius: 10px;
             border: 1px solid #1f2937;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .radar-grid {
-            position: absolute;
-            width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
-        .driver-marker {
-            width: 18px; height: 18px;
-            background: var(--accent-amber);
-            border: 3px solid #ffffff;
-            border-radius: 50%;
-            position: absolute;
-            box-shadow: 0 0 15px var(--accent-amber);
-            animation: radar-pulse 1.5s infinite;
-        }
-        @keyframes radar-pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            background: #1a2234;
         }
     </style>
 </head>
@@ -324,7 +303,7 @@
                     </button>
                 </div>
                 
-                <div id="location-text" class="location-status">📍 Acquiring live GPS coordinates...</div>
+                <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
                 <!-- Emergency Countdown Overlay -->
                 <div id="countdown-box" class="countdown-overlay">
@@ -351,33 +330,31 @@
             </div>
         </div>
 
-        <!-- TAB 2: LIVE MAP & MOVEMENT TRACKER -->
+        <!-- TAB 2: LIVE SATELLITE MAP & LANDMARKS -->
         <div id="tab-map" class="tab-section">
-            <div class="map-container">
-                <h3 style="color:#ffffff;">Live Mbombela Movement Tracker</h3>
-                <p style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">Real-time radar tracking your vehicle coordinates.</p>
+            <div class="map-wrapper">
+                <h3 style="color:#ffffff;">Mbombela Satellite Navigation</h3>
+                <p style="font-size:0.78rem; color:var(--text-sub);">Real-time aerial imagery & safety tracking.</p>
                 
-                <div class="radar-screen">
-                    <div class="radar-grid"></div>
-                    <div id="map-marker" class="driver-marker" style="top: 50%; left: 50%;"></div>
-                </div>
+                <!-- Actual Satellite Map Container -->
+                <div id="live-satellite-map"></div>
 
-                <div id="live-coords-box" style="margin-top: 12px; font-size: 0.8rem; color: var(--accent-amber); font-weight: 700;">
-                    Lat: -- | Lng: --
+                <div id="live-coords-box" style="font-size: 0.78rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
+                    GPS: Locating satellite fix...
                 </div>
             </div>
 
             <div class="info-card" style="border-left: 4px solid #ef4444;">
                 <div class="info-left">
                     <h3>Mbombela Central (CBD)</h3>
-                    <p>Status: High Caution | Night Hours Active</p>
+                    <p>Status: High Caution | Night Patrols Active</p>
                 </div>
             </div>
 
             <div class="info-card" style="border-left: 4px solid #f59e0b;">
                 <div class="info-left">
                     <h3>Riverside Mall Hub</h3>
-                    <p>Status: Moderate Risk | Pick-up Drop-off</p>
+                    <p>Status: Moderate Risk | Pick-up Drop-off Zone</p>
                 </div>
             </div>
         </div>
@@ -425,7 +402,7 @@
             </div>
         </div>
 
-        <!-- TAB 5: PROFILE & SETTINGS (Includes PSIRA WhatsApp Contact) -->
+        <!-- TAB 5: PROFILE & SETTINGS -->
         <div id="tab-profile" class="tab-section">
             <h3 style="color:#ffffff;">Driver & Armed Response Profile</h3>
             <p style="font-size:0.8rem; color:var(--text-sub);">Configure your details and private security WhatsApp dispatch line.</p>
@@ -449,7 +426,7 @@
                 </div>
                 <div class="form-group">
                     <label>PSIRA / Private Security WhatsApp Number</label>
-                    <input type="text" id="profile-psira" class="form-control" placeholder="e.g. +27821234567">
+                    <input type="text" id="profile-psira" class="form-control" placeholder="+27821234567">
                 </div>
                 <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Security Line</button>
             </div>
@@ -473,7 +450,7 @@
             <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
             <span>SOS</span>
         </button>
-        <button class="nav-item" onclick="switchTab('tab-map', this)">
+        <button class="nav-item" onclick="switchTab('tab-map', this)" id="nav-map-btn">
             <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
             <span>Map</span>
         </button>
@@ -496,14 +473,17 @@
         let countdownTimer = null;
         let countdownVal = 5;
         let html5QrCode = null;
-        let currentLat = null;
-        let currentLng = null;
-        let watchId = null;
+        let currentLat = -25.4753; // Default Mbombela Center
+        let currentLng = 30.9694;
+        let map = null;
+        let driverMarker = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderLocalTrips();
             loadProfile();
             startLiveGPSWatch();
+            // Pre-initialize map on load so tiles download immediately
+            setTimeout(initSatelliteMap, 500);
         });
 
         function switchTab(tabId, el) {
@@ -517,17 +497,52 @@
             } else {
                 stopScanner();
             }
+
+            // Force map to recalculate and display tiles correctly when switching to map tab
+            if (tabId === 'tab-map') {
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                        map.setView([currentLat, currentLng], 15);
+                    } else {
+                        initSatelliteMap();
+                    }
+                }, 150);
+            }
         }
 
-        /* Live Continuous GPS Watcher & Real-time Map Plotter */
+        /* Initialize Real Satellite Imagery Map */
+        function initSatelliteMap() {
+            if (!map && document.getElementById('live-satellite-map')) {
+                map = L.map('live-satellite-map', {
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([currentLat, currentLng], 15);
+
+                // Esri World Imagery (High-Resolution Satellite Tiles)
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+                }).addTo(map);
+
+                // Mbombela Safety Zone Markers
+                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b><br>High Caution Zone");
+                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b><br>Moderate Risk Pick-up");
+                L.marker([-25.4851, 30.9542]).addTo(map).bindPopup("<b>Sonpark Centre</b><br>Normal Patrol Active");
+
+                // Driver Position Marker
+                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b><br>SafeRide Active Unit");
+            }
+        }
+
+        /* Live Continuous GPS Watcher & Satellite Map Updater */
         function startLiveGPSWatch() {
             const locText = document.getElementById('location-text');
             const headerStatus = document.getElementById('header-gps-status');
             const coordsBox = document.getElementById('live-coords-box');
-            const marker = document.getElementById('map-marker');
 
             if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(
+                navigator.geolocation.watchPosition(
                     (position) => {
                         currentLat = position.coords.latitude;
                         currentLng = position.coords.longitude;
@@ -536,10 +551,13 @@
                         headerStatus.innerText = "GPS Live";
                         coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
 
-                        // Translate real movement slightly across the radar screen simulation
-                        // Centered at offset simulation for real-time visual feedback
-                        marker.style.top = `calc(50% + ${(Math.sin(currentLat) * 40)}px)`;
-                        marker.style.left = `calc(50% + ${(Math.cos(currentLng) * 40)}px)`;
+                        if (map) {
+                            if (!driverMarker) {
+                                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
+                            } else {
+                                driverMarker.setLatLng([currentLat, currentLng]);
+                            }
+                        }
                     },
                     (error) => {
                         locText.innerText = "⚠️ GPS Signal Lost. Check location permissions.";
@@ -580,22 +598,18 @@
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverName = profile.name || 'Mbombela Driver';
             const plate = profile.plate || 'N/A';
-            const psiraPhone = profile.psira || ''; // PSIRA / Armed Response WhatsApp line
+            const psiraPhone = profile.psira || '';
             
-            let mapsUrl = "https://maps.google.com/?q=Mbombela";
-            if (currentLat && currentLng) {
-                mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            }
+            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
 
             const alertMessage = encodeURIComponent(
                 `🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Independent Driver under threat in Mbombela.\n\n` +
                 `👤 Driver: ${driverName}\n` +
                 `🚗 Vehicle Plate: ${plate}\n` +
-                `📍 Live GPS Coordinates: ${mapsUrl}\n\n` +
+                `📍 Live Satellite GPS: ${mapsUrl}\n\n` +
                 `Please dispatch armed response immediately.`
             );
 
-            // Open WhatsApp targeted specifically to the PSIRA/security number if provided, otherwise general dispatch
             const whatsappTarget = psiraPhone ? `https://wa.me/${psiraPhone}?text=${alertMessage}` : `https://wa.me/?text=${alertMessage}`;
             
             window.open(whatsappTarget, '_blank');
