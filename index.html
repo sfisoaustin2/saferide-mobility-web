@@ -462,6 +462,11 @@
                     <input type="text" id="profile-psira" class="form-control" placeholder="+27821234567">
                 </div>
                 <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Security Line</button>
+                
+                <!-- Official Legal Link Added Here -->
+                <div style="text-align: center; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                    <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
+                </div>
             </div>
         </div>
     </main>
@@ -584,7 +589,6 @@
             }
         }
 
-        /* Turn-by-Turn Navigation Launchers */
         function startNavigation(destination) {
             const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
             window.open(url, '_blank');
