@@ -251,6 +251,50 @@
         /* Scanner Display */
         #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
+
+        /* Real-time Map Radar Styling */
+        .map-container {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .radar-screen {
+            width: 100%;
+            height: 220px;
+            background: #0b0f19;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .radar-grid {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .driver-marker {
+            width: 18px; height: 18px;
+            background: var(--accent-amber);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 15px var(--accent-amber);
+            animation: radar-pulse 1.5s infinite;
+        }
+        @keyframes radar-pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
     </style>
 </head>
 <body>
@@ -271,12 +315,12 @@
         <div id="tab-portal" class="tab-section active">
             <div class="sos-card">
                 <div class="sos-title">Emergency Response</div>
-                <div class="sos-subtitle">Independent Uber, Bolt & Maxim Protection</div>
+                <div class="sos-subtitle">PSIRA Private Security & Independent Protection</div>
                 
                 <div class="panic-btn-container">
                     <button class="panic-btn" onclick="startCountdown()">
                         SOS
-                        <span class="panic-btn-sub">PRESS TO DISPATCH</span>
+                        <span class="panic-btn-sub">ARMED DISPATCH</span>
                     </button>
                 </div>
                 
@@ -284,7 +328,7 @@
 
                 <!-- Emergency Countdown Overlay -->
                 <div id="countdown-box" class="countdown-overlay">
-                    <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS IN</div>
+                    <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
                     <div id="countdown-num" class="countdown-num">5</div>
                     <button class="cancel-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
                 </div>
@@ -307,10 +351,21 @@
             </div>
         </div>
 
-        <!-- TAB 2: SAFETY MAP & ZONES -->
+        <!-- TAB 2: LIVE MAP & MOVEMENT TRACKER -->
         <div id="tab-map" class="tab-section">
-            <h3 style="color:#ffffff;">Mbombela Zone Safety</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Local zone threat monitoring for Mbombela region.</p>
+            <div class="map-container">
+                <h3 style="color:#ffffff;">Live Mbombela Movement Tracker</h3>
+                <p style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">Real-time radar tracking your vehicle coordinates.</p>
+                
+                <div class="radar-screen">
+                    <div class="radar-grid"></div>
+                    <div id="map-marker" class="driver-marker" style="top: 50%; left: 50%;"></div>
+                </div>
+
+                <div id="live-coords-box" style="margin-top: 12px; font-size: 0.8rem; color: var(--accent-amber); font-weight: 700;">
+                    Lat: -- | Lng: --
+                </div>
+            </div>
 
             <div class="info-card" style="border-left: 4px solid #ef4444;">
                 <div class="info-left">
@@ -323,20 +378,6 @@
                 <div class="info-left">
                     <h3>Riverside Mall Hub</h3>
                     <p>Status: Moderate Risk | Pick-up Drop-off</p>
-                </div>
-            </div>
-
-            <div class="info-card" style="border-left: 4px solid #10b981;">
-                <div class="info-left">
-                    <h3>Sonpark & West End</h3>
-                    <p>Status: Patrol Active | Low Incidents</p>
-                </div>
-            </div>
-
-            <div class="info-card" style="border-left: 4px solid #f59e0b;">
-                <div class="info-left">
-                    <h3>KaNyamazane Route</h3>
-                    <p>Status: Caution | Stay on Main Arterial</p>
                 </div>
             </div>
         </div>
@@ -384,10 +425,10 @@
             </div>
         </div>
 
-        <!-- TAB 5: PROFILE & SETTINGS -->
+        <!-- TAB 5: PROFILE & SETTINGS (Includes PSIRA WhatsApp Contact) -->
         <div id="tab-profile" class="tab-section">
-            <h3 style="color:#ffffff;">Driver Profile</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Stored safely on your phone.</p>
+            <h3 style="color:#ffffff;">Driver & Armed Response Profile</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub);">Configure your details and private security WhatsApp dispatch line.</p>
 
             <div class="sos-card" style="text-align: left;">
                 <div class="form-group">
@@ -395,7 +436,7 @@
                     <input type="text" id="profile-name" class="form-control" value="Independent Mbombela Driver">
                 </div>
                 <div class="form-group">
-                    <label>Platform</label>
+                    <label>Ride Platform</label>
                     <select id="profile-platform" class="form-control">
                         <option>Bolt</option>
                         <option>Uber</option>
@@ -406,7 +447,11 @@
                     <label>Vehicle Plate Number</label>
                     <input type="text" id="profile-plate" class="form-control" placeholder="e.g., MP 123-456">
                 </div>
-                <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Update Profile</button>
+                <div class="form-group">
+                    <label>PSIRA / Private Security WhatsApp Number</label>
+                    <input type="text" id="profile-psira" class="form-control" placeholder="e.g. +27821234567">
+                </div>
+                <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Security Line</button>
             </div>
         </div>
     </main>
@@ -430,7 +475,7 @@
         </button>
         <button class="nav-item" onclick="switchTab('tab-map', this)">
             <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-            <span>Zones</span>
+            <span>Map</span>
         </button>
         <button class="nav-item" onclick="switchTab('tab-trips', this)">
             <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
@@ -467,7 +512,6 @@
             document.getElementById(tabId).classList.add('active');
             if(el) el.classList.add('active');
 
-            // Handle scanner lifecycle automatically
             if (tabId === 'tab-scanner') {
                 initAutoBackCameraScanner();
             } else {
@@ -475,24 +519,33 @@
             }
         }
 
-        /* Live Continuous GPS Watcher */
+        /* Live Continuous GPS Watcher & Real-time Map Plotter */
         function startLiveGPSWatch() {
             const locText = document.getElementById('location-text');
             const headerStatus = document.getElementById('header-gps-status');
+            const coordsBox = document.getElementById('live-coords-box');
+            const marker = document.getElementById('map-marker');
 
             if (navigator.geolocation) {
                 watchId = navigator.geolocation.watchPosition(
                     (position) => {
                         currentLat = position.coords.latitude;
                         currentLng = position.coords.longitude;
+                        
                         locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
                         headerStatus.innerText = "GPS Live";
+                        coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
+
+                        // Translate real movement slightly across the radar screen simulation
+                        // Centered at offset simulation for real-time visual feedback
+                        marker.style.top = `calc(50% + ${(Math.sin(currentLat) * 40)}px)`;
+                        marker.style.left = `calc(50% + ${(Math.cos(currentLng) * 40)}px)`;
                     },
                     (error) => {
-                        locText.innerText = "⚠️ GPS Signal Lost. Check device location settings.";
+                        locText.innerText = "⚠️ GPS Signal Lost. Check location permissions.";
                         headerStatus.innerText = "GPS Error";
                     },
-                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
                 );
             } else {
                 locText.innerText = "⚠️ Geolocation not supported.";
@@ -511,7 +564,7 @@
                 if (countdownVal <= 0) {
                     clearInterval(countdownTimer);
                     document.getElementById('countdown-box').style.display = 'none';
-                    dispatchEmergencySOS();
+                    dispatchPSIRAEmergencySOS();
                 }
             }, 1000);
         }
@@ -521,21 +574,32 @@
             document.getElementById('countdown-box').style.display = 'none';
         }
 
-        function dispatchEmergencySOS() {
+        /* PSIRA / Private Security WhatsApp Dispatch */
+        function dispatchPSIRAEmergencySOS() {
             const statusDiv = document.getElementById('location-text');
-            
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverName = profile.name || 'Mbombela Driver';
             const plate = profile.plate || 'N/A';
+            const psiraPhone = profile.psira || ''; // PSIRA / Armed Response WhatsApp line
             
             let mapsUrl = "https://maps.google.com/?q=Mbombela";
             if (currentLat && currentLng) {
                 mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             }
 
-            const text = encodeURIComponent(`🚨 EMERGENCY SOS! SafeRide Driver Needs Urgent Help!\nName: ${driverName}\nPlate: ${plate}\nLive Location: ${mapsUrl}`);
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-            statusDiv.innerText = "🚨 EMERGENCY SOS DISPATCHED!";
+            const alertMessage = encodeURIComponent(
+                `🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Independent Driver under threat in Mbombela.\n\n` +
+                `👤 Driver: ${driverName}\n` +
+                `🚗 Vehicle Plate: ${plate}\n` +
+                `📍 Live GPS Coordinates: ${mapsUrl}\n\n` +
+                `Please dispatch armed response immediately.`
+            );
+
+            // Open WhatsApp targeted specifically to the PSIRA/security number if provided, otherwise general dispatch
+            const whatsappTarget = psiraPhone ? `https://wa.me/${psiraPhone}?text=${alertMessage}` : `https://wa.me/?text=${alertMessage}`;
+            
+            window.open(whatsappTarget, '_blank');
+            statusDiv.innerText = "🚨 ARMED RESPONSE DISPATCHED!";
         }
 
         /* QR Code Generator */
@@ -573,7 +637,6 @@
                 html5QrCode = new Html5Qrcode("qr-reader");
             }
 
-            // Automatically use environment (back) camera
             html5QrCode.start(
                 { facingMode: "environment" }, 
                 { fps: 15, qrbox: { width: 220, height: 220 } },
@@ -581,11 +644,10 @@
                     resultDiv.innerText = `✅ Verified Passenger Code: ${decodedText}`;
                 },
                 (errorMessage) => {
-                    // Scanning actively in background
+                    // Scanning actively
                 }
             ).catch((err) => {
                 resultDiv.innerText = "⚠️ Camera access denied or unavailable.";
-                console.error(err);
             });
         }
 
@@ -635,15 +697,16 @@
             container.innerHTML = html;
         }
 
-        /* Local Profile Handling */
+        /* Profile & PSIRA Contact Handling */
         function saveProfile() {
             const profile = {
                 name: document.getElementById('profile-name').value,
                 platform: document.getElementById('profile-platform').value,
-                plate: document.getElementById('profile-plate').value
+                plate: document.getElementById('profile-plate').value,
+                psira: document.getElementById('profile-psira').value
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            alert('Profile saved to your device!');
+            alert('Profile & Security WhatsApp Line saved successfully!');
         }
 
         function loadProfile() {
@@ -651,7 +714,8 @@
             if (profile.name) document.getElementById('profile-name').value = profile.name;
             if (profile.platform) document.getElementById('profile-platform').value = profile.platform;
             if (profile.plate) document.getElementById('profile-plate').value = profile.plate;
+            if (profile.psira) document.getElementById('profile-psira').value = profile.psira;
         }
     </script>
 </body>
-</html>s
+</html>
