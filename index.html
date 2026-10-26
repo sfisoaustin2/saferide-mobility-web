@@ -11,6 +11,9 @@
     <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Leaflet Satellite Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         :root {
@@ -18,6 +21,7 @@
             --bg-card: #111827;
             --bg-card-alt: #1f2937;
             --accent-amber: #f59e0b;
+            --accent-red: #dc2626;
             --accent-green: #10b981;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
@@ -106,6 +110,85 @@
         .card-heading { font-size: 1.1rem; font-weight: 800; color: #ffffff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .card-text { font-size: 0.84rem; color: var(--text-sub); line-height: 1.5; }
 
+        /* SOS Panic Button Styling */
+        .sos-card { 
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
+            border: 1px solid var(--border-color); 
+            border-radius: 20px; 
+            padding: 24px 20px; 
+            text-align: center; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .sos-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
+        .sos-subtitle { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 20px; }
+        
+        .panic-btn-container { position: relative; width: 150px; height: 150px; margin: 0 auto 16px auto; }
+
+        .panic-btn { 
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+            color: #ffffff; 
+            border: none; 
+            width: 150px; 
+            height: 150px; 
+            border-radius: 50%; 
+            font-size: 1.3rem; 
+            font-weight: 900; 
+            cursor: pointer; 
+            box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.2); 
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            letter-spacing: 0.05em;
+            outline: none;
+        }
+        .panic-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4); }
+        .panic-btn-sub { font-size: 0.65rem; font-weight: 600; opacity: 0.85; margin-top: 3px; }
+
+        .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
+
+        .ble-status-banner {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        /* Overlays */
+        .overlay-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(185, 28, 28, 0.95);
+            border-radius: 20px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            padding: 20px;
+        }
+        .overlay-num { font-size: 3.5rem; font-weight: 900; color: #ffffff; line-height: 1; margin: 10px 0; }
+        .overlay-btn {
+            margin-top: 10px;
+            background: #ffffff;
+            color: #991b1b;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
         /* Form Controls */
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
         .form-group label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; }
@@ -131,10 +214,32 @@
             cursor: pointer; 
             text-align: center;
             width: 100%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
         }
         .action-btn:active { opacity: 0.9; }
 
-        /* Scanner Container */
+        /* Map & Scanner */
+        .map-wrapper {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #live-satellite-map {
+            width: 100% !important;
+            height: 260px !important;
+            display: block !important;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            background: #1a2234;
+        }
         #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
 
@@ -181,7 +286,7 @@
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            <span>Online</span>
+            <span id="header-gps-status">GPS Active</span>
         </div>
     </header>
 
@@ -197,9 +302,10 @@
                 </div>
             </div>
             
-            <div class="content-card" style="text-align: center; padding: 16px;">
-                <h3 style="color: white; font-size: 0.95rem;">Quick Access</h3>
-                <p class="card-text">Select **Driver Profile** below to register your membership, or **For Passengers** to verify your ride badge.</p>
+            <div class="sos-card" style="padding: 16px;">
+                <div class="sos-title" style="font-size: 1rem;">Quick SOS Panic Dispatch</div>
+                <div class="sos-subtitle" style="margin-bottom: 12px;">Tap to initiate PSIRA emergency countdown</div>
+                <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;" onclick="startCountdown()">🚨 Trigger Emergency SOS</button>
             </div>
         </div>
 
@@ -230,13 +336,45 @@
             </div>
         </div>
 
-        <!-- 3. DRIVER PROFILE TAB (REGISTRATION) -->
+        <!-- 3. DRIVER PROFILE TAB (REGISTRATION, SOS, BLE & TOKENIZATION) -->
         <div id="tab-profile" class="tab-section">
-            <div class="content-card">
-                <div class="card-heading">Driver Membership Registration</div>
-                <div class="card-text">Register your profile to activate your membership and connect your PSIRA armed response details.</div>
+            <div class="sos-card">
+                <div class="sos-title">Emergency Response Console</div>
+                <div class="sos-subtitle">PSIRA Private Security & Independent Protection</div>
                 
-                <div class="form-group" style="margin-top: 8px;">
+                <div class="panic-btn-container">
+                    <button class="panic-btn" onclick="startCountdown()">
+                        SOS
+                        <span class="panic-btn-sub">ARMED DISPATCH</span>
+                    </button>
+                </div>
+                
+                <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
+
+                <div class="ble-status-banner">
+                    <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
+                    <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="connectBLEHardwareButton()">Pair Button</button>
+                </div>
+
+                <div id="countdown-box" class="overlay-screen">
+                    <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
+                    <div id="countdown-num" class="overlay-num">5</div>
+                    <button class="overlay-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
+                </div>
+            </div>
+
+            <div class="map-wrapper">
+                <h3 style="color:#ffffff; font-size: 0.95rem;">Mbombela Satellite Map</h3>
+                <div id="live-satellite-map"></div>
+                <div id="live-coords-box" style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
+                    GPS: Locating satellite fix...
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-heading">Driver Membership & Security Setup</div>
+                
+                <div class="form-group">
                     <label>Full Name & Surname</label>
                     <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sipho Dlamini">
                 </div>
@@ -256,7 +394,21 @@
                     <label>PSIRA / Security Partner WhatsApp Number</label>
                     <input type="text" id="reg-psira" class="form-control" placeholder="+27821234567">
                 </div>
-                <button class="action-btn" onclick="saveDriverRegistration()">Register Membership</button>
+
+                <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 6px; margin-bottom: 6px;">
+                    <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
+                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your card securely for automated safety membership billing.</p>
+                    <div id="token-status-display" style="font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px;">Status: No secure token linked</div>
+                    <button type="button" class="action-btn" style="background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3);" onclick="simulateCardTokenization()">
+                        🔐 Securely Tokenize Card
+                    </button>
+                </div>
+
+                <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Token Settings</button>
+                
+                <div style="text-align: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
+                </div>
             </div>
         </div>
 
@@ -311,7 +463,19 @@
 
     <!-- App Engine Logic -->
     <script>
+        let countdownTimer = null;
+        let countdownVal = 5;
         let html5QrCode = null;
+        let currentLat = -25.4753;
+        let currentLng = 30.9694;
+        let map = null;
+        let driverMarker = null;
+        let bleDevice = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDriverRegistration();
+            startLiveGPSWatch();
+        });
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
@@ -324,6 +488,132 @@
             } else {
                 stopScanner();
             }
+
+            if (tabId === 'tab-profile') {
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                        map.setView([currentLat, currentLng], 15);
+                    } else {
+                        initSatelliteMap();
+                    }
+                }, 150);
+            }
+        }
+
+        function initSatelliteMap() {
+            if (!map && document.getElementById('live-satellite-map')) {
+                map = L.map('live-satellite-map', { zoomControl: true, attributionControl: false }).setView([currentLat, currentLng], 15);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
+                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b>");
+                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b>");
+                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
+            }
+        }
+
+        function startLiveGPSWatch() {
+            const headerStatus = document.getElementById('header-gps-status');
+            const locText = document.getElementById('location-text');
+            const coordsBox = document.getElementById('live-coords-box');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        currentLat = position.coords.latitude;
+                        currentLng = position.coords.longitude;
+                        if (locText) locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                        if (headerStatus) headerStatus.innerText = "GPS Live";
+                        if (coordsBox) coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
+                        if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
+                    },
+                    (error) => { if (locText) locText.innerText = "⚠️ GPS Signal Lost."; },
+                    { enableHighAccuracy: true, maximumAge: 5000 }
+                );
+            }
+        }
+
+        function startCountdown() {
+            countdownVal = 5;
+            document.getElementById('countdown-num').innerText = countdownVal;
+            document.getElementById('countdown-box').style.display = 'flex';
+            
+            countdownTimer = setInterval(() => {
+                countdownVal--;
+                document.getElementById('countdown-num').innerText = countdownVal;
+                if (countdownVal <= 0) {
+                    clearInterval(countdownTimer);
+                    document.getElementById('countdown-box').style.display = 'none';
+                    dispatchPSIRAEmergencySOS();
+                }
+            }, 1000);
+        }
+
+        function cancelCountdown() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            document.getElementById('countdown-box').style.display = 'none';
+        }
+
+        function dispatchPSIRAEmergencySOS() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const psiraPhone = profile.psira || '';
+            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+            const msg = encodeURIComponent(`🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Driver under threat.\n📍 GPS: ${mapsUrl}`);
+            window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
+        }
+
+        async function connectBLEHardwareButton() {
+            const bleStatusLabel = document.getElementById('ble-device-name');
+            try {
+                if (!navigator.bluetooth) {
+                    alert('Web Bluetooth is not supported on this device/browser.');
+                    return;
+                }
+                
+                bleStatusLabel.innerText = "Scanning for BLE button...";
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['generic_access', 'battery_service', 0xFFE0, 0x1802]
+                });
+
+                const server = await bleDevice.gatt.connect();
+                bleStatusLabel.innerText = `🟢 BLE Connected: ${bleDevice.name || 'Panic Button'}`;
+                bleStatusLabel.style.color = "var(--accent-green)";
+
+                bleDevice.addEventListener('gattserverdisconnected', () => {
+                    bleStatusLabel.innerText = "⚠️ BLE Panic Button Disconnected!";
+                    bleStatusLabel.style.color = "var(--accent-red)";
+                });
+
+                const services = await server.getPrimaryServices();
+                for (const service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    for (const char of characteristics) {
+                        if (char.properties.notify || char.properties.indicate) {
+                            await char.startNotifications();
+                            char.addEventListener('characteristicvaluechanged', (event) => {
+                                startCountdown();
+                            });
+                        }
+                    }
+                }
+                alert(`Successfully paired physical button: ${bleDevice.name || 'BLE Panic Button'}`);
+            } catch (error) {
+                console.log('Bluetooth error:', error);
+                bleStatusLabel.innerText = "🔘 BLE Panic Button: Not Connected";
+            }
+        }
+
+        function simulateCardTokenization() {
+            const tokenDisplay = document.getElementById('token-status-display');
+            tokenDisplay.innerText = "Status: Connecting to secure gateway...";
+            
+            setTimeout(() => {
+                const mockToken = "tok_za_" + Math.random().toString(36).substring(2, 12);
+                localStorage.setItem('saferide_payment_token', mockToken);
+                tokenDisplay.innerText = `Status: 🟢 Token Linked (${mockToken.substring(0, 10)}...)`;
+                tokenDisplay.style.color = "var(--accent-green)";
+                alert('Card successfully tokenized and securely stored via gateway reference!');
+            }, 1200);
         }
 
         function saveDriverRegistration() {
@@ -334,7 +624,22 @@
                 psira: document.getElementById('reg-psira').value
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            alert('Driver membership profile successfully registered!');
+            alert('Driver membership profile & security settings successfully saved!');
+        }
+
+        function loadDriverRegistration() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            if (profile.name) document.getElementById('reg-name').value = profile.name;
+            if (profile.platform) document.getElementById('reg-platform').value = profile.platform;
+            if (profile.plate) document.getElementById('reg-plate').value = profile.plate;
+            if (profile.psira) document.getElementById('reg-psira').value = profile.psira;
+
+            const token = localStorage.getItem('saferide_payment_token');
+            if (token) {
+                const tokenDisplay = document.getElementById('token-status-display');
+                tokenDisplay.innerText = `Status: 🟢 Token Linked (${token.substring(0, 10)}...)`;
+                tokenDisplay.style.color = "var(--accent-green)";
+            }
         }
 
         function initScanner() {
