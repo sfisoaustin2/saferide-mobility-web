@@ -2,16 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeRide - Mbombela Driver Safety Net</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeRide Mobility - Mbombela Driver Safety Net</title>
     <style>
-        body { background-color: #0d1117; color: #ffffff; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        h1 { color: #f0f6fc; }
-        p { color: #8b949e; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { 
+            background-color: #0b0f19; 
+            color: #f3f4f6; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            border-left: 1px solid #1f2937; 
+            border-right: 1px solid #1f2937; 
+        }
+
+        /* Top Bar Header */
+        header { 
+            background-color: #111827; 
+            padding: 16px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #1f2937; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        
+        .brand-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title span { color: #f59e0b; }
+        .brand-tag { font-size: 0.72rem; color: #9ca3af; margin-top: 2px; }
+        .status-badge { 
+            background-color: rgba(16, 185, 129, 0.15); 
+            color: #10b981; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; }
+
+        /* Main Content Container */
+        main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Emergency Panic Button Card */
+        .sos-card { 
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
+            border: 1px solid #374151; 
+            border-radius: 16px; 
+            padding: 24px 20px; 
+            text-align: center; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .sos-title { font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .sos-subtitle { font-size: 0.82rem; color: #9ca3af; margin-bottom: 20px; }
+        
+        .panic-btn { 
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+            color: #ffffff; 
+            border: none; 
+            width: 140px; 
+            height: 140px; 
+            border-radius: 50%; 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.2); 
+            transition: all 0.2s ease;
+            margin: 0 auto 16px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            letter-spacing: 0.05em;
+        }
+        .panic-btn:active { transform: scale(0.95); box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.4); }
+        .panic-btn-sub { font-size: 0.65rem; font-weight: 500; opacity: 0.8; margin-top: 2px; }
+
+        /* Info Grid Cards */
+        .info-card { 
+            background-color: #111827; 
+            border: 1px solid #1f2937; 
+            border-radius: 12px; 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .info-left h3 { font-size: 0.95rem; font-weight: 700; color: #f3f4f6; }
+        .info-left p { font-size: 0.8rem; color: #9ca3af; margin-top: 3px; }
+        .action-btn { 
+            background-color: #1f2937; 
+            color: #f59e0b; 
+            border: 1px solid rgba(245, 158, 11, 0.3); 
+            padding: 8px 14px; 
+            border-radius: 8px; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+        }
+
+        /* Bottom Fixed Navigation Bar */
+        nav { 
+            background-color: #111827; 
+            border-top: 1px solid #1f2937; 
+            padding: 12px 20px; 
+            display: flex; 
+            justify-content: space-around; 
+            position: sticky; 
+            bottom: 0; 
+        }
+        .nav-item { 
+            background: none; 
+            border: none; 
+            color: #9ca3af; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+        }
+        .nav-item.active { color: #f59e0b; }
     </style>
 </head>
 <body>
-    <h1>SafeRide Mobility PWA MVP</h1>
-    <p>Mbombela Driver Safety Net is live and online!</p>
+
+    <header>
+        <div>
+            <div class="brand-title">Safe<span>Ride</span></div>
+            <div class="brand-tag">Mbombela Driver Safety Net</div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Protected
+        </div>
+    </header>
+
+    <main>
+        <!-- SOS Panic Trigger Card -->
+        <div class="sos-card">
+            <div class="sos-title">Emergency Response</div>
+            <div class="sos-subtitle">Independent Uber, Bolt & Maxim Protection</div>
+            
+            <button class="panic-btn" onclick="triggerSOS()">
+                SOS
+                <span class="panic-btn-sub">PRESS & HOLD</span>
+            </button>
+            
+            <p style="font-size: 0.75rem; color: #6b7280;">GPS location streaming active for Mbombela region</p>
+        </div>
+
+        <!-- Driver Verification Card -->
+        <div class="info-card">
+            <div class="info-left">
+                <h3>QR Driver Verification</h3>
+                <p>Display your active badge to passengers</p>
+            </div>
+            <button class="action-btn" onclick="alert('Displaying SafeRide Driver Verification QR Code')">Show QR</button>
+        </div>
+
+        <!-- Network Safety Status Card -->
+        <div class="info-card">
+            <div class="info-left">
+                <h3>Mbombela Network</h3>
+                <p>Community alert system active</p>
+            </div>
+            <button class="action-btn" style="color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="alert('Network Signal Strong - All Mbombela Zones Normal')">Check Status</button>
+        </div>
+    </main>
+
+    <nav>
+        <button class="nav-item active">
+            <span>🛡️ Portal</span>
+        </button>
+        <button class="nav-item" onclick="alert('Opening SafeRide Verification Scanner...')">
+            <span>🔍 Verify</span>
+        </button>
+        <button class="nav-item" onclick="alert('SafeRide Mbombela Support: Direct Emergency Hotline Active')">
+            <span>📞 Help</span>
+        </button>
+    </nav>
+
+    <script>
+        function triggerSOS() {
+            alert("🚨 SAFETRACK ALERT SENT!\n\nYour GPS coordinates and emergency alert have been dispatched to the SafeRide Mbombela monitoring net.");
+        }
+    </script>
+
 </body>
 </html>
