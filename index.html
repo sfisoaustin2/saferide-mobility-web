@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeRide Mobility - Driver Safety Net</title>
+    <title>SafeRide Mobility - South Africa Driver Safety Net</title>
+    <!-- Favicon & PWA Manifest Links -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
     <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -39,7 +43,7 @@
             position: relative;
         }
 
-        /* Top Header */
+        /* Top Bar with Hamburger & Logo Header */
         header { 
             background-color: var(--bg-card); 
             padding: 14px 20px; 
@@ -51,7 +55,11 @@
             top: 0; 
             z-index: 30; 
         }
-        
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .menu-toggle-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .menu-toggle-btn svg { width: 24px; height: 24px; fill: currentColor; }
+
         .brand-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
         .brand-tag { font-size: 0.7rem; color: var(--text-sub); }
@@ -70,11 +78,86 @@
         }
         .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
 
+        /* Slide-Out Navigation Drawer Menu */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+        }
+        .drawer-overlay.active { display: block; }
+
+        .drawer-menu {
+            position: fixed;
+            top: 0; left: -280px; width: 280px; height: 100%;
+            background-color: #fdfbf7;
+            color: #111827;
+            z-index: 101;
+            transition: left 0.3s ease;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+        }
+        .drawer-menu.active { left: 0; }
+        .drawer-close-btn { align-self: flex-start; background: none; border: none; font-size: 1.5rem; font-weight: 700; cursor: pointer; color: #111827; margin-bottom: 10px; }
+
+        .drawer-link {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .drawer-link:active { color: var(--accent-amber); }
+
         /* Main Container */
         main { flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
 
         .tab-section { display: none; flex-direction: column; gap: 16px; }
         .tab-section.active { display: flex; }
+
+        /* Hero Banner (Prime-Style) */
+        .hero-card {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.4) 0%, rgba(11, 15, 25, 0.9) 100%), url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80');
+            background-size: cover;
+            background-position: center;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+            margin-bottom: 6px;
+        }
+        .hero-title { font-size: 1.8rem; font-weight: 900; color: #ffffff; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+        .hero-subtitle { font-size: 0.85rem; color: #e5e7eb; font-weight: 500; letter-spacing: 0.05em; margin-bottom: 24px; }
+
+        .hero-actions { display: flex; gap: 12px; justify-content: center; }
+        .btn-hero-dark {
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #374151;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            flex: 1;
+            cursor: pointer;
+        }
+        .btn-hero-amber {
+            background-color: var(--accent-amber);
+            color: #000000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            flex: 1;
+            cursor: pointer;
+        }
 
         /* Shift Status Selector Bar */
         .shift-bar {
@@ -285,10 +368,7 @@
         .nav-item.active { color: var(--accent-amber); }
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
 
-        /* Scanner & Map Containers */
-        #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
-        #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
-
+        /* Maps */
         .map-wrapper {
             background: #111827;
             border: 1px solid var(--border-color);
@@ -310,10 +390,16 @@
 </head>
 <body>
 
+    <!-- Header with Drawer Menu Button -->
     <header>
-        <div>
-            <div class="brand-title">Safe<span>Ride</span></div>
-            <div class="brand-tag">Mbombela Driver Safety Net</div>
+        <div class="header-left">
+            <button class="menu-toggle-btn" onclick="toggleDrawer()">
+                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div>
+                <div class="brand-title">Safe<span>Ride</span></div>
+                <div class="brand-tag">Mbombela Driver Safety Net</div>
+            </div>
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
@@ -321,7 +407,30 @@
         </div>
     </header>
 
+    <!-- Side-Sliding Navigation Drawer Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div id="drawer-menu" class="drawer-menu">
+        <button class="drawer-close-btn" onclick="toggleDrawer()">✕</button>
+        <a class="drawer-link" onclick="openDrawerTab('tab-portal')">Home</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-profile')">About Us</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-scanner')">For Passengers</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-trips')">Fleet Owners</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-profile')">Become a Driver</a>
+        <a class="drawer-link" onclick="triggerPWAInstall()">Download the App</a>
+        <a class="drawer-link" href="legal.html">Contact Us</a>
+    </div>
+
     <main>
+        <!-- Hero Banner Section -->
+        <div class="hero-card">
+            <div class="hero-title">Safe Ride</div>
+            <div class="hero-subtitle">YOUR JOURNEY, PROTECTED.</div>
+            <div class="hero-actions">
+                <button class="btn-hero-dark" onclick="switchTab('tab-scanner', document.querySelectorAll('.nav-item')[3])">Passenger</button>
+                <button class="btn-hero-amber" onclick="switchTab('tab-profile', document.querySelectorAll('.nav-item')[4])">Become a driver</button>
+            </div>
+        </div>
+
         <!-- Shift Status Bar -->
         <div class="shift-bar">
             <span style="font-size: 0.82rem; font-weight: 700;">Driver Status:</span>
@@ -347,20 +456,17 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
-                <!-- Hardware BLE Status Badge -->
                 <div class="ble-status-banner">
                     <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
                     <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem;" onclick="connectBLEHardwareButton()">Pair Button</button>
                 </div>
 
-                <!-- Emergency SOS Countdown Overlay -->
                 <div id="countdown-box" class="overlay-screen">
                     <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
                     <div id="countdown-num" class="overlay-num">5</div>
                     <button class="overlay-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
                 </div>
 
-                <!-- Night Trip Check-In Safety Overlay -->
                 <div id="night-checkin-box" class="overlay-screen" style="background: rgba(15, 23, 42, 0.96); border: 2px solid var(--accent-amber);">
                     <div style="font-size:0.9rem; font-weight:800; color:var(--accent-amber);">🛡️ NIGHT SAFETY CHECK-IN</div>
                     <div style="font-size:0.78rem; color:var(--text-sub); margin-top:4px;">Are you safe on your current trip?</div>
@@ -397,7 +503,6 @@
                 </div>
             </div>
 
-            <!-- Start Navigation Quick-Launch Card -->
             <div class="sos-card" style="text-align: left; padding: 16px;">
                 <h3 style="color:#ffffff; font-size:0.95rem; margin-bottom: 6px;">🧭 Turn-by-Turn Navigation</h3>
                 <p style="font-size:0.78rem; color:var(--text-sub); margin-bottom: 12px;">Launch Google Maps routing to key Mbombela hubs or your live GPS.</p>
@@ -481,7 +586,6 @@
                     <input type="text" id="profile-psira" class="form-control" placeholder="+27821234567">
                 </div>
 
-                <!-- Secure Payment Tokenization Section -->
                 <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 10px; margin-bottom: 10px;">
                     <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
                     <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your debit/credit card securely for automated safety membership billing.</p>
@@ -493,7 +597,6 @@
 
                 <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Token Settings</button>
                 
-                <!-- Official Legal Link -->
                 <div style="text-align: center; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;">
                     <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
                 </div>
@@ -548,6 +651,7 @@
         let map = null;
         let driverMarker = null;
         let bleDevice = null;
+        let deferredPrompt = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             renderLocalTrips();
@@ -559,13 +663,41 @@
             setTimeout(initSatelliteMap, 500);
         });
 
-        /* Simulated Secure Payment Tokenization Flow (PCI-DSS & POPIA Compliant) */
+        // PWA Installation prompt listener
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function triggerPWAInstall() {
+            toggleDrawer();
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
+            } else {
+                alert("To install SafeRide, tap your browser menu (3 dots) and select 'Add to Home screen' or 'Install App'.");
+            }
+        }
+
+        function toggleDrawer() {
+            document.getElementById('drawer-overlay').classList.toggle('active');
+            document.getElementById('drawer-menu').classList.toggle('active');
+        }
+
+        function openDrawerTab(tabId) {
+            toggleDrawer();
+            const navItems = document.querySelectorAll('.nav-item');
+            const tabMap = { 'tab-portal': 0, 'tab-map': 1, 'tab-trips': 2, 'tab-scanner': 3, 'tab-profile': 4 };
+            switchTab(tabId, navItems[tabMap[tabId] || 0]);
+        }
+
         function simulateCardTokenization() {
             const tokenDisplay = document.getElementById('token-status-display');
             tokenDisplay.innerText = "Status: Connecting to secure gateway...";
             
             setTimeout(() => {
-                // Generates a simulated secure gateway token reference
                 const mockToken = "tok_za_" + Math.random().toString(36).substring(2, 12);
                 localStorage.setItem('saferide_payment_token', mockToken);
                 tokenDisplay.innerText = `Status: 🟢 Token Linked (${mockToken.substring(0, 10)}...)`;
