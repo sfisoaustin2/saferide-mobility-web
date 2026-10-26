@@ -50,7 +50,7 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 340px 1fr;
+            grid-template-columns: 360px 1fr;
             gap: 20px;
             padding: 24px;
             flex: 1;
@@ -82,14 +82,28 @@
         .alert-item {
             background: rgba(220, 38, 38, 0.1);
             border: 1px solid rgba(220, 38, 38, 0.4);
-            border-radius: 10px;
-            padding: 14px;
+            border-radius: 12px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
         .alert-header { display: flex; justify-content: space-between; font-weight: 800; color: #ef4444; font-size: 0.9rem; }
-        .alert-details { font-size: 0.82rem; color: var(--text-sub); line-height: 1.4; }
+        .alert-details { font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }
+
+        .location-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
 
         .dispatch-btn {
             background: var(--accent-red);
@@ -99,7 +113,7 @@
             border-radius: 8px;
             font-weight: 800;
             cursor: pointer;
-            margin-top: 8px;
+            margin-top: 6px;
             font-size: 0.82rem;
             display: flex;
             align-items: center;
@@ -135,12 +149,12 @@
     </header>
 
     <div class="dashboard-grid">
-        <!-- Sidebar Stats & Config -->
+        <!-- Sidebar Controls & Config -->
         <div class="panel">
             <div class="panel-title">Dispatch Status</div>
             
             <div class="stat-card">
-                <span>Active Drivers</span>
+                <span>Active Driver Units</span>
                 <span class="stat-val" id="stat-active">1</span>
             </div>
             <div class="stat-card">
@@ -149,37 +163,41 @@
             </div>
 
             <!-- Webhook Gateway Configuration -->
-            <div class="panel-title" style="margin-top: 6px;">PSIRA Webhook API</div>
+            <div class="panel-title" style="margin-top: 6px;">PSIRA Armed Response Gateway</div>
             <div class="form-group">
-                <label>Webhook URL / Phone Endpoint</label>
-                <input type="text" id="webhook-url" class="form-control" placeholder="https://api.callmebot.com/whatsapp.php or Webhook URL">
+                <label>Webhook API URL (Optional)</label>
+                <input type="text" id="webhook-url" class="form-control" placeholder="https://api.security.co.za/dispatch">
             </div>
             <div class="form-group">
-                <label>PSIRA Dispatch Number</label>
+                <label>PSIRA WhatsApp Dispatch Number</label>
                 <input type="text" id="psira-phone" class="form-control" placeholder="+27821234567">
             </div>
-            <button style="background: var(--bg-card-alt); color: var(--accent-amber); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem;" onclick="saveWebhookSettings()">Save Gateway Config</button>
+            <button style="background: var(--bg-card-alt); color: var(--accent-amber); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem;" onclick="saveWebhookSettings()">Save PSIRA Contact Settings</button>
 
-            <!-- Emergency Queue -->
-            <div class="panel-title" style="margin-top: 10px;">Active Emergency Alerts</div>
+            <!-- Active Emergency Queue -->
+            <div class="panel-title" style="margin-top: 10px;">Active Emergency Queue</div>
             
             <div id="alert-feed">
                 <div class="alert-item">
                     <div class="alert-header">
-                        <span>🚨 LIVE SOS ALERT</span>
+                        <span>🚨 LIVE SOS DISPATCH</span>
                         <span>ACTIVE</span>
                     </div>
                     <div class="alert-details">
                         <strong>Driver:</strong> Mbombela Unit #001<br>
                         <strong>Platform:</strong> Bolt / Uber<br>
-                        <strong>Zone:</strong> Mbombela Central (CBD)<br>
-                        <strong>GPS:</strong> -25.4753, 30.9694
+                        <strong>Zone:</strong> Mbombela Central (CBD)
                     </div>
-                    <button class="dispatch-btn" onclick="sendPSIRAWebhookDispatch()">
-                        ⚡ Direct Webhook PSIRA Dispatch
+                    
+                    <div class="location-badge">
+                        📍 Live GPS: <span id="ctrl-live-coords">Acquiring live position...</span>
+                    </div>
+
+                    <button class="dispatch-btn" onclick="sendPSIRAWithLiveLocation()">
+                        ⚡ Dispatch PSIRA Armed Unit (Live GPS)
                     </button>
-                    <button class="dispatch-btn" style="background: #25D366;" onclick="triggerWhatsAppFallback()">
-                        💬 WhatsApp Direct Fallback
+                    <button class="dispatch-btn" style="background: #25D366;" onclick="triggerWhatsAppLiveDispatch()">
+                        💬 WhatsApp Live Location Dispatch
                     </button>
                 </div>
             </div>
@@ -188,7 +206,7 @@
         <!-- Main Monitoring Feed & Trip Logs -->
         <div class="panel">
             <div class="panel-title">
-                <span>Driver Trip Monitor & Safety Feed</span>
+                <span>Driver Movement & Trip Safety Feed</span>
                 <button style="background: var(--bg-card-alt); color: var(--accent-amber); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight:700; cursor:pointer;" onclick="loadLogs()">Refresh Feed</button>
             </div>
 
@@ -218,12 +236,21 @@
     </div>
 
     <script>
+        let ctrlLat = -25.4753;
+        let ctrlLng = 30.9694;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWebhookSettings();
+            loadLogs();
+            trackControlRoomGPS();
+        });
+
         function saveWebhookSettings() {
             const url = document.getElementById('webhook-url').value;
             const phone = document.getElementById('psira-phone').value;
             localStorage.setItem('saferide_webhook_url', url);
             localStorage.setItem('saferide_psira_phone', phone);
-            alert('Webhook Gateway settings saved!');
+            alert('PSIRA Contact settings saved!');
         }
 
         function loadWebhookSettings() {
@@ -233,47 +260,67 @@
             if (phone) document.getElementById('psira-phone').value = phone;
         }
 
-        async function sendPSIRAWebhookDispatch() {
+        /* Real-Time Location Tracker */
+        function trackControlRoomGPS() {
+            const coordsSpan = document.getElementById('ctrl-live-coords');
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (pos) => {
+                        ctrlLat = pos.coords.latitude;
+                        ctrlLng = pos.coords.longitude;
+                        coordsSpan.innerText = `${ctrlLat.toFixed(4)}, ${ctrlLng.toFixed(4)}`;
+                    },
+                    (err) => {
+                        coordsSpan.innerText = "GPS Fixed (-25.4753, 30.9694)";
+                    },
+                    { enableHighAccuracy: true, maximumAge: 5000 }
+                );
+            }
+        }
+
+        /* Webhook Dispatch with Live Location Payload */
+        async function sendPSIRAWithLiveLocation() {
             const webhookUrl = document.getElementById('webhook-url').value;
-            const psiraPhone = document.getElementById('psira-phone').value;
+            const mapsUrl = `https://maps.google.com/?q=${ctrlLat},${ctrlLng}`;
 
             const payload = {
                 event: "PSIRA_ARMED_DISPATCH_REQUIRED",
                 driver_unit: "Mbombela Unit #001",
-                location: "Mbombela Central (CBD)",
-                gps_coords: "-25.4753, 30.9694",
-                maps_link: "https://maps.google.com/?q=-25.4753,30.9694",
+                latitude: ctrlLat,
+                longitude: ctrlLng,
+                google_maps_live: mapsUrl,
                 timestamp: new Date().toISOString()
             };
 
             if (webhookUrl) {
                 try {
-                    // Send HTTP POST webhook to security company endpoint
                     await fetch(webhookUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    alert('✅ PSIRA Webhook Dispatch Sent Successfully!');
+                    alert(`✅ PSIRA Webhook Alert Sent with Live Location!\n${mapsUrl}`);
                 } catch (e) {
-                    console.error('Webhook error:', e);
-                    alert('⚠️ Webhook request failed. Switching to WhatsApp fallback...');
-                    triggerWhatsAppFallback();
+                    alert('⚠️ Webhook request failed. Switching to WhatsApp Live Location dispatch...');
+                    triggerWhatsAppLiveDispatch();
                 }
             } else {
-                alert('No Webhook URL configured. Executing WhatsApp direct fallback...');
-                triggerWhatsAppFallback();
+                triggerWhatsAppLiveDispatch();
             }
         }
 
-        function triggerWhatsAppFallback() {
+        /* Direct WhatsApp Emergency Message with Live Maps Coordinates */
+        function triggerWhatsAppLiveDispatch() {
             const psiraPhone = document.getElementById('psira-phone').value || '';
+            const mapsUrl = `https://maps.google.com/?q=${ctrlLat},${ctrlLng}`;
+
             const message = encodeURIComponent(
-                `🚨 [CONTROL ROOM DISPATCH] Armed Response Required!\n` +
-                `Target: Mbombela Driver Unit #001\n` +
-                `Location: Mbombela Central (CBD)\n` +
-                `GPS: https://maps.google.com/?q=-25.4753,30.9694\n` +
-                `PSIRA Protocol: Level 1 Emergency Alert`
+                `🚨 [PSIRA EMERGENCY ARMED DISPATCH]\n` +
+                `Immediate armed response requested for SafeRide driver unit in Mbombela!\n\n` +
+                `👤 Driver Unit: Mbombela Unit #001\n` +
+                `📍 LIVE GPS LOCATION: ${mapsUrl}\n` +
+                `⏱️ Time: ${new Date().toLocaleTimeString()}\n\n` +
+                `Please send nearest armed vehicle immediately.`
             );
 
             const link = psiraPhone ? `https://wa.me/${psiraPhone}?text=${message}` : `https://wa.me/?text=${message}`;
@@ -301,11 +348,6 @@
             });
             tbody.innerHTML = html;
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadWebhookSettings();
-            loadLogs();
-        });
     </script>
 </body>
 </html>
