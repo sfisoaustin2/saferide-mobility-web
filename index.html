@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeRide Mobility - South Africa Driver Safety Net</title>
+    <title>SafeRide Mobility - Mbombela Driver Safety Net</title>
     <!-- Favicon & PWA Manifest Links -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-192.png">
@@ -11,17 +11,13 @@
     <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <!-- Leaflet Satellite Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         :root {
-            --bg-main: #0b0f19;
+            --bg-main: #090d16;
             --bg-card: #111827;
             --bg-card-alt: #1f2937;
             --accent-amber: #f59e0b;
-            --accent-red: #dc2626;
             --accent-green: #10b981;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
@@ -43,7 +39,7 @@
             position: relative;
         }
 
-        /* Top Bar with Hamburger & Logo Header */
+        /* Top Header Bar */
         header { 
             background-color: var(--bg-card); 
             padding: 14px 20px; 
@@ -56,13 +52,9 @@
             z-index: 30; 
         }
 
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .menu-toggle-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .menu-toggle-btn svg { width: 24px; height: 24px; fill: currentColor; }
-
-        .brand-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
-        .brand-tag { font-size: 0.7rem; color: var(--text-sub); }
+        .brand-tag { font-size: 0.68rem; color: var(--text-sub); font-weight: 500; }
         
         .status-badge { 
             background-color: rgba(16, 185, 129, 0.15); 
@@ -78,214 +70,41 @@
         }
         .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
 
-        /* Slide-Out Navigation Drawer Menu */
-        .drawer-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-        }
-        .drawer-overlay.active { display: block; }
-
-        .drawer-menu {
-            position: fixed;
-            top: 0; left: -280px; width: 280px; height: 100%;
-            background-color: #fdfbf7;
-            color: #111827;
-            z-index: 101;
-            transition: left 0.3s ease;
-            padding: 30px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-            box-shadow: 5px 0 25px rgba(0,0,0,0.5);
-        }
-        .drawer-menu.active { left: 0; }
-        .drawer-close-btn { align-self: flex-start; background: none; border: none; font-size: 1.5rem; font-weight: 700; cursor: pointer; color: #111827; margin-bottom: 10px; }
-
-        .drawer-link {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #111827;
-            text-decoration: none;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .drawer-link:active { color: var(--accent-amber); }
-
-        /* Main Container */
-        main { flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+        /* Main App Container */
+        main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
 
         .tab-section { display: none; flex-direction: column; gap: 16px; }
         .tab-section.active { display: flex; }
 
-        /* Hero Banner (Prime-Style) */
-        .hero-card {
-            background: linear-gradient(180deg, rgba(17, 24, 39, 0.4) 0%, rgba(11, 15, 25, 0.9) 100%), url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80');
+        /* 1. HOME PAGE STYLING */
+        .home-hero {
+            background: linear-gradient(180deg, rgba(9, 13, 22, 0.6) 0%, rgba(9, 13, 22, 0.95) 100%), url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80');
             background-size: cover;
             background-position: center;
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            padding: 30px 20px;
+            padding: 32px 20px;
             text-align: center;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-            margin-bottom: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
-        .hero-title { font-size: 1.8rem; font-weight: 900; color: #ffffff; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-        .hero-subtitle { font-size: 0.85rem; color: #e5e7eb; font-weight: 500; letter-spacing: 0.05em; margin-bottom: 24px; }
+        .shield-icon { font-size: 3rem; margin-bottom: 10px; display: inline-block; filter: drop-shadow(0 0 10px rgba(245,158,11,0.5)); }
+        .home-title { font-size: 1.8rem; font-weight: 900; color: #ffffff; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+        .home-title span { color: var(--accent-amber); }
+        .home-subtitle { font-size: 0.95rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 16px; letter-spacing: 0.02em; }
+        .home-mission { font-size: 0.85rem; color: #e5e7eb; line-height: 1.5; background: rgba(17, 24, 39, 0.85); padding: 14px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3); }
 
-        .hero-actions { display: flex; gap: 12px; justify-content: center; }
-        .btn-hero-dark {
-            background-color: #000000;
-            color: #ffffff;
-            border: 1px solid #374151;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.88rem;
-            flex: 1;
-            cursor: pointer;
-        }
-        .btn-hero-amber {
-            background-color: var(--accent-amber);
-            color: #000000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 0.88rem;
-            flex: 1;
-            cursor: pointer;
-        }
-
-        /* Shift Status Selector Bar */
-        .shift-bar {
-            background: var(--bg-card);
+        /* Generic Cards & Content */
+        .content-card {
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .shift-select {
-            background: var(--bg-card-alt);
-            color: var(--accent-green);
-            border: 1px solid var(--border-color);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
-
-        /* SOS Panic Button Styling */
-        .sos-card { 
-            background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
-            border: 1px solid var(--border-color); 
-            border-radius: 20px; 
-            padding: 24px 20px; 
-            text-align: center; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-        .sos-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
-        .sos-subtitle { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 20px; }
-        
-        .panic-btn-container { position: relative; width: 150px; height: 150px; margin: 0 auto 16px auto; }
-
-        .panic-btn { 
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
-            color: #ffffff; 
-            border: none; 
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            font-size: 1.3rem; 
-            font-weight: 900; 
-            cursor: pointer; 
-            box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.2); 
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            letter-spacing: 0.05em;
-            outline: none;
-        }
-        .panic-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4); }
-        .panic-btn-sub { font-size: 0.65rem; font-weight: 600; opacity: 0.85; margin-top: 3px; }
-
-        .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
-
-        .ble-status-banner {
-            background: rgba(31, 41, 55, 0.8);
-            border: 1px dashed var(--border-color);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 0.75rem;
-            color: var(--text-sub);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 12px;
-        }
-
-        /* Overlays */
-        .overlay-screen {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(185, 28, 28, 0.95);
-            border-radius: 20px;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 5;
+            border-radius: 16px;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .overlay-num { font-size: 3.5rem; font-weight: 900; color: #ffffff; line-height: 1; margin: 10px 0; }
-        .overlay-btn {
-            margin-top: 10px;
-            background: #ffffff;
-            color: #991b1b;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        /* Generic Cards */
-        .info-card { 
-            background-color: var(--bg-card); 
-            border: 1px solid #1f2937; 
-            border-radius: 14px; 
-            padding: 16px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-        }
-        .info-left h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
-        .info-left p { font-size: 0.8rem; color: var(--text-sub); margin-top: 3px; }
-        
-        .action-btn { 
-            background-color: var(--bg-card-alt); 
-            color: var(--accent-amber); 
-            border: 1px solid rgba(245, 158, 11, 0.3); 
-            padding: 10px 16px; 
-            border-radius: 10px; 
-            font-size: 0.82rem; 
-            font-weight: 700; 
-            cursor: pointer; 
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .action-btn:active { opacity: 0.8; }
+        .card-heading { font-size: 1.1rem; font-weight: 800; color: #ffffff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .card-text { font-size: 0.84rem; color: var(--text-sub); line-height: 1.5; }
 
         /* Form Controls */
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
@@ -301,46 +120,29 @@
         }
         .form-control:focus { outline: none; border-color: var(--accent-amber); }
 
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.88);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 340px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .close-btn {
-            background: var(--bg-card-alt); 
-            color: white; 
-            border: 1px solid var(--border-color); 
-            padding: 10px 20px; 
+        .action-btn { 
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
+            color: #000000; 
+            border: none; 
+            padding: 12px 16px; 
             border-radius: 10px; 
+            font-size: 0.88rem; 
+            font-weight: 800; 
             cursor: pointer; 
-            margin-top: 16px; 
-            font-weight: 700;
+            text-align: center;
             width: 100%;
         }
+        .action-btn:active { opacity: 0.9; }
 
-        /* Bottom Fixed Navigation Bar */
+        /* Scanner Container */
+        #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
+
+        /* Bottom Fixed Navigation Bar (5 Tabs) */
         nav { 
             background-color: var(--bg-card); 
             border-top: 1px solid #1f2937; 
-            padding: 10px; 
+            padding: 8px 4px; 
             display: flex; 
             justify-content: space-around; 
             position: fixed; 
@@ -355,437 +157,161 @@
             background: none; 
             border: none; 
             color: var(--text-sub); 
-            font-size: 0.72rem; 
+            font-size: 0.65rem; 
             font-weight: 700; 
             cursor: pointer; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 4px; 
+            gap: 3px; 
             text-decoration: none;
             width: 20%;
         }
         .nav-item.active { color: var(--accent-amber); }
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
-
-        /* Maps */
-        .map-wrapper {
-            background: #111827;
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        #live-satellite-map {
-            width: 100% !important;
-            height: 320px !important;
-            display: block !important;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            background: #1a2234;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Header with Drawer Menu Button -->
+    <!-- Top Header -->
     <header>
-        <div class="header-left">
-            <button class="menu-toggle-btn" onclick="toggleDrawer()">
-                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-            </button>
-            <div>
-                <div class="brand-title">Safe<span>Ride</span></div>
-                <div class="brand-tag">Mbombela Driver Safety Net</div>
-            </div>
+        <div>
+            <div class="brand-title">Safe<span>Ride</span></div>
+            <div class="brand-tag">Mbombela Protection Network</div>
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            <span id="header-gps-status">GPS Active</span>
+            <span>Online</span>
         </div>
     </header>
 
-    <!-- Side-Sliding Navigation Drawer Overlay -->
-    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
-    <div id="drawer-menu" class="drawer-menu">
-        <button class="drawer-close-btn" onclick="toggleDrawer()">✕</button>
-        <a class="drawer-link" onclick="openDrawerTab('tab-portal')">Home</a>
-        <a class="drawer-link" onclick="openDrawerTab('tab-profile')">About Us</a>
-        <a class="drawer-link" onclick="openDrawerTab('tab-scanner')">For Passengers</a>
-        <a class="drawer-link" onclick="openDrawerTab('tab-trips')">Fleet Owners</a>
-        <a class="drawer-link" onclick="openDrawerTab('tab-profile')">Become a Driver</a>
-        <a class="drawer-link" onclick="triggerPWAInstall()">Download the App</a>
-        <a class="drawer-link" href="legal.html">Contact Us</a>
-    </div>
-
     <main>
-        <!-- Hero Banner Section -->
-        <div class="hero-card">
-            <div class="hero-title">Safe Ride</div>
-            <div class="hero-subtitle">YOUR JOURNEY, PROTECTED.</div>
-            <div class="hero-actions">
-                <button class="btn-hero-dark" onclick="switchTab('tab-scanner', document.querySelectorAll('.nav-item')[3])">Passenger</button>
-                <button class="btn-hero-amber" onclick="switchTab('tab-profile', document.querySelectorAll('.nav-item')[4])">Become a driver</button>
-            </div>
-        </div>
-
-        <!-- Shift Status Bar -->
-        <div class="shift-bar">
-            <span style="font-size: 0.82rem; font-weight: 700;">Driver Status:</span>
-            <select id="driver-shift-status" class="shift-select" onchange="updateShiftStatus()">
-                <option value="ONLINE">🟢 Online & Active</option>
-                <option value="ON_TRIP">🟡 On Active Trip</option>
-                <option value="OFFLINE">🔴 Offline</option>
-            </select>
-        </div>
-
-        <!-- TAB 1: PORTAL / SOS -->
-        <div id="tab-portal" class="tab-section active">
-            <div class="sos-card">
-                <div class="sos-title">Emergency Response</div>
-                <div class="sos-subtitle">PSIRA Private Security & Independent Protection</div>
-                
-                <div class="panic-btn-container">
-                    <button class="panic-btn" onclick="startCountdown()">
-                        SOS
-                        <span class="panic-btn-sub">ARMED DISPATCH</span>
-                    </button>
-                </div>
-                
-                <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
-
-                <div class="ble-status-banner">
-                    <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
-                    <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem;" onclick="connectBLEHardwareButton()">Pair Button</button>
-                </div>
-
-                <div id="countdown-box" class="overlay-screen">
-                    <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
-                    <div id="countdown-num" class="overlay-num">5</div>
-                    <button class="overlay-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
-                </div>
-
-                <div id="night-checkin-box" class="overlay-screen" style="background: rgba(15, 23, 42, 0.96); border: 2px solid var(--accent-amber);">
-                    <div style="font-size:0.9rem; font-weight:800; color:var(--accent-amber);">🛡️ NIGHT SAFETY CHECK-IN</div>
-                    <div style="font-size:0.78rem; color:var(--text-sub); margin-top:4px;">Are you safe on your current trip?</div>
-                    <div id="checkin-num" class="overlay-num" style="color: white; font-size: 2.8rem;">30</div>
-                    <button class="overlay-btn" style="background: var(--accent-green); color: white;" onclick="acknowledgeSafetyCheckin()">I AM SAFE ✅</button>
+        <!-- 1. HOME PAGE TAB -->
+        <div id="tab-home" class="tab-section active">
+            <div class="home-hero">
+                <div class="shield-icon">🛡️</div>
+                <div class="home-title">Safe<span>Ride</span></div>
+                <div class="home-subtitle">Your Journey, Protected and Empowered.</div>
+                <div class="home-mission">
+                    Empowering independent e-hailing drivers across Mbombela with real-time armed response and community accountability. We build a secure driving environment where every journey is backed by instant emergency protection.
                 </div>
             </div>
-
-            <div class="info-card">
-                <div class="info-left">
-                    <h3>QR Verification Badge</h3>
-                    <p>Show active ID badge to passengers</p>
-                </div>
-                <button class="action-btn" onclick="showQRCode()">Show Badge</button>
-            </div>
-
-            <div class="info-card">
-                <div class="info-left">
-                    <h3>Direct Police Dispatch</h3>
-                    <p>SAPS Mbombela Emergency Call</p>
-                </div>
-                <a href="tel:10111" class="action-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Call 10111</a>
-            </div>
-        </div>
-
-        <!-- TAB 2: LIVE SATELLITE MAP & NAVIGATION -->
-        <div id="tab-map" class="tab-section">
-            <div class="map-wrapper">
-                <h3 style="color:#ffffff;">Mbombela Satellite Navigation</h3>
-                <p style="font-size:0.78rem; color:var(--text-sub);">Real-time aerial imagery & routing.</p>
-                <div id="live-satellite-map"></div>
-                <div id="live-coords-box" style="font-size: 0.78rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
-                    GPS: Locating satellite fix...
-                </div>
-            </div>
-
-            <div class="sos-card" style="text-align: left; padding: 16px;">
-                <h3 style="color:#ffffff; font-size:0.95rem; margin-bottom: 6px;">🧭 Turn-by-Turn Navigation</h3>
-                <p style="font-size:0.78rem; color:var(--text-sub); margin-bottom: 12px;">Launch Google Maps routing to key Mbombela hubs or your live GPS.</p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="action-btn" style="flex:1; justify-content:center;" onclick="startNavigation('Riverside Mall Mbombela')">Riverside Mall</button>
-                    <button class="action-btn" style="flex:1; justify-content:center;" onclick="startNavigation('Sonpark Shopping Centre Mbombela')">Sonpark</button>
-                </div>
-                <button class="action-btn" style="width:100%; justify-content:center; margin-top: 8px; background: rgba(16,185,129,0.15); color: var(--accent-green); border-color: rgba(16,185,129,0.3);" onclick="startLiveGPSNavigation()">
-                    📍 Route to My Live GPS Coordinates
-                </button>
-            </div>
-        </div>
-
-        <!-- TAB 3: TRIPS & LOGS -->
-        <div id="tab-trips" class="tab-section">
-            <h3 style="color:#ffffff;">Trip Log & Safety Notes</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Keep local logs of passengers & trips.</p>
             
-            <div class="sos-card" style="text-align: left;">
-                <div class="form-group">
-                    <label>Pickup Zone</label>
-                    <select id="trip-pickup" class="form-control">
-                        <option>Mbombela Central (CBD)</option>
-                        <option>Riverside Mall Hub</option>
-                        <option>Sonpark Shopping Centre</option>
-                        <option>West End Shopping Centre</option>
-                        <option>KaNyamazane Route</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Passenger Initial / Name</label>
-                    <input type="text" id="trip-passenger" class="form-control" placeholder="e.g. Passenger J.">
-                </div>
-                <div class="form-group">
-                    <label>Notes / Flag</label>
-                    <input type="text" id="trip-notes" class="form-control" placeholder="e.g. Cash Trip / Night Drop">
-                </div>
-                <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveLocalTrip()">Save Local Trip Log</button>
-            </div>
-
-            <div id="trip-history-list">
-                <h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>
+            <div class="content-card" style="text-align: center; padding: 16px;">
+                <h3 style="color: white; font-size: 0.95rem;">Quick Access</h3>
+                <p class="card-text">Select **Driver Profile** below to register your membership, or **For Passengers** to verify your ride badge.</p>
             </div>
         </div>
 
-        <!-- TAB 4: SCANNER -->
-        <div id="tab-scanner" class="tab-section">
-            <h3 style="color:#ffffff;">Passenger Badge Scanner</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Rear camera active for instant passenger verification.</p>
+        <!-- 2. ABOUT US TAB -->
+        <div id="tab-about" class="tab-section">
+            <div class="content-card">
+                <div class="card-heading">Company Overview</div>
+                <div class="card-text">
+                    SafeRide Mobility (Pty) Ltd is a specialized safety platform built from the ground up for independent e-hailing drivers (Bolt, Uber, and Maxim) operating across Mbombela. We provide dedicated tactical safety infrastructure tailored to vulnerable drivers on the road.
+                </div>
+            </div>
 
-            <div class="sos-card" style="padding: 12px;">
-                <div id="qr-reader"></div>
-                <div id="scanner-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-green); font-weight: 700;">Aim back camera at passenger code...</div>
+            <div class="content-card">
+                <div class="card-heading">Mission & Vision</div>
+                <div class="card-text">
+                    <strong>Mission:</strong> To safeguard independent drivers against roadside threats through rapid armed response integration and digital accountability.<br><br>
+                    <strong>Vision:</strong> A fear-free transport ecosystem across Mpumalanga where every driver returns home safely.
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-heading">Core Values & Radical Trust</div>
+                <div class="card-text">
+                    * <strong>Radical Transparency:</strong> Clear, open membership structures with zero hidden fees.<br>
+                    * <strong>Trust & Accountability:</strong> Verified passenger and driver profiles ensuring complete mutual safety.<br>
+                    * <strong>Community Resilience:</strong> Standing united to uplift local drivers against vulnerability on the road.
+                </div>
             </div>
         </div>
 
-        <!-- TAB 5: PROFILE & SETTINGS -->
+        <!-- 3. DRIVER PROFILE TAB (REGISTRATION) -->
         <div id="tab-profile" class="tab-section">
-            <h3 style="color:#ffffff;">Driver & Armed Response Profile</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub);">Configure your details and secure payment tokenization.</p>
-
-            <div class="sos-card" style="text-align: left;">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="profile-name" class="form-control" value="Independent Mbombela Driver">
+            <div class="content-card">
+                <div class="card-heading">Driver Membership Registration</div>
+                <div class="card-text">Register your profile to activate your membership and connect your PSIRA armed response details.</div>
+                
+                <div class="form-group" style="margin-top: 8px;">
+                    <label>Full Name & Surname</label>
+                    <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sipho Dlamini">
                 </div>
                 <div class="form-group">
-                    <label>Ride Platform</label>
-                    <select id="profile-platform" class="form-control">
+                    <label>E-Hailing Platform</label>
+                    <select id="reg-platform" class="form-control">
                         <option>Bolt</option>
                         <option>Uber</option>
                         <option>Maxim</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Vehicle Plate Number</label>
-                    <input type="text" id="profile-plate" class="form-control" placeholder="e.g., MP 123-456">
+                    <label>Vehicle Registration / Plate Number</label>
+                    <input type="text" id="reg-plate" class="form-control" placeholder="e.g., MP 123-456">
                 </div>
                 <div class="form-group">
-                    <label>PSIRA / Private Security WhatsApp Number</label>
-                    <input type="text" id="profile-psira" class="form-control" placeholder="+27821234567">
+                    <label>PSIRA / Security Partner WhatsApp Number</label>
+                    <input type="text" id="reg-psira" class="form-control" placeholder="+27821234567">
                 </div>
+                <button class="action-btn" onclick="saveDriverRegistration()">Register Membership</button>
+            </div>
+        </div>
 
-                <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 10px; margin-bottom: 10px;">
-                    <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
-                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your debit/credit card securely for automated safety membership billing.</p>
-                    <div id="token-status-display" style="font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px;">Status: No secure token linked</div>
-                    <button type="button" class="action-btn" style="width: 100%; justify-content: center; background: rgba(245,158,11,0.15); color: var(--accent-amber); border-color: rgba(245,158,11,0.3);" onclick="simulateCardTokenization()">
-                        🔐 Securely Tokenize Card
-                    </button>
+        <!-- 4. CONTACT DETAILS TAB -->
+        <div id="tab-contact" class="tab-section">
+            <div class="content-card" style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">📞</div>
+                <div class="card-heading" style="border: none; text-align: center;">Contact Details</div>
+                <div class="card-text" style="margin-top: 8px;">
+                    Direct support and official control room contact channels will be added here at a later stage. Stay tuned for updates!
                 </div>
+            </div>
+        </div>
 
-                <button class="action-btn" style="width: 100%; justify-content: center; margin-top: 6px;" onclick="saveProfile()">Save Profile & Token Settings</button>
+        <!-- 5. FOR PASSENGERS TAB (SCANNING) -->
+        <div id="tab-passengers" class="tab-section">
+            <div class="content-card">
+                <div class="card-heading">For Passengers: Ride Verification</div>
+                <div class="card-text">Scan your driver's SafeRide QR verification badge or NFC token to ensure your trip is secure and monitored.</div>
                 
-                <div style="text-align: center; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-                    <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
+                <div style="padding: 10px; background: var(--bg-card-alt); border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div id="qr-reader"></div>
+                    <div id="scanner-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-green); font-weight: 700; text-align: center;">Point camera at driver QR badge...</div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- QR Modal -->
-    <div id="qr-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:#ffffff;">Driver Verification Badge</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub); margin-top:4px;">SafeRide Mbombela Verified</p>
-            <div id="qrcode-canvas" style="margin: 16px 0; padding: 10px; background: white; border-radius: 12px;"></div>
-            <div id="qr-driver-info" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;"></div>
-            <button class="close-btn" onclick="closeQRCode()">Close Badge</button>
-        </div>
-    </div>
-
-    <!-- Navigation Bar -->
+    <!-- Bottom Navigation Bar (5 Exact Tabs) -->
     <nav>
-        <button class="nav-item active" onclick="switchTab('tab-portal', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
-            <span>SOS</span>
+        <button class="nav-item active" onclick="switchTab('tab-home', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
         </button>
-        <button class="nav-item" onclick="switchTab('tab-map', this)">
-            <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-            <span>Map</span>
-        </button>
-        <button class="nav-item" onclick="switchTab('tab-trips', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-            <span>Trips</span>
-        </button>
-        <button class="nav-item" onclick="switchTab('tab-scanner', this)">
-            <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm-2-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 0h2v2h-2v-2z"/></svg>
-            <span>Scan</span>
+        <button class="nav-item" onclick="switchTab('tab-about', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <span>About Us</span>
         </button>
         <button class="nav-item" onclick="switchTab('tab-profile', this)">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <span>Profile</span>
+            <span>Driver Profile</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-contact', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>Contact</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-passengers', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm-2-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 0h2v2h-2v-2z"/></svg>
+            <span>Passengers</span>
         </button>
     </nav>
 
     <!-- App Engine Logic -->
     <script>
-        let countdownTimer = null;
-        let countdownVal = 5;
-        let checkinTimer = null;
-        let checkinVal = 30;
         let html5QrCode = null;
-        let currentLat = -25.4753;
-        let currentLng = 30.9694;
-        let map = null;
-        let driverMarker = null;
-        let bleDevice = null;
-        let deferredPrompt = null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderLocalTrips();
-            loadProfile();
-            startLiveGPSWatch();
-            registerServiceWorker();
-            loadShiftStatus();
-            startNightCheckinTimer();
-            setTimeout(initSatelliteMap, 500);
-        });
-
-        // PWA Installation prompt listener
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        function triggerPWAInstall() {
-            toggleDrawer();
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    deferredPrompt = null;
-                });
-            } else {
-                alert("To install SafeRide, tap your browser menu (3 dots) and select 'Add to Home screen' or 'Install App'.");
-            }
-        }
-
-        function toggleDrawer() {
-            document.getElementById('drawer-overlay').classList.toggle('active');
-            document.getElementById('drawer-menu').classList.toggle('active');
-        }
-
-        function openDrawerTab(tabId) {
-            toggleDrawer();
-            const navItems = document.querySelectorAll('.nav-item');
-            const tabMap = { 'tab-portal': 0, 'tab-map': 1, 'tab-trips': 2, 'tab-scanner': 3, 'tab-profile': 4 };
-            switchTab(tabId, navItems[tabMap[tabId] || 0]);
-        }
-
-        function simulateCardTokenization() {
-            const tokenDisplay = document.getElementById('token-status-display');
-            tokenDisplay.innerText = "Status: Connecting to secure gateway...";
-            
-            setTimeout(() => {
-                const mockToken = "tok_za_" + Math.random().toString(36).substring(2, 12);
-                localStorage.setItem('saferide_payment_token', mockToken);
-                tokenDisplay.innerText = `Status: 🟢 Token Linked (${mockToken.substring(0, 10)}...)`;
-                tokenDisplay.style.color = "var(--accent-green)";
-                alert('Card successfully tokenized and securely stored via gateway reference!');
-            }, 1200);
-        }
-
-        async function connectBLEHardwareButton() {
-            const bleStatusLabel = document.getElementById('ble-device-name');
-            try {
-                if (!navigator.bluetooth) {
-                    alert('Web Bluetooth is not supported on this device/browser.');
-                    return;
-                }
-                
-                bleStatusLabel.innerText = "Scanning for BLE button...";
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['generic_access', 'battery_service', 0xFFE0, 0x1802]
-                });
-
-                const server = await bleDevice.gatt.connect();
-                bleStatusLabel.innerText = `🟢 BLE Connected: ${bleDevice.name || 'Panic Button'}`;
-                bleStatusLabel.style.color = "var(--accent-green)";
-
-                bleDevice.addEventListener('gattserverdisconnected', onBLEDisconnected);
-
-                const services = await server.getPrimaryServices();
-                for (const service of services) {
-                    const characteristics = await service.getCharacteristics();
-                    for (const char of characteristics) {
-                        if (char.properties.notify || char.properties.indicate) {
-                            await char.startNotifications();
-                            char.addEventListener('characteristicvaluechanged', (event) => {
-                                startCountdown();
-                            });
-                        }
-                    }
-                }
-                alert(`Successfully paired physical button: ${bleDevice.name || 'BLE Panic Button'}`);
-            } catch (error) {
-                console.log('Bluetooth error:', error);
-                bleStatusLabel.innerText = "🔘 BLE Panic Button: Not Connected";
-            }
-        }
-
-        function onBLEDisconnected() {
-            document.getElementById('ble-device-name').innerText = "⚠️ BLE Panic Button Disconnected!";
-            document.getElementById('ble-device-name').style.color = "var(--accent-red)";
-        }
-
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
-            }
-        }
-
-        function updateShiftStatus() {
-            localStorage.setItem('saferide_shift_status', document.getElementById('driver-shift-status').value);
-        }
-
-        function loadShiftStatus() {
-            const saved = localStorage.getItem('saferide_shift_status');
-            if (saved) document.getElementById('driver-shift-status').value = saved;
-        }
-
-        function startNightCheckinTimer() {
-            const hour = new Date().getHours();
-            if (hour >= 18 || hour <= 5) {
-                checkinTimer = setInterval(() => {
-                    checkinVal--;
-                    document.getElementById('checkin-num').innerText = checkinVal;
-                    if (checkinVal <= 0) {
-                        clearInterval(checkinTimer);
-                        document.getElementById('night-checkin-box').style.display = 'flex';
-                        setTimeout(dispatchPSIRAEmergencySOS, 5000);
-                    }
-                }, 60000);
-            }
-        }
-
-        function acknowledgeSafetyCheckin() {
-            document.getElementById('night-checkin-box').style.display = 'none';
-            checkinVal = 30;
-            if (checkinTimer) clearInterval(checkinTimer);
-            startNightCheckinTimer();
-        }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
@@ -793,163 +319,33 @@
             document.getElementById(tabId).classList.add('active');
             if(el) el.classList.add('active');
 
-            if (tabId === 'tab-scanner') {
-                initAutoBackCameraScanner();
+            if (tabId === 'tab-passengers') {
+                initScanner();
             } else {
                 stopScanner();
             }
-
-            if (tabId === 'tab-map') {
-                setTimeout(() => {
-                    if (map) {
-                        map.invalidateSize();
-                        map.setView([currentLat, currentLng], 15);
-                    } else {
-                        initSatelliteMap();
-                    }
-                }, 150);
-            }
         }
 
-        function startNavigation(destination) {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
-            window.open(url, '_blank');
+        function saveDriverRegistration() {
+            const profile = {
+                name: document.getElementById('reg-name').value,
+                platform: document.getElementById('reg-platform').value,
+                plate: document.getElementById('reg-plate').value,
+                psira: document.getElementById('reg-psira').value
+            };
+            localStorage.setItem('saferide_profile', JSON.stringify(profile));
+            alert('Driver membership profile successfully registered!');
         }
 
-        function startLiveGPSNavigation() {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`;
-            window.open(url, '_blank');
-        }
-
-        function initSatelliteMap() {
-            if (!map && document.getElementById('live-satellite-map')) {
-                map = L.map('live-satellite-map', { zoomControl: true, attributionControl: false }).setView([currentLat, currentLng], 15);
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
-                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b>");
-                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b>");
-                driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
-            }
-        }
-
-        function startLiveGPSWatch() {
-            const locText = document.getElementById('location-text');
-            const headerStatus = document.getElementById('header-gps-status');
-            const coordsBox = document.getElementById('live-coords-box');
-
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(
-                    (position) => {
-                        currentLat = position.coords.latitude;
-                        currentLng = position.coords.longitude;
-                        locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
-                        headerStatus.innerText = "GPS Live";
-                        coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
-                        if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
-                    },
-                    (error) => { locText.innerText = "⚠️ GPS Signal Lost."; },
-                    { enableHighAccuracy: true, maximumAge: 5000 }
-                );
-            }
-        }
-
-        function startCountdown() {
-            countdownVal = 5;
-            document.getElementById('countdown-num').innerText = countdownVal;
-            document.getElementById('countdown-box').style.display = 'flex';
-            
-            countdownTimer = setInterval(() => {
-                countdownVal--;
-                document.getElementById('countdown-num').innerText = countdownVal;
-                if (countdownVal <= 0) {
-                    clearInterval(countdownTimer);
-                    document.getElementById('countdown-box').style.display = 'none';
-                    dispatchPSIRAEmergencySOS();
-                }
-            }, 1000);
-        }
-
-        function cancelCountdown() {
-            if (countdownTimer) clearInterval(countdownTimer);
-            document.getElementById('countdown-box').style.display = 'none';
-        }
-
-        function dispatchPSIRAEmergencySOS() {
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const psiraPhone = profile.psira || '';
-            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            const msg = encodeURIComponent(`🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Driver under threat.\n📍 GPS: ${mapsUrl}`);
-            window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
-        }
-
-        function showQRCode() {
-            const container = document.getElementById('qrcode-canvas');
-            container.innerHTML = '';
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverInfo = `${profile.name || 'Mbombela Driver'} | ${profile.platform || 'Bolt'} | ${profile.plate || 'N/A'}`;
-            document.getElementById('qr-driver-info').innerText = driverInfo;
-            new QRCode(container, { text: `SafeRide-Verified:${driverInfo}`, width: 180, height: 180 });
-            document.getElementById('qr-modal').style.display = 'flex';
-        }
-
-        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
-
-        function initAutoBackCameraScanner() {
+        function initScanner() {
             if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 220 }, (text) => {
-                document.getElementById('scanner-result').innerText = `✅ Verified: ${text}`;
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 200 }, (text) => {
+                document.getElementById('scanner-result').innerText = `✅ Verified Badge: ${text}`;
             }, () => {});
         }
 
         function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e => {});
-        }
-
-        function saveLocalTrip() {
-            const pickup = document.getElementById('trip-pickup').value;
-            const passenger = document.getElementById('trip-passenger').value || 'Anonymous';
-            const notes = document.getElementById('trip-notes').value || 'None';
-            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
-            trips.unshift({ pickup, passenger, notes, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-            localStorage.setItem('saferide_trips', JSON.stringify(trips));
-            renderLocalTrips();
-            alert('Trip logged!');
-        }
-
-        function renderLocalTrips() {
-            const container = document.getElementById('trip-history-list');
-            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
-            if (trips.length === 0) { container.innerHTML = `<h4 style="color:var(--text-sub); font-size:0.85rem;">No local trips logged yet.</h4>`; return; }
-            let html = `<h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>`;
-            trips.slice(0, 5).forEach(t => {
-                html += `<div class="info-card" style="margin-bottom: 8px;"><div class="info-left"><h3>${t.pickup} (${t.passenger})</h3><p>Time: ${t.time} | Note: ${t.notes}</p></div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function saveProfile() {
-            const profile = {
-                name: document.getElementById('profile-name').value,
-                platform: document.getElementById('profile-platform').value,
-                plate: document.getElementById('profile-plate').value,
-                psira: document.getElementById('profile-psira').value
-            };
-            localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            alert('Profile & payment token settings saved!');
-        }
-
-        function loadProfile() {
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (profile.name) document.getElementById('profile-name').value = profile.name;
-            if (profile.platform) document.getElementById('profile-platform').value = profile.platform;
-            if (profile.plate) document.getElementById('profile-plate').value = profile.plate;
-            if (profile.psira) document.getElementById('profile-psira').value = profile.psira;
-
-            const token = localStorage.getItem('saferide_payment_token');
-            if (token) {
-                const tokenDisplay = document.getElementById('token-status-display');
-                tokenDisplay.innerText = `Status: 🟢 Token Linked (${token.substring(0, 10)}...)`;
-                tokenDisplay.style.color = "var(--accent-green)";
-            }
         }
     </script>
 </body>
