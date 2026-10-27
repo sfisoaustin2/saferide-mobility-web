@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Control Room & Dispatch Command</title>
+    <!-- Favicon Links -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -33,6 +34,7 @@
             flex-direction: column;
         }
 
+        /* Admin Header with Logo Integration */
         header { 
             background-color: var(--bg-card); 
             padding: 16px 24px; 
@@ -222,9 +224,12 @@
 <body>
 
     <header>
-        <div>
-            <div class="brand-title">Safe<span>Ride</span> Control Desk</div>
-            <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Operations, PSIRA Dispatch & Email Engine</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="logo.png" alt="SafeRide Logo" style="height: 38px; width: auto; object-fit: contain;">
+            <div>
+                <div class="brand-title">Safe<span>Ride</span> Control Desk</div>
+                <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Operations, PSIRA Dispatch & Email Engine</div>
+            </div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <a href="index.html" class="nav-back">← Back to Driver App</a>
