@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeRide Mobility - Legal & Terms of Service</title>
+    <title>SafeRide Mobility - Terms of Service & POPIA Privacy Policy</title>
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    
     <style>
         :root {
-            --bg-main: #0b0f19;
+            --bg-main: #090d16;
             --bg-card: #111827;
             --bg-card-alt: #1f2937;
             --accent-amber: #f59e0b;
+            --accent-red: #dc2626;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
             --border-color: #374151;
@@ -20,76 +26,139 @@
         body { 
             background-color: var(--bg-main); 
             color: var(--text-main); 
-            padding: 20px; 
-            max-width: 600px; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
             margin: 0 auto;
-            line-height: 1.6;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
+        header { 
+            background-color: var(--bg-card); 
+            padding: 16px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border-color); 
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        h1 { font-size: 1.4rem; color: #ffffff; }
-        h1 span { color: var(--accent-amber); }
-        h2 { font-size: 1.05rem; color: var(--accent-amber); margin-top: 20px; margin-bottom: 8px; }
-        p, li { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 10px; }
-        ul { padding-left: 20px; }
+        .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title span { color: var(--accent-amber); }
+        .nav-back { color: var(--accent-amber); font-size: 0.82rem; text-decoration: none; font-weight: 700; }
 
-        .back-btn {
-            display: inline-block;
-            background: var(--bg-card-alt);
-            color: var(--accent-amber);
+        main {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 50px;
+        }
+
+        .legal-card {
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 10px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.85rem;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        .legal-title { font-size: 1.1rem; font-weight: 800; color: #ffffff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .legal-text { font-size: 0.84rem; color: var(--text-sub); line-height: 1.6; }
+        .legal-text strong { color: var(--text-main); }
+        .legal-list { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.84rem; color: var(--text-sub); }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.82rem;
+            color: #fef3c7;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">← Back to SafeRide Portal</a>
-
     <header>
-        <h1>Safe<span>Ride</span> Legal & Compliance</h1>
-        <p>SafeRide Mobility (Pty) Ltd — Mbombela, South Africa</p>
+        <div>
+            <div class="brand-title">Safe<span>Ride</span> Legal</div>
+            <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Compliance Framework</div>
+        </div>
+        <a href="index.html" class="nav-back">← Back to App</a>
     </header>
 
-    <section>
-        <h2>1. Terms and Conditions of Service</h2>
-        <p>By accessing or utilizing the SafeRide Mobility platform, driver application, or control room dispatch network, you agree to be bound by these Terms and Conditions. SafeRide Mobility (Pty) Ltd provides an independent safety and verification utility designed for e-hailing drivers (including Bolt, Uber, and Maxim operators) operating within Mbombela and surrounding regions.</p>
-        
-        <h2>2. Driver Responsibilities & Conduct</h2>
-        <ul>
-            <li>Drivers must maintain valid identification, vehicle documentation, and correct profile info within the app.</li>
-            <li>The SOS emergency panic button must only be activated in genuine safety threats or emergencies requiring PSIRA private security or emergency intervention.</li>
-            <li>Misuse of the emergency dispatch system or false alerts may result in immediate suspension from the SafeRide network and potential liability for unnecessary deployment costs.</li>
-        </ul>
+    <main>
+        <!-- Document Overview -->
+        <div class="legal-card">
+            <div class="legal-title">📜 Terms of Service & POPIA Compliance</div>
+            <div class="legal-text">
+                <strong>SafeRide Mobility (Pty) Ltd</strong> ("SafeRide", "we", "our", or "us") operates in Mbombela, Mpumalanga, providing emergency dispatch technology, driver safety networks, and verification tools for independent e-hailing operators (Bolt, Uber, Maxim). By registering on our platform or utilizing our control room services, you agree to the legal terms and data privacy mandates outlined below.
+            </div>
+        </div>
 
-        <h2>3. PSIRA Armed Response & Third-Party Dispatches</h2>
-        <p>SafeRide Mobility facilitates direct communication lines and webhook/WhatsApp payloads to contracted private security service providers (PSIRA registered). While SafeRide endeavors to ensure rapid transmission of live GPS coordinates during emergencies, response times depend on third-party security providers, network connectivity, and regional conditions.</p>
+        <!-- 1. POPIA Data Privacy Policy -->
+        <div class="legal-card">
+            <div class="legal-title">🔒 Protection of Personal Information Act (POPIA) Policy</div>
+            <div class="legal-text">
+                In compliance with South Africa’s Protection of Personal Information Act (POPIA), SafeRide Mobility is committed to safeguarding the personal and telemetry data of all registered drivers and verifying passengers.
+            </div>
+            <ul class="legal-list">
+                <li><strong>Information Collected:</strong> We collect driver names, contact numbers, PSIRA WhatsApp emergency numbers, vehicle registration plates, VIN numbers, and real-time GPS telemetry coordinates during active shifts.</li>
+                <li><strong>Purpose of Collection:</strong> Data is strictly utilized for instant PSIRA private security dispatch during SOS emergencies, Night Shift Check-In verifications, and membership billing validations.</li>
+                <li><strong>Data Sharing & Third Parties:</strong> Driver location data and vehicle identifiers are shared exclusively with contracted PSIRA-registered armed response partners and licensed short-term insurance underwriters (for Tier 3 Ultimate Shield members). We do not sell or monetize personal data to third-party marketers.</li>
+                <li><strong>Data Security:</strong> All digital records, tokenized payment references, and local storage logs are encrypted and maintained securely in compliance with South African data governance standards.</li>
+            </ul>
+        </div>
 
-        <h2>4. Privacy & Data Protection (POPIA Compliance)</h2>
-        <p>In accordance with the Protection of Personal Information Act (POPIA):</p>
-        <ul>
-            <li>Trip logs, driver profiles, and passenger verification records are stored locally on your device's secure browser storage (`localStorage`) to preserve privacy.</li>
-            <li>Live GPS coordinates and unit identifiers are transmitted strictly during active emergency dispatches or control room monitoring to facilitate security responses.</li>
-            <li>We do not sell, trade, or transfer personal driver or passenger data to unauthorized third parties.</li>
-        </ul>
+        <!-- 2. Emergency Response & Liability Waiver -->
+        <div class="legal-card">
+            <div class="legal-title">🚨 Emergency Dispatch & Liability Waiver</div>
+            <div class="legal-text">
+                SafeRide Mobility acts as a technology communications bridge connecting independent e-hailing drivers with private security dispatch networks.
+            </div>
+            <div class="highlight-box">
+                <strong>Disclaimer:</strong> While SafeRide provides rapid PSIRA dispatch protocols, physical response times depend on third-party tactical security providers and live cellular/GPS network availability across Mbombela. SafeRide shall not be held liable for delayed armed response times caused by force majeure, network outages, or inaccurate GPS signals.
+            </div>
+        </div>
 
-        <h2>5. Limitation of Liability</h2>
-        <p>SafeRide Mobility (Pty) Ltd acts as an auxiliary safety net and communication conduit. The company shall not be held directly liable for physical injuries, criminal acts, vehicle damage, or losses incurred while operating e-hailing services. Drivers operate independently at their own discretion and risk.</p>
+        <!-- 3. Tier 3 Ultimate Shield - Vehicle Insurance Terms -->
+        <div class="legal-card">
+            <div class="legal-title">🚗 Tier 3: Ultimate Shield Insurance Terms</div>
+            <div class="legal-text">
+                Drivers subscribed to **Tier 3 Ultimate Shield (R599/mo)** receive partnered underwritten vehicle theft and hijacking claim protection:
+            </div>
+            <ul class="legal-list">
+                <li><strong>Underwriting Partnership:</strong> Insurance claim payouts and risk underwriting are provided by our licensed FSCA-approved short-term insurance partners. SafeRide facilitates policy linkage and rapid SVR (Stolen Vehicle Recovery) coordination.</li>
+                <li><strong>Driver Obligations:</strong> Members must ensure accurate submission of their vehicle VIN, engine number, and market value. Failure to report stolen or hijacked incidents within the mandated insurer window may void claim eligibility.</li>
+            </ul>
+        </div>
 
-        <h2>6. Governing Law</h2>
-        <p>These terms are governed by and construed in accordance with the laws of the Republic of South Africa, and any disputes shall be subject to the exclusive jurisdiction of the South African courts.</p>
-    </section>
+        <!-- 4. Driver Code of Conduct & Fines -->
+        <div class="legal-card">
+            <div class="legal-title">⚠️ Driver Code of Conduct & Compliance Fines</div>
+            <div class="legal-text">
+                To maintain the integrity of the SafeRide network and protect all members in Mbombela, drivers are subject to operational guidelines:
+            </div>
+            <ul class="legal-list">
+                <li>Drivers must maintain active subscription payments and respond to Night Shift Check-In prompts.</li>
+                <li>The admin control room reserves the right to issue non-compliance penalties or fines (e.g., R250) for false alarms, unverified plates, or failure to maintain required safety states.</li>
+                <li>SafeRide reserves the right to suspend or cancel the membership and remove any driver found violating safety standards or engaging in unauthorized passenger transport flags.</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; font-size: 0.75rem; color: var(--text-sub); margin-top: 10px;">
+            © 2026 SafeRide Mobility (Pty) Ltd. Mbombela, Mpumalanga, South Africa. All Rights Reserved.
+        </div>
+    </main>
 
 </body>
 </html>
