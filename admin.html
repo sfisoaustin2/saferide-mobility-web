@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeRide Mobility - Control Room Desk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeRide Mobility - Operations Control Room & Admin Desk</title>
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    
     <style>
         :root {
-            --bg-main: #0b0f19;
+            --bg-main: #090d16;
             --bg-card: #111827;
             --bg-card-alt: #1f2937;
             --accent-amber: #f59e0b;
             --accent-red: #dc2626;
             --accent-green: #10b981;
+            --accent-blue: #3b82f6;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
             --border-color: #374151;
@@ -19,180 +23,497 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-        body { background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+        body { 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-        header { background-color: var(--bg-card); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .brand-title { font-size: 1.3rem; font-weight: 800; color: #ffffff; }
+        /* Admin Header */
+        header { 
+            background-color: var(--bg-card); 
+            padding: 16px 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border-color); 
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand-title { font-size: 1.2rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
-        .badge-psira { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .admin-badge { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.4); }
 
-        .dashboard-grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; padding: 24px; flex: 1; }
-        .panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-        .panel-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; display: flex; justify-content: space-between; align-items: center; }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-        .stat-card { background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--accent-green); }
+        /* Metrics Summary Bar */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
 
-        .alert-item { background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .alert-header { display: flex; justify-content: space-between; font-weight: 800; color: #ef4444; font-size: 0.9rem; }
-        .alert-details { font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }
+        .metric-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-        .location-badge { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-        .dispatch-btn { background: var(--accent-red); color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 6px; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .metric-title { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
+        .metric-value { font-size: 1.6rem; font-weight: 900; color: #ffffff; }
 
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 0.75rem; color: var(--text-sub); font-weight: 600; }
-        .form-control { background: var(--bg-card-alt); border: 1px solid var(--border-color); color: white; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem; }
+        /* Tables & Action Cards */
+        .panel-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
-        th { color: var(--text-sub); font-weight: 700; }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .panel-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
+
+        /* Driver Table */
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--text-sub);
+            padding: 12px 14px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:hover { background-color: rgba(31, 41, 55, 0.5); }
+
+        /* Status Pills */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .pill-paid { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .pill-unpaid { background: rgba(220, 38, 38, 0.15); color: var(--accent-red); border: 1px solid rgba(220, 38, 38, 0.3); }
+        .pill-tier { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        /* Action Buttons */
+        .btn-fine {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+        .btn-fine:hover { background-color: var(--accent-amber); color: #000; }
+
+        .btn-remove {
+            background-color: rgba(220, 38, 38, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .btn-remove:hover { background-color: var(--accent-red); color: #fff; }
+
+        .btn-add {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Fine Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 18px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; }
+        .form-control {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            width: 100%;
+        }
+
+        .nav-back { color: var(--accent-amber); font-size: 0.82rem; text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <div class="brand-title">Safe<span>Ride</span> Control Desk</div>
-            <div style="font-size: 0.8rem; color: var(--text-sub);">Mbombela Region Operator Console</div>
+            <div class="brand-title">Safe<span>Ride</span> Desk</div>
+            <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Control Room & Compliance Engine</div>
         </div>
-        <div class="badge-psira">🛡️ PSIRA Integration Active</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="index.html" class="nav-back">← Back to App</a>
+            <span class="admin-badge">ADMIN CONTROL</span>
+        </div>
     </header>
 
-    <div class="dashboard-grid">
-        <div class="panel">
-            <div class="panel-title">Dispatch Status</div>
-            
-            <div class="stat-card">
-                <span>Driver Shift Status</span>
-                <span class="stat-val" id="ctrl-shift-status" style="font-size:1rem; font-weight:800; color:var(--accent-amber);">CHECKING...</span>
+    <div class="container">
+        
+        <!-- Metrics Bar -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">Active Network Drivers</div>
+                <div class="metric-value" id="stat-total-drivers">0</div>
             </div>
-            <div class="stat-card">
-                <span>PSIRA Armed Response</span>
-                <span style="color: var(--accent-green); font-weight: 700;">ONLINE</span>
+            <div class="metric-card">
+                <div class="metric-title">Paid Subscriptions</div>
+                <div class="metric-value" id="stat-paid-subs" style="color: var(--accent-green);">0</div>
             </div>
-
-            <div class="panel-title" style="margin-top: 6px;">PSIRA Armed Response Gateway</div>
-            <div class="form-group">
-                <label>Webhook API URL (Optional)</label>
-                <input type="text" id="webhook-url" class="form-control" placeholder="https://api.security.co.za/dispatch">
+            <div class="metric-card">
+                <div class="metric-title">Unpaid / Lapsed</div>
+                <div class="metric-value" id="stat-unpaid-subs" style="color: var(--accent-red);">0</div>
             </div>
-            <div class="form-group">
-                <label>PSIRA WhatsApp Dispatch Number</label>
-                <input type="text" id="psira-phone" class="form-control" placeholder="+27821234567">
-            </div>
-            <button style="background: var(--bg-card-alt); color: var(--accent-amber); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem;" onclick="saveWebhookSettings()">Save Settings</button>
-
-            <div class="panel-title" style="margin-top: 10px;">Active Emergency Queue</div>
-            <div id="alert-feed">
-                <div class="alert-item">
-                    <div class="alert-header">
-                        <span>🚨 LIVE SOS DISPATCH</span>
-                        <span>ACTIVE</span>
-                    </div>
-                    <div class="alert-details">
-                        <strong>Driver:</strong> Mbombela Unit #001<br>
-                        <strong>Platform:</strong> Bolt / Uber<br>
-                        <strong>Zone:</strong> Mbombela Central (CBD)
-                    </div>
-                    <div class="location-badge">
-                        📍 Live GPS: <span id="ctrl-live-coords">Acquiring position...</span>
-                    </div>
-                    <button class="dispatch-btn" onclick="triggerWhatsAppLiveDispatch()">
-                        💬 WhatsApp Live Location Dispatch
-                    </button>
-                </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Fines Issued</div>
+                <div class="metric-value" id="stat-total-fines" style="color: var(--accent-amber);">R0</div>
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-title">
-                <span>Driver Movement & Trip Safety Feed</span>
-                <button style="background: var(--bg-card-alt); color: var(--accent-amber); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight:700; cursor:pointer;" onclick="loadData()">Refresh Data</button>
+        <!-- Driver Subscription & Compliance Panel -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Driver Subscriptions & Compliance Registry</div>
+                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Manage plan tiers, verify monthly membership payments, issue non-compliance penalties, or cancel accounts.</div>
+                </div>
+                <button class="btn-add" onclick="addNewDriverPrompt()">+ Register Driver</button>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Driver</th>
-                        <th>Pickup Zone</th>
-                        <th>Passenger</th>
-                        <th>Flag / Note</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="logs-table-body">
-                    <tr>
-                        <td>12:40 PM</td>
-                        <td>Driver #001</td>
-                        <td>Riverside Mall Hub</td>
-                        <td>Passenger J.</td>
-                        <td>Night Drop</td>
-                        <td><span style="color:var(--accent-green); font-weight:700;">VERIFIED</span></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Driver Details</th>
+                            <th>Platform & Vehicle</th>
+                            <th>Selected Premium Tier</th>
+                            <th>Subscription Status</th>
+                            <th>Active Fines</th>
+                            <th>Control Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driver-table-body">
+                        <!-- Rendered via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Non-Compliance Fine Modal -->
+    <div id="fine-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#ffffff; font-size: 1.1rem;">Issue Non-Compliance Fine</h3>
+            <div id="fine-driver-name" style="font-size: 0.85rem; color: var(--accent-amber); font-weight: 700;"></div>
+            
+            <div class="form-group">
+                <label>Non-Compliance Reason</label>
+                <select id="fine-reason" class="form-control">
+                    <option value="Failed Night Check-in Verification">Failed Night Check-in Verification</option>
+                    <option value="Operating with Unverified Vehicle/Plate">Operating with Unverified Vehicle/Plate</option>
+                    <option value="Offline During Active Shift Requirement">Offline During Active Shift Requirement</option>
+                    <option value="Unauthorized Passenger Transport Flag">Unauthorized Passenger Transport Flag</option>
+                    <option value="PSIRA Alarm False Alert Penalty">PSIRA Alarm False Alert Penalty</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Penalty Fine Amount (ZAR)</label>
+                <input type="number" id="fine-amount" class="form-control" value="250" placeholder="e.g. 250">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-add" style="flex: 1;" onclick="submitDriverFine()">Confirm & Issue Fine</button>
+                <button class="btn-remove" style="flex: 1; background: var(--bg-card-alt); color: white;" onclick="closeFineModal()">Cancel</button>
+            </div>
         </div>
     </div>
 
+    <!-- Script Logic -->
     <script>
-        let ctrlLat = -25.4753;
-        let ctrlLng = 30.9694;
+        let selectedDriverIndex = null;
+
+        // Default seed drivers if local storage is empty
+        const defaultDrivers = [
+            {
+                driverId: "SR-MBE-2026-X89J",
+                name: "Sipho Dlamini",
+                phone: "+27821234567",
+                platform: "Bolt",
+                plate: "MP 123-456",
+                tier: "Pro Defender (R299/mo)",
+                paymentStatus: "PAID",
+                lastPaidDate: "2026-10-01",
+                fines: 0,
+                fineHistory: []
+            },
+            {
+                driverId: "SR-MBE-2026-K41P",
+                name: "Thabo Ndlovu",
+                phone: "+27719876543",
+                platform: "Uber",
+                plate: "MP 889-712",
+                tier: "Basic Guard (R149/mo)",
+                paymentStatus: "UNPAID",
+                lastPaidDate: "2026-08-15",
+                fines: 250,
+                fineHistory: [{ reason: "Failed Night Check-in Verification", amount: 250 }]
+            },
+            {
+                driverId: "SR-MBE-2026-Z90L",
+                name: "Jabu Khumalo",
+                phone: "+27603334455",
+                platform: "Maxim",
+                plate: "MP 455-110",
+                tier: "Fleet Shield (R499/mo)",
+                paymentStatus: "PAID",
+                lastPaidDate: "2026-10-05",
+                fines: 0,
+                fineHistory: []
+            }
+        ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadWebhookSettings();
-            loadData();
-            trackControlRoomGPS();
-            setInterval(loadData, 3000); // Auto-sync status every 3s
+            loadAndRenderDashboard();
         });
 
-        function saveWebhookSettings() {
-            localStorage.setItem('saferide_webhook_url', document.getElementById('webhook-url').value);
-            localStorage.setItem('saferide_psira_phone', document.getElementById('psira-phone').value);
-            alert('Settings saved!');
+        function getDriverData() {
+            const data = localStorage.getItem('saferide_admin_drivers');
+            if (!data) {
+                localStorage.setItem('saferide_admin_drivers', JSON.stringify(defaultDrivers));
+                return defaultDrivers;
+            }
+            return JSON.parse(data);
         }
 
-        function loadWebhookSettings() {
-            document.getElementById('webhook-url').value = localStorage.getItem('saferide_webhook_url') || '';
-            document.getElementById('psira-phone').value = localStorage.getItem('saferide_psira_phone') || '';
+        function saveDriverData(drivers) {
+            localStorage.setItem('saferide_admin_drivers', JSON.stringify(drivers));
+            loadAndRenderDashboard();
         }
 
-        function loadData() {
-            // Load driver shift status
-            const shift = localStorage.getItem('saferide_shift_status') || 'ONLINE';
-            const statusEl = document.getElementById('ctrl-shift-status');
-            statusEl.innerText = shift;
-            statusEl.style.color = shift === 'ONLINE' ? '#10b981' : (shift === 'ON_TRIP' ? '#f59e0b' : '#ef4444');
+        function loadAndRenderDashboard() {
+            const drivers = getDriverData();
+            const tableBody = document.getElementById('driver-table-body');
+            tableBody.innerHTML = '';
 
-            // Load trip logs
-            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
-            const tbody = document.getElementById('logs-table-body');
-            if (trips.length === 0) return;
+            let totalPaid = 0;
+            let totalUnpaid = 0;
+            let totalFinesZAR = 0;
 
-            let html = '';
-            trips.forEach(t => {
-                html += `<tr><td>${t.time}</td><td>Mbombela Driver</td><td>${t.pickup}</td><td>${t.passenger}</td><td>${t.notes}</td><td><span style="color:var(--accent-green); font-weight:700;">OK</span></td></tr>`;
+            drivers.forEach((d, index) => {
+                if (d.paymentStatus === 'PAID') totalPaid++;
+                else totalUnpaid++;
+
+                totalFinesZAR += (d.fines || 0);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color:#fff;">${d.name}</strong><br>
+                        <span style="font-size:0.75rem; color:var(--accent-amber);">${d.driverId}</span><br>
+                        <span style="font-size:0.75rem; color:var(--text-sub);">${d.phone}</span>
+                    </td>
+                    <td>
+                        <strong style="color:#fff;">${d.platform}</strong><br>
+                        <span style="font-size:0.75rem; color:var(--text-sub);">${d.plate}</span>
+                    </td>
+                    <td>
+                        <span class="pill pill-tier">${d.tier}</span>
+                    </td>
+                    <td>
+                        <span class="pill ${d.paymentStatus === 'PAID' ? 'pill-paid' : 'pill-unpaid'}">
+                            ${d.paymentStatus === 'PAID' ? '🟢 Paid' : '🔴 Unpaid'}
+                        </span>
+                        <div style="font-size:0.7rem; color:var(--text-sub); margin-top:4px;">
+                            ${d.paymentStatus === 'PAID' ? 'Paid on: ' + d.lastPaidDate : 'Overdue since: ' + d.lastPaidDate}
+                        </div>
+                        <button style="margin-top:6px; background:none; border:none; color:var(--accent-amber); font-size:0.7rem; text-decoration:underline; cursor:pointer;" onclick="togglePaymentStatus(${index})">
+                            Toggle Status
+                        </button>
+                    </td>
+                    <td>
+                        <strong style="color: ${d.fines > 0 ? 'var(--accent-red)' : 'var(--accent-green)'};">R${d.fines || 0}</strong>
+                        ${d.fineHistory && d.fineHistory.length > 0 ? `<div style="font-size:0.68rem; color:var(--text-sub);">${d.fineHistory[d.fineHistory.length - 1].reason}</div>` : ''}
+                    </td>
+                    <td>
+                        <button class="btn-fine" onclick="openFineModal(${index})">⚠️ Fine</button>
+                        <button class="btn-remove" onclick="removeDriverSubscription(${index})">🗑️ Cancel Sub</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
             });
-            tbody.innerHTML = html;
+
+            // Update Metric Display
+            document.getElementById('stat-total-drivers').innerText = drivers.length;
+            document.getElementById('stat-paid-subs').innerText = totalPaid;
+            document.getElementById('stat-unpaid-subs').innerText = totalUnpaid;
+            document.getElementById('stat-total-fines').innerText = `R${totalFinesZAR}`;
         }
 
-        function trackControlRoomGPS() {
-            const coordsSpan = document.getElementById('ctrl-live-coords');
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition((pos) => {
-                    ctrlLat = pos.coords.latitude;
-                    ctrlLng = pos.coords.longitude;
-                    coordsSpan.innerText = `${ctrlLat.toFixed(4)}, ${ctrlLng.toFixed(4)}`;
-                }, (err) => {}, { enableHighAccuracy: true });
+        function togglePaymentStatus(index) {
+            const drivers = getDriverData();
+            if (drivers[index].paymentStatus === 'PAID') {
+                drivers[index].paymentStatus = 'UNPAID';
+            } else {
+                drivers[index].paymentStatus = 'PAID';
+                drivers[index].lastPaidDate = new Date().toISOString().split('T')[0];
+            }
+            saveDriverData(drivers);
+        }
+
+        function openFineModal(index) {
+            selectedDriverIndex = index;
+            const drivers = getDriverData();
+            document.getElementById('fine-driver-name').innerText = `Driver: ${drivers[index].name} (${drivers[index].driverId})`;
+            document.getElementById('fine-modal').style.display = 'flex';
+        }
+
+        function closeFineModal() {
+            document.getElementById('fine-modal').style.display = 'none';
+            selectedDriverIndex = null;
+        }
+
+        function submitDriverFine() {
+            if (selectedDriverIndex === null) return;
+            const drivers = getDriverData();
+            const reason = document.getElementById('fine-reason').value;
+            const amount = parseInt(document.getElementById('fine-amount').value) || 0;
+
+            drivers[selectedDriverIndex].fines = (drivers[selectedDriverIndex].fines || 0) + amount;
+            if (!drivers[selectedDriverIndex].fineHistory) drivers[selectedDriverIndex].fineHistory = [];
+            drivers[selectedDriverIndex].fineHistory.push({ reason, amount, date: new Date().toISOString().split('T')[0] });
+
+            saveDriverData(drivers);
+            closeFineModal();
+            alert(`Issued non-compliance fine of R${amount} to ${drivers[selectedDriverIndex].name}.`);
+        }
+
+        function removeDriverSubscription(index) {
+            const drivers = getDriverData();
+            const driverName = drivers[index].name;
+            if (confirm(`Are you sure you want to cancel the subscription and remove ${driverName} (${drivers[index].driverId}) from SafeRide Mobility?`)) {
+                drivers.splice(index, 1);
+                saveDriverData(drivers);
+                alert(`Subscription cancelled. ${driverName} has been removed from active network.`);
             }
         }
 
-        function triggerWhatsAppLiveDispatch() {
-            const psiraPhone = document.getElementById('psira-phone').value || '';
-            const mapsUrl = `https://maps.google.com/?q=${ctrlLat},${ctrlLng}`;
-            const message = encodeURIComponent(`🚨 [PSIRA EMERGENCY ARMED DISPATCH]\nImmediate armed response requested for SafeRide driver unit in Mbombela!\n📍 LIVE GPS: ${mapsUrl}`);
-            window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${message}` : `https://wa.me/?text=${message}`, '_blank');
+        function addNewDriverPrompt() {
+            const name = prompt("Enter Driver Full Name:");
+            if (!name) return;
+            const platform = prompt("Enter E-hailing Platform (Bolt / Uber / Maxim):", "Bolt");
+            const plate = prompt("Enter Vehicle Plate Number:", "MP 123-456");
+            const tier = prompt("Choose Tier (1: Basic Guard R149, 2: Pro Defender R299, 3: Fleet Shield R499):", "2");
+
+            let tierName = "Pro Defender (R299/mo)";
+            if (tier === "1") tierName = "Basic Guard (R149/mo)";
+            if (tier === "3") tierName = "Fleet Shield (R499/mo)";
+
+            const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const year = new Date().getFullYear();
+            const driverId = `SR-MBE-${year}-${randomHash}`;
+
+            const drivers = getDriverData();
+            drivers.push({
+                driverId,
+                name,
+                phone: "+27820000000",
+                platform: platform || "Bolt",
+                plate: plate || "N/A",
+                tier: tierName,
+                paymentStatus: "PAID",
+                lastPaidDate: new Date().toISOString().split('T')[0],
+                fines: 0,
+                fineHistory: []
+            });
+
+            saveDriverData(drivers);
+            alert(`Successfully registered ${name} with ID: ${driverId}`);
         }
     </script>
 </body>
