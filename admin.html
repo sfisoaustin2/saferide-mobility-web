@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Control Room & Dispatch Command</title>
-    <!-- Favicon Links -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,7 +33,6 @@
             flex-direction: column;
         }
 
-        /* Admin Header */
         header { 
             background-color: var(--bg-card); 
             padding: 16px 24px; 
@@ -61,7 +59,6 @@
             gap: 24px;
         }
 
-        /* Metrics Summary Bar */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -81,7 +78,6 @@
         .metric-title { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .metric-value { font-size: 1.6rem; font-weight: 900; color: #ffffff; }
 
-        /* Panels & Cards */
         .panel-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -105,7 +101,6 @@
 
         .panel-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
 
-        /* Map Styling - Separated cleanly */
         #admin-live-map {
             width: 100%;
             height: 320px;
@@ -114,21 +109,6 @@
             background: #1a2234;
         }
 
-        /* SOS Alert Item */
-        .alert-item {
-            background: rgba(220, 38, 38, 0.1);
-            border: 1px solid rgba(220, 38, 38, 0.4);
-            border-radius: 12px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .alert-title { font-size: 0.85rem; font-weight: 800; color: var(--accent-red); display: flex; align-items: center; gap: 6px; }
-        .alert-desc { font-size: 0.78rem; color: var(--text-sub); }
-
-        /* Driver Table */
         .table-wrapper { overflow-x: auto; width: 100%; }
 
         table {
@@ -136,7 +116,7 @@
             border-collapse: collapse;
             text-align: left;
             font-size: 0.85rem;
-            min-width: 900px;
+            min-width: 950px;
         }
 
         th {
@@ -158,7 +138,6 @@
 
         tr:hover { background-color: rgba(31, 41, 55, 0.5); }
 
-        /* Status Pills */
         .pill {
             display: inline-flex;
             align-items: center;
@@ -173,7 +152,6 @@
         .pill-unpaid { background: rgba(220, 38, 38, 0.15); color: var(--accent-red); border: 1px solid rgba(220, 38, 38, 0.3); }
         .pill-tier { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
 
-        /* Action Buttons */
         .btn-action {
             padding: 6px 12px;
             border-radius: 8px;
@@ -188,16 +166,9 @@
         }
 
         .btn-fine { background-color: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
-        .btn-fine:hover { background-color: var(--accent-amber); color: #000; }
-
         .btn-email { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.4); }
-        .btn-email:hover { background-color: var(--accent-blue); color: #fff; }
-
         .btn-sos { background-color: rgba(220, 38, 38, 0.2); color: var(--accent-red); border: 1px solid rgba(220, 38, 38, 0.5); }
-        .btn-sos:hover { background-color: var(--accent-red); color: #fff; }
-
         .btn-remove { background-color: rgba(107, 114, 128, 0.2); color: var(--text-sub); border: 1px solid rgba(107, 114, 128, 0.4); }
-        .btn-remove:hover { background-color: var(--accent-red); color: #fff; }
 
         .btn-add {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
@@ -210,7 +181,6 @@
             cursor: pointer;
         }
 
-        /* Modals - Perfectly Layered On Top */
         .modal {
             display: none;
             position: fixed;
@@ -263,8 +233,6 @@
     </header>
 
     <div class="container">
-        
-        <!-- Metrics Bar -->
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-title">Active Network Drivers</div>
@@ -284,7 +252,6 @@
             </div>
         </div>
 
-        <!-- SECTION 1: LIVE SATELLITE MAP (Cleanly Isolated) -->
         <div class="panel-card">
             <div class="panel-header">
                 <div>
@@ -300,12 +267,11 @@
             <div id="admin-live-map"></div>
         </div>
 
-        <!-- SECTION 2: DRIVER SUBSCRIPTION, PSIRA DISPATCH & COMPLIANCE REGISTRY -->
         <div class="panel-card">
             <div class="panel-header">
                 <div>
-                    <div class="panel-title">Driver Subscriptions, PSIRA & Compliance Registry</div>
-                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Manage plan tiers, dispatch emergency WhatsApp to driver's PSIRA partner, issue fines, or export data.</div>
+                    <div class="panel-title">Driver Subscriptions, Insurance & Compliance Registry</div>
+                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Manage plan tiers, verify theft insurance details, dispatch PSIRA WhatsApp, issue fines, or export CSV.</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-action btn-email" onclick="exportRegistryCSV()">📥 Export CSV</button>
@@ -319,22 +285,19 @@
                         <tr>
                             <th>Driver Details & Email</th>
                             <th>Platform & Vehicle</th>
-                            <th>PSIRA WhatsApp Number</th>
-                            <th>Selected Premium Tier</th>
+                            <th>PSIRA WhatsApp</th>
+                            <th>Selected Plan Package</th>
                             <th>Status & Fines</th>
                             <th>Dispatch & Control Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="driver-table-body">
-                        <!-- Rendered via JavaScript -->
-                    </tbody>
+                    <tbody id="driver-table-body"></tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
-    <!-- Non-Compliance Fine Modal -->
+    <!-- Fine Modal -->
     <div id="fine-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:#ffffff; font-size: 1.1rem;">Issue Non-Compliance Fine</h3>
@@ -353,7 +316,7 @@
 
             <div class="form-group">
                 <label>Penalty Fine Amount (ZAR)</label>
-                <input type="number" id="fine-amount" class="form-control" value="250" placeholder="e.g. 250">
+                <input type="number" id="fine-amount" class="form-control" value="250">
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -363,7 +326,7 @@
         </div>
     </div>
 
-    <!-- Email Communication Dispatcher Modal -->
+    <!-- Email Modal -->
     <div id="email-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:#ffffff; font-size: 1.1rem;">✉️ Send Direct Email Communication</h3>
@@ -375,6 +338,7 @@
                     <option value="MARKETING">📢 Marketing & Promo Ad Campaign</option>
                     <option value="FINE_NOTICE">⚠️ Non-Compliance Fine Payment Notice</option>
                     <option value="SUB_REMINDER">💳 Subscription Payment Due Reminder</option>
+                    <option value="INSURANCE_CLAIM">🚗 Car Theft/Hijack Insurance Claim Form</option>
                     <option value="GENERAL">📝 Custom Operational Notice</option>
                 </select>
             </div>
@@ -396,7 +360,6 @@
         </div>
     </div>
 
-    <!-- Script Logic -->
     <script>
         let selectedDriverIndex = null;
         let adminMap = null;
@@ -411,6 +374,7 @@
                 platform: "Bolt",
                 plate: "MP 123-456",
                 tier: "Pro Defender (R299/mo)",
+                vin: "AHTKK123456789",
                 paymentStatus: "PAID",
                 lastPaidDate: "2026-10-01",
                 fines: 0,
@@ -427,6 +391,7 @@
                 platform: "Uber",
                 plate: "MP 889-712",
                 tier: "Basic Guard (R149/mo)",
+                vin: "N/A",
                 paymentStatus: "UNPAID",
                 lastPaidDate: "2026-08-15",
                 fines: 250,
@@ -442,7 +407,8 @@
                 psira: "+27603334455",
                 platform: "Maxim",
                 plate: "MP 455-110",
-                tier: "Fleet Shield (R499/mo)",
+                tier: "Ultimate Shield (R599/mo)",
+                vin: "AHTKK987654321",
                 paymentStatus: "PAID",
                 lastPaidDate: "2026-10-05",
                 fines: 0,
@@ -524,6 +490,7 @@
                     </td>
                     <td>
                         <span class="pill pill-tier">${d.tier}</span>
+                        ${d.tier.includes('Ultimate Shield') ? `<div style="font-size:0.68rem; color:var(--accent-blue); margin-top:3px;">🛡️ Vehicle Insured (VIN: ${d.vin || 'Pending'})</div>` : ''}
                     </td>
                     <td>
                         <span class="pill ${d.paymentStatus === 'PAID' ? 'pill-paid' : 'pill-unpaid'}">
@@ -630,13 +597,16 @@
 
             if (type === 'MARKETING') {
                 subjectInput.value = `Exclusive SafeRide Upgrade Offer for Mbombela Drivers!`;
-                bodyInput.value = `Hi ${driver.name},\n\nUpgrade your protection plan to Pro Defender today and get priority PSIRA tactical dispatch and free hardware button pairing!\n\nSafeRide Marketing Team`;
+                bodyInput.value = `Hi ${driver.name},\n\nUpgrade your protection plan to Ultimate Shield (R599/mo) today to get full underwritten vehicle theft & hijacking insurance cover!\n\nSafeRide Marketing Team`;
             } else if (type === 'FINE_NOTICE') {
                 subjectInput.value = `Important: Non-Compliance Fine Account Notice (${driver.driverId})`;
                 bodyInput.value = `Dear ${driver.name},\n\nThis is a notification regarding outstanding fines on your SafeRide account (Total: R${driver.fines || 0}).\n\nPlease review your compliance dashboard.\n\nSafeRide Control Desk`;
             } else if (type === 'SUB_REMINDER') {
                 subjectInput.value = `SafeRide Monthly Safety Plan Payment Reminder`;
-                bodyInput.value = `Dear ${driver.name},\n\nYour ${driver.tier} subscription status is currently marked as ${driver.paymentStatus}.\n\nPlease renew to ensure uninterrupted armed response coverage in Mbombela.\n\nSafeRide Billing Team`;
+                bodyInput.value = `Dear ${driver.name},\n\nYour ${driver.tier} subscription status is currently marked as ${driver.paymentStatus}.\n\nPlease renew to ensure uninterrupted coverage in Mbombela.\n\nSafeRide Billing Team`;
+            } else if (type === 'INSURANCE_CLAIM') {
+                subjectInput.value = `SafeRide Ultimate Shield - Vehicle Theft/Hijack Claim Form`;
+                bodyInput.value = `Dear ${driver.name},\n\nWe have received your stolen vehicle alert for Vehicle Plate: ${driver.plate} (VIN: ${driver.vin || 'N/A'}).\n\nOur underwritten insurance partner claims team is processing your case.\n\nSafeRide Claims Desk`;
             } else {
                 subjectInput.value = `SafeRide Mobility Operations Notice`;
                 bodyInput.value = `Dear ${driver.name},\n\n[Insert custom operational message here]\n\nRegards,\nSafeRide Control Desk`;
@@ -688,9 +658,9 @@
 
         function exportRegistryCSV() {
             const drivers = getDriverData();
-            let csvContent = "data:text/csv;charset=utf-8,DriverID,Name,Email,Phone,PSIRAWha,Platform,Plate,Tier,PaymentStatus,FinesZAR\n";
+            let csvContent = "data:text/csv;charset=utf-8,DriverID,Name,Email,Phone,PSIRAWha,Platform,Plate,VIN,Tier,PaymentStatus,FinesZAR\n";
             drivers.forEach(d => {
-                csvContent += `${d.driverId},"${d.name}","${d.email}","${d.phone}","${d.psira}","${d.platform}","${d.plate}","${d.tier}",${d.paymentStatus},${d.fines || 0}\n`;
+                csvContent += `${d.driverId},"${d.name}","${d.email}","${d.phone}","${d.psira}","${d.platform}","${d.plate}","${d.vin || 'N/A'}","${d.tier}",${d.paymentStatus},${d.fines || 0}\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -708,11 +678,15 @@
             const psira = prompt("Enter Driver PSIRA WhatsApp Number (e.g. +27821234567):", "+27821234567");
             const platform = prompt("Enter E-hailing Platform (Bolt / Uber / Maxim):", "Bolt");
             const plate = prompt("Enter Vehicle Plate Number:", "MP 123-456");
-            const tier = prompt("Choose Tier (1: Basic Guard R149, 2: Pro Defender R299, 3: Fleet Shield R499):", "2");
+            const tier = prompt("Choose Tier (1: Basic Guard R149, 2: Pro Defender R299, 3: Ultimate Shield R599):", "2");
 
             let tierName = "Pro Defender (R299/mo)";
+            let vin = "N/A";
             if (tier === "1") tierName = "Basic Guard (R149/mo)";
-            if (tier === "3") tierName = "Fleet Shield (R499/mo)";
+            if (tier === "3") {
+                tierName = "Ultimate Shield (R599/mo)";
+                vin = prompt("Enter Vehicle VIN for Theft Insurance:", "AHTKK123456789") || "Pending";
+            }
 
             const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
             const year = new Date().getFullYear();
@@ -728,6 +702,7 @@
                 platform: platform || "Bolt",
                 plate: plate || "N/A",
                 tier: tierName,
+                vin: vin,
                 paymentStatus: "PAID",
                 lastPaidDate: new Date().toISOString().split('T')[0],
                 fines: 0,
