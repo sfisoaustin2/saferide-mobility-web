@@ -6,6 +6,9 @@
     <title>SafeRide Mobility - Operations Control Room & Admin Desk</title>
     <!-- Favicon Links -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <!-- Leaflet Satellite Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         :root {
@@ -49,7 +52,7 @@
         .admin-badge { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.4); }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             padding: 20px;
@@ -78,7 +81,18 @@
         .metric-title { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .metric-value { font-size: 1.6rem; font-weight: 900; color: #ffffff; }
 
-        /* Tables & Action Cards */
+        /* Split View Layout for Map & Live Alarms */
+        .split-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .split-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Panels & Cards */
         .panel-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -99,6 +113,29 @@
         }
 
         .panel-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
+
+        /* Map Styling */
+        #admin-live-map {
+            width: 100%;
+            height: 350px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: #1a2234;
+        }
+
+        /* SOS Alert Item */
+        .alert-item {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .alert-title { font-size: 0.85rem; font-weight: 800; color: var(--accent-red); display: flex; align-items: center; gap: 6px; }
+        .alert-desc { font-size: 0.78rem; color: var(--text-sub); }
 
         /* Driver Table */
         .table-wrapper { overflow-x: auto; }
@@ -223,12 +260,12 @@
 
     <header>
         <div>
-            <div class="brand-title">Safe<span>Ride</span> Desk</div>
-            <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Control Room & Compliance Engine</div>
+            <div class="brand-title">Safe<span>Ride</span> Control Room</div>
+            <div style="font-size: 0.68rem; color: var(--text-sub);">Mbombela Security Dispatch & Compliance Console</div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-            <a href="index.html" class="nav-back">← Back to App</a>
-            <span class="admin-badge">ADMIN CONTROL</span>
+            <a href="index.html" class="nav-back">← Back to Driver App</a>
+            <span class="admin-badge">ADMIN DESK</span>
         </div>
     </header>
 
@@ -254,12 +291,42 @@
             </div>
         </div>
 
-        <!-- Driver Subscription & Compliance Panel -->
+        <!-- Split Grid: Live Map Telemetry & Emergency Console -->
+        <div class="split-grid">
+            <!-- Live Map Panel -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Mbombela Live Fleet Satellite Telemetry</div>
+                        <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Real-time GPS tracking for active drivers across Mbombela & surrounding hubs.</div>
+                    </div>
+                    <button class="btn-add" style="padding: 4px 10px; font-size: 0.72rem;" onclick="recenterMap()">Recenter Map</button>
+                </div>
+                <div id="admin-live-map"></div>
+            </div>
+
+            <!-- Active Emergencies & Alarms Feed -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">Active Security Feed</div>
+                    <span class="pill pill-paid">PSIRA DISPATCH READY</span>
+                </div>
+                
+                <div id="emergency-feed" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="alert-item">
+                        <div class="alert-title">🚨 Standby Panic Monitor</div>
+                        <div class="alert-desc">No active emergency SOS triggers currently reported in Mbombela central. System monitoring live GPS pings.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Subscription & Compliance Registry Panel -->
         <div class="panel-card">
             <div class="panel-header">
                 <div>
                     <div class="panel-title">Driver Subscriptions & Compliance Registry</div>
-                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Manage plan tiers, verify monthly membership payments, issue non-compliance penalties, or cancel accounts.</div>
+                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Manage plan tiers, verify monthly payments, issue non-compliance penalties, or cancel accounts.</div>
                 </div>
                 <button class="btn-add" onclick="addNewDriverPrompt()">+ Register Driver</button>
             </div>
@@ -317,8 +384,9 @@
     <!-- Script Logic -->
     <script>
         let selectedDriverIndex = null;
+        let adminMap = null;
 
-        // Default seed drivers if local storage is empty
+        // Default seed drivers
         const defaultDrivers = [
             {
                 driverId: "SR-MBE-2026-X89J",
@@ -330,7 +398,9 @@
                 paymentStatus: "PAID",
                 lastPaidDate: "2026-10-01",
                 fines: 0,
-                fineHistory: []
+                fineHistory: [],
+                lat: -25.4735,
+                lng: 30.9702
             },
             {
                 driverId: "SR-MBE-2026-K41P",
@@ -342,7 +412,9 @@
                 paymentStatus: "UNPAID",
                 lastPaidDate: "2026-08-15",
                 fines: 250,
-                fineHistory: [{ reason: "Failed Night Check-in Verification", amount: 250 }]
+                fineHistory: [{ reason: "Failed Night Check-in Verification", amount: 250 }],
+                lat: -25.4492,
+                lng: 30.9851
             },
             {
                 driverId: "SR-MBE-2026-Z90L",
@@ -354,13 +426,35 @@
                 paymentStatus: "PAID",
                 lastPaidDate: "2026-10-05",
                 fines: 0,
-                fineHistory: []
+                fineHistory: [],
+                lat: -25.4800,
+                lng: 30.9600
             }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
+            initAdminSatelliteMap();
             loadAndRenderDashboard();
         });
+
+        function initAdminSatelliteMap() {
+            if (!adminMap && document.getElementById('admin-live-map')) {
+                adminMap = L.map('admin-live-map', { zoomControl: true, attributionControl: false }).setView([-25.4753, 30.9694], 13);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(adminMap);
+
+                const drivers = getDriverData();
+                drivers.forEach(d => {
+                    if (d.lat && d.lng) {
+                        L.marker([d.lat, d.lng]).addTo(adminMap)
+                            .bindPopup(`<b>${d.name} (${d.platform})</b><br>ID: ${d.driverId}<br>Plate: ${d.plate}`);
+                    }
+                });
+            }
+        }
+
+        function recenterMap() {
+            if (adminMap) adminMap.setView([-25.4753, 30.9694], 13);
+        }
 
         function getDriverData() {
             const data = localStorage.getItem('saferide_admin_drivers');
@@ -509,7 +603,9 @@
                 paymentStatus: "PAID",
                 lastPaidDate: new Date().toISOString().split('T')[0],
                 fines: 0,
-                fineHistory: []
+                fineHistory: [],
+                lat: -25.4753,
+                lng: 30.9694
             });
 
             saveDriverData(drivers);
