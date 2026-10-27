@@ -58,7 +58,7 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
         /* Metrics Summary Bar */
@@ -81,17 +81,6 @@
         .metric-title { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
         .metric-value { font-size: 1.6rem; font-weight: 900; color: #ffffff; }
 
-        /* Split View Layout for Map & Live Alarms */
-        .split-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 900px) {
-            .split-grid { grid-template-columns: 1fr; }
-        }
-
         /* Panels & Cards */
         .panel-card {
             background-color: var(--bg-card);
@@ -110,14 +99,16 @@
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .panel-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; }
 
-        /* Map Styling */
+        /* Map Styling - Separated cleanly */
         #admin-live-map {
             width: 100%;
-            height: 350px;
+            height: 320px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             background: #1a2234;
@@ -138,13 +129,14 @@
         .alert-desc { font-size: 0.78rem; color: var(--text-sub); }
 
         /* Driver Table */
-        .table-wrapper { overflow-x: auto; }
+        .table-wrapper { overflow-x: auto; width: 100%; }
 
         table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
             font-size: 0.85rem;
+            min-width: 900px;
         }
 
         th {
@@ -183,7 +175,7 @@
 
         /* Action Buttons */
         .btn-action {
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 8px;
             font-weight: 700;
             font-size: 0.75rem;
@@ -191,7 +183,7 @@
             border: none;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             text-decoration: none;
         }
 
@@ -218,13 +210,13 @@
             cursor: pointer;
         }
 
-        /* Modals */
+        /* Modals - Perfectly Layered On Top */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 100;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -239,6 +231,7 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.9);
         }
 
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -291,42 +284,23 @@
             </div>
         </div>
 
-        <!-- Split Grid: Live Map Telemetry & Emergency Console -->
-        <div class="split-grid">
-            <!-- Live Map Panel -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <div>
-                        <div class="panel-title">Mbombela Live Fleet Satellite Telemetry</div>
-                        <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Real-time GPS tracking for active drivers across Mbombela & surrounding hubs.</div>
-                    </div>
-                    <button class="btn-add" style="padding: 4px 10px; font-size: 0.72rem;" onclick="recenterMap()">Recenter Map</button>
+        <!-- SECTION 1: LIVE SATELLITE MAP (Cleanly Isolated) -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Mbombela Live Fleet Satellite Telemetry</div>
+                    <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">Real-time GPS tracking for active drivers across Mbombela & surrounding hubs.</div>
                 </div>
-                <div id="admin-live-map"></div>
-            </div>
-
-            <!-- Active Emergencies & Broadcast Center -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <div class="panel-title">Security Feed & Broadcast</div>
-                    <span class="pill pill-paid">PSIRA DISPATCH READY</span>
-                </div>
-                
-                <div id="emergency-feed" style="display: flex; flex-direction: column; gap: 10px;">
-                    <div class="alert-item">
-                        <div class="alert-title">🚨 Standby Panic Monitor</div>
-                        <div class="alert-desc">Monitoring live GPS pings. Tap below to simulate test emergency siren.</div>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-top: 6px;">
-                    <button class="btn-action btn-fine" style="flex: 1; justify-content: center;" onclick="triggerTestSirenAlarm()">🔊 Test Alarm Siren</button>
-                    <button class="btn-action btn-email" style="flex: 1; justify-content: center;" onclick="openBroadcastModal()">📢 Broadcast Email</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-action btn-fine" onclick="triggerTestSirenAlarm()">🔊 Test Alarm Siren</button>
+                    <button class="btn-action btn-email" onclick="openBroadcastModal()">📢 Broadcast Email</button>
+                    <button class="btn-add" style="padding: 6px 12px; font-size: 0.75rem;" onclick="recenterMap()">Recenter Map</button>
                 </div>
             </div>
+            <div id="admin-live-map"></div>
         </div>
 
-        <!-- Driver Subscription & Compliance Registry Panel -->
+        <!-- SECTION 2: DRIVER SUBSCRIPTION, PSIRA DISPATCH & COMPLIANCE REGISTRY -->
         <div class="panel-card">
             <div class="panel-header">
                 <div>
@@ -345,7 +319,7 @@
                         <tr>
                             <th>Driver Details & Email</th>
                             <th>Platform & Vehicle</th>
-                            <th>PSIRA WhatsApp</th>
+                            <th>PSIRA WhatsApp Number</th>
                             <th>Selected Premium Tier</th>
                             <th>Status & Fines</th>
                             <th>Dispatch & Control Actions</th>
@@ -427,7 +401,6 @@
         let selectedDriverIndex = null;
         let adminMap = null;
 
-        // Default seed drivers with PSIRA WhatsApp numbers & emails
         const defaultDrivers = [
             {
                 driverId: "SR-MBE-2026-X89J",
@@ -500,7 +473,10 @@
         }
 
         function recenterMap() {
-            if (adminMap) adminMap.setView([-25.4753, 30.9694], 13);
+            if (adminMap) {
+                adminMap.invalidateSize();
+                adminMap.setView([-25.4753, 30.9694], 13);
+            }
         }
 
         function getDriverData() {
@@ -562,7 +538,7 @@
                     </td>
                     <td>
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button class="btn-action btn-sos" onclick="dispatchAdminPSIRAWrap(${index})">🚨 WhatsApp SOS</button>
+                            <button class="btn-action btn-sos" onclick="dispatchAdminPSIRAWrap(${index})">🚨 Dispatch PSIRA</button>
                             <button class="btn-action btn-email" onclick="openEmailModal(${index})">✉️ Email</button>
                             <button class="btn-action btn-fine" onclick="openFineModal(${index})">⚠️ Fine</button>
                             <button class="btn-action btn-remove" onclick="removeDriverSubscription(${index})">🗑️ Cancel</button>
