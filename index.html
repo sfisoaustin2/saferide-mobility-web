@@ -23,6 +23,7 @@
             --accent-amber: #f59e0b;
             --accent-red: #dc2626;
             --accent-green: #10b981;
+            --accent-blue: #3b82f6;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
             --border-color: #374151;
@@ -535,7 +536,7 @@
 
             <!-- Driver Registration & Tokenization Form -->
             <div class="content-card">
-                <div class="card-heading">Driver Membership & Security Setup</div>
+                <div class="card-heading">Driver Membership & Package Selection</div>
                 
                 <div class="form-group">
                     <label>Full Name & Surname</label>
@@ -558,6 +559,33 @@
                     <input type="text" id="reg-psira" class="form-control" placeholder="+27821234567">
                 </div>
 
+                <div class="form-group">
+                    <label style="color:var(--accent-amber); font-weight:700;">Select Protection Plan Package</label>
+                    <select id="reg-tier" class="form-control" onchange="toggleInsuranceFields()">
+                        <option value="Basic Guard (R149/mo)">Tier 1: Basic Guard - R149/mo (In-App SOS & Tracking)</option>
+                        <option value="Pro Defender (R299/mo)">Tier 2: Pro Defender - R299/mo (BLE Panic Button & Night Timer)</option>
+                        <option value="Ultimate Shield (R599/mo)">Tier 3: Ultimate Shield - R599/mo (Includes Theft/Hijack Car Insurance)</option>
+                    </select>
+                </div>
+
+                <!-- Tier 3 Partner Vehicle Insurance Details Section -->
+                <div id="insurance-fields" style="display: none; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
+                    <label style="color: var(--accent-blue); font-weight: 700; font-size: 0.8rem;">🚗 Partner Car Theft Insurance Verification</label>
+                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; margin-bottom: 8px;">Enter vehicle identification to activate underwritten theft/hijack payout cover.</p>
+                    <div class="form-group">
+                        <label>Vehicle VIN Number</label>
+                        <input type="text" id="reg-vin" class="form-control" placeholder="e.g. AHTKK123456789">
+                    </div>
+                    <div class="form-group">
+                        <label>Engine Number</label>
+                        <input type="text" id="reg-engine" class="form-control" placeholder="e.g. 1KR-FE-98765">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Estimated Market Value (ZAR)</label>
+                        <input type="number" id="reg-market-val" class="form-control" placeholder="e.g. 150000">
+                    </div>
+                </div>
+
                 <!-- Secure Payment Tokenization Section -->
                 <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 6px; margin-bottom: 6px;">
                     <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
@@ -568,7 +596,7 @@
                     </button>
                 </div>
 
-                <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Token Settings</button>
+                <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Plan Settings</button>
                 
                 <div style="text-align: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
@@ -704,6 +732,16 @@
             e.preventDefault();
             deferredPrompt = e;
         });
+
+        function toggleInsuranceFields() {
+            const tierVal = document.getElementById('reg-tier').value;
+            const fields = document.getElementById('insurance-fields');
+            if (tierVal.includes('Ultimate Shield')) {
+                fields.style.display = 'block';
+            } else {
+                fields.style.display = 'none';
+            }
+        }
 
         function generateUniqueDriverID() {
             const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -989,11 +1027,15 @@
                 name: document.getElementById('reg-name').value,
                 platform: document.getElementById('reg-platform').value,
                 plate: document.getElementById('reg-plate').value,
-                psira: document.getElementById('reg-psira').value
+                psira: document.getElementById('reg-psira').value,
+                tier: document.getElementById('reg-tier').value,
+                vin: document.getElementById('reg-vin').value,
+                engine: document.getElementById('reg-engine').value,
+                marketVal: document.getElementById('reg-market-val').value
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
             document.getElementById('unique-id-display').innerText = `Driver ID: ${driverId}`;
-            alert(`Driver profile saved! Assigned Unique ID: ${driverId}`);
+            alert(`Driver profile saved! Package: ${profile.tier} | Unique ID: ${driverId}`);
         }
 
         function loadDriverRegistration() {
@@ -1005,6 +1047,13 @@
             if (profile.platform && document.getElementById('reg-platform')) document.getElementById('reg-platform').value = profile.platform;
             if (profile.plate && document.getElementById('reg-plate')) document.getElementById('reg-plate').value = profile.plate;
             if (profile.psira && document.getElementById('reg-psira')) document.getElementById('reg-psira').value = profile.psira;
+            if (profile.tier && document.getElementById('reg-tier')) {
+                document.getElementById('reg-tier').value = profile.tier;
+                toggleInsuranceFields();
+            }
+            if (profile.vin && document.getElementById('reg-vin')) document.getElementById('reg-vin').value = profile.vin;
+            if (profile.engine && document.getElementById('reg-engine')) document.getElementById('reg-engine').value = profile.engine;
+            if (profile.marketVal && document.getElementById('reg-market-val')) document.getElementById('reg-market-val').value = profile.marketVal;
 
             const token = localStorage.getItem('saferide_payment_token');
             if (token && document.getElementById('token-status-display')) {
