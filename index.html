@@ -56,6 +56,10 @@
             z-index: 30; 
         }
 
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .menu-toggle-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .menu-toggle-btn svg { width: 24px; height: 24px; fill: currentColor; }
+
         .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
         .brand-tag { font-size: 0.68rem; color: var(--text-sub); font-weight: 500; }
@@ -73,6 +77,51 @@
             gap: 6px;
         }
         .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
+
+        /* Side Sliding Drawer Navigation */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+        }
+        .drawer-overlay.active { display: block; }
+
+        .drawer-menu {
+            position: fixed;
+            top: 0; left: -290px; width: 290px; height: 100%;
+            background-color: #0d1322;
+            color: var(--text-main);
+            z-index: 101;
+            transition: left 0.3s ease;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+        }
+        .drawer-menu.active { left: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .drawer-close-btn { background: none; border: none; font-size: 1.4rem; font-weight: 700; cursor: pointer; color: var(--text-sub); }
+
+        .drawer-section-title { font-size: 0.7rem; font-weight: 800; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.08em; margin: 12px 0 6px 0; }
+        
+        .drawer-link {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .drawer-link:active, .drawer-link:hover { background: var(--bg-card-alt); color: var(--accent-amber); }
 
         /* Main App Container */
         main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
@@ -109,6 +158,26 @@
         }
         .card-heading { font-size: 1.1rem; font-weight: 800; color: #ffffff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .card-text { font-size: 0.84rem; color: var(--text-sub); line-height: 1.5; }
+
+        /* Shift Status Selector Bar */
+        .shift-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shift-select {
+            background: var(--bg-card-alt);
+            color: var(--accent-green);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
 
         /* SOS Panic Button Styling */
         .sos-card { 
@@ -189,6 +258,19 @@
             cursor: pointer;
         }
 
+        /* Generic Cards */
+        .info-card { 
+            background-color: var(--bg-card); 
+            border: 1px solid #1f2937; 
+            border-radius: 14px; 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .info-left h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+        .info-left p { font-size: 0.8rem; color: var(--text-sub); margin-top: 3px; }
+
         /* Form Controls */
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
         .form-group label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; }
@@ -221,6 +303,41 @@
             text-decoration: none;
         }
         .action-btn:active { opacity: 0.9; }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .close-btn {
+            background: var(--bg-card-alt); 
+            color: white; 
+            border: 1px solid var(--border-color); 
+            padding: 10px 20px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            margin-top: 16px; 
+            font-weight: 700;
+            width: 100%;
+        }
 
         /* Map & Scanner */
         .map-wrapper {
@@ -278,17 +395,46 @@
 </head>
 <body>
 
-    <!-- Top Header -->
+    <!-- Top Header Bar with Menu Button -->
     <header>
-        <div>
-            <div class="brand-title">Safe<span>Ride</span></div>
-            <div class="brand-tag">Mbombela Protection Network</div>
+        <div class="header-left">
+            <button class="menu-toggle-btn" onclick="toggleDrawer()">
+                <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div>
+                <div class="brand-title">Safe<span>Ride</span></div>
+                <div class="brand-tag">Mbombela Protection Network</div>
+            </div>
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
             <span id="header-gps-status">GPS Active</span>
         </div>
     </header>
+
+    <!-- Side-Sliding Drawer Navigation Menu -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div id="drawer-menu" class="drawer-menu">
+        <div class="drawer-header">
+            <div>
+                <div class="brand-title" style="font-size: 1.1rem;">Safe<span>Ride</span></div>
+                <div style="font-size: 0.65rem; color: var(--text-sub);">Driver Safety Console</div>
+            </div>
+            <button class="drawer-close-btn" onclick="toggleDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-section-title">Navigation Tabs</div>
+        <a class="drawer-link" onclick="openDrawerTab('tab-home')">🏠 Home Page</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-about')">ℹ️ About Us & Values</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-profile')">🛡️ Driver Profile & SOS</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-contact')">📞 Contact Details</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-passengers')">🔍 Passenger Scanner</a>
+
+        <div class="drawer-section-title" style="margin-top: 18px;">Quick Actions</div>
+        <a class="drawer-link" onclick="showQRCode(); toggleDrawer();">💳 Show Driver QR Badge</a>
+        <a class="drawer-link" onclick="triggerPWAInstall()">📱 Install PWA App</a>
+        <a class="drawer-link" href="legal.html">📄 Terms & POPIA Privacy</a>
+    </div>
 
     <main>
         <!-- 1. HOME PAGE TAB -->
@@ -306,6 +452,14 @@
                 <div class="sos-title" style="font-size: 1rem;">Quick SOS Panic Dispatch</div>
                 <div class="sos-subtitle" style="margin-bottom: 12px;">Tap to initiate PSIRA emergency countdown</div>
                 <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;" onclick="startCountdown()">🚨 Trigger Emergency SOS</button>
+            </div>
+
+            <div class="info-card">
+                <div class="info-left">
+                    <h3>Driver Verification Badge</h3>
+                    <p>Show your active QR/NFC code to passengers</p>
+                </div>
+                <button class="action-btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem;" onclick="showQRCode()">Show Badge</button>
             </div>
         </div>
 
@@ -336,8 +490,19 @@
             </div>
         </div>
 
-        <!-- 3. DRIVER PROFILE TAB (REGISTRATION, SOS, BLE & TOKENIZATION) -->
+        <!-- 3. DRIVER PROFILE TAB (COMMAND CONSOLE & REGISTRATION) -->
         <div id="tab-profile" class="tab-section">
+            <!-- Driver Shift Status Bar -->
+            <div class="shift-bar">
+                <span style="font-size: 0.82rem; font-weight: 700;">Driver Shift Status:</span>
+                <select id="driver-shift-status" class="shift-select" onchange="updateShiftStatus()">
+                    <option value="ONLINE">🟢 Online & Active</option>
+                    <option value="ON_TRIP">🟡 On Active Trip</option>
+                    <option value="OFFLINE">🔴 Offline</option>
+                </select>
+            </div>
+
+            <!-- Emergency Response Panel -->
             <div class="sos-card">
                 <div class="sos-title">Emergency Response Console</div>
                 <div class="sos-subtitle">PSIRA Private Security & Independent Protection</div>
@@ -351,26 +516,50 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
+                <!-- Hardware BLE Status Banner -->
                 <div class="ble-status-banner">
                     <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
                     <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="connectBLEHardwareButton()">Pair Button</button>
                 </div>
 
+                <!-- Emergency SOS Countdown Overlay -->
                 <div id="countdown-box" class="overlay-screen">
                     <div style="font-size:0.8rem; font-weight:700; color:white;">DISPATCHING SOS & PSIRA IN</div>
                     <div id="countdown-num" class="overlay-num">5</div>
                     <button class="overlay-btn" onclick="cancelCountdown()">CANCEL ALERT</button>
                 </div>
+
+                <!-- Night Trip Check-In Safety Overlay -->
+                <div id="night-checkin-box" class="overlay-screen" style="background: rgba(15, 23, 42, 0.96); border: 2px solid var(--accent-amber);">
+                    <div style="font-size:0.9rem; font-weight:800; color:var(--accent-amber);">🛡️ NIGHT SAFETY CHECK-IN</div>
+                    <div style="font-size:0.78rem; color:var(--text-sub); margin-top:4px;">Are you safe on your current trip?</div>
+                    <div id="checkin-num" class="overlay-num" style="color: white; font-size: 2.8rem;">30</div>
+                    <button class="overlay-btn" style="background: var(--accent-green); color: white;" onclick="acknowledgeSafetyCheckin()">I AM SAFE ✅</button>
+                </div>
             </div>
 
+            <!-- Driver Verification Badge Card -->
+            <div class="info-card">
+                <div class="info-left">
+                    <h3>QR Verification Badge</h3>
+                    <p>Show active ID badge to passengers</p>
+                </div>
+                <button class="action-btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem;" onclick="showQRCode()">Show Badge</button>
+            </div>
+
+            <!-- Live Satellite Map Widget -->
             <div class="map-wrapper">
                 <h3 style="color:#ffffff; font-size: 0.95rem;">Mbombela Satellite Map</h3>
                 <div id="live-satellite-map"></div>
                 <div id="live-coords-box" style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700; text-align: center;">
                     GPS: Locating satellite fix...
                 </div>
+                <button class="action-btn" style="margin-top: 6px; background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3);" onclick="startLiveGPSNavigation()">
+                    📍 Navigation: Route to My Live GPS
+                </button>
             </div>
 
+            <!-- Driver Registration & Tokenization Form -->
             <div class="content-card">
                 <div class="card-heading">Driver Membership & Security Setup</div>
                 
@@ -395,9 +584,10 @@
                     <input type="text" id="reg-psira" class="form-control" placeholder="+27821234567">
                 </div>
 
+                <!-- Secure Payment Tokenization Section -->
                 <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 6px; margin-bottom: 6px;">
                     <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
-                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your card securely for automated safety membership billing.</p>
+                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your debit/credit card securely for automated safety membership billing.</p>
                     <div id="token-status-display" style="font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px;">Status: No secure token linked</div>
                     <button type="button" class="action-btn" style="background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3);" onclick="simulateCardTokenization()">
                         🔐 Securely Tokenize Card
@@ -409,6 +599,43 @@
                 <div style="text-align: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
                 </div>
+            </div>
+
+            <!-- Local Trip Logs Section -->
+            <div class="content-card">
+                <div class="card-heading">Trip Safety Logs</div>
+                <div class="form-group">
+                    <label>Pickup Zone</label>
+                    <select id="trip-pickup" class="form-control">
+                        <option>Mbombela Central (CBD)</option>
+                        <option>Riverside Mall Hub</option>
+                        <option>Sonpark Shopping Centre</option>
+                        <option>West End Shopping Centre</option>
+                        <option>KaNyamazane Route</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Passenger Initial / Name</label>
+                    <input type="text" id="trip-passenger" class="form-control" placeholder="e.g. Passenger J.">
+                </div>
+                <div class="form-group">
+                    <label>Notes / Flag</label>
+                    <input type="text" id="trip-notes" class="form-control" placeholder="e.g. Cash Trip / Night Drop">
+                </div>
+                <button class="action-btn" onclick="saveLocalTrip()">Save Local Trip Log</button>
+
+                <div id="trip-history-list" style="margin-top: 12px;">
+                    <h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>
+                </div>
+            </div>
+
+            <!-- SAPS Emergency Call Card -->
+            <div class="info-card">
+                <div class="info-left">
+                    <h3>Direct Police Dispatch</h3>
+                    <p>SAPS Mbombela Emergency Call</p>
+                </div>
+                <a href="tel:10111" class="action-btn" style="width: auto; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); background: var(--bg-card-alt);">Call 10111</a>
             </div>
         </div>
 
@@ -436,6 +663,17 @@
             </div>
         </div>
     </main>
+
+    <!-- Driver QR Verification Modal -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#ffffff;">Driver Verification Badge</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-top:4px;">SafeRide Mbombela Verified</p>
+            <div id="qrcode-canvas" style="margin: 16px 0; padding: 10px; background: white; border-radius: 12px;"></div>
+            <div id="qr-driver-info" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;"></div>
+            <button class="close-btn" onclick="closeQRCode()">Close Badge</button>
+        </div>
+    </div>
 
     <!-- Bottom Navigation Bar (5 Exact Tabs) -->
     <nav>
@@ -465,17 +703,55 @@
     <script>
         let countdownTimer = null;
         let countdownVal = 5;
+        let checkinTimer = null;
+        let checkinVal = 30;
         let html5QrCode = null;
         let currentLat = -25.4753;
         let currentLng = 30.9694;
         let map = null;
         let driverMarker = null;
         let bleDevice = null;
+        let deferredPrompt = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDriverRegistration();
+            renderLocalTrips();
             startLiveGPSWatch();
+            registerServiceWorker();
+            loadShiftStatus();
+            startNightCheckinTimer();
         });
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function triggerPWAInstall() {
+            if (document.getElementById('drawer-menu').classList.contains('active')) {
+                toggleDrawer();
+            }
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
+            } else {
+                alert("To install SafeRide Mobility, tap your mobile browser menu (3 dots) and select 'Add to Home screen' or 'Install App'.");
+            }
+        }
+
+        function toggleDrawer() {
+            document.getElementById('drawer-overlay').classList.toggle('active');
+            document.getElementById('drawer-menu').classList.toggle('active');
+        }
+
+        function openDrawerTab(tabId) {
+            toggleDrawer();
+            const navItems = document.querySelectorAll('.nav-item');
+            const tabMap = { 'tab-home': 0, 'tab-about': 1, 'tab-profile': 2, 'tab-contact': 3, 'tab-passengers': 4 };
+            switchTab(tabId, navItems[tabMap[tabId] || 0]);
+        }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
@@ -499,6 +775,46 @@
                     }
                 }, 150);
             }
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+        }
+
+        function updateShiftStatus() {
+            localStorage.setItem('saferide_shift_status', document.getElementById('driver-shift-status').value);
+        }
+
+        function loadShiftStatus() {
+            const saved = localStorage.getItem('saferide_shift_status');
+            if (saved && document.getElementById('driver-shift-status')) {
+                document.getElementById('driver-shift-status').value = saved;
+            }
+        }
+
+        function startNightCheckinTimer() {
+            const hour = new Date().getHours();
+            if (hour >= 18 || hour <= 5) {
+                checkinTimer = setInterval(() => {
+                    checkinVal--;
+                    const checkinNum = document.getElementById('checkin-num');
+                    if (checkinNum) checkinNum.innerText = checkinVal;
+                    if (checkinVal <= 0) {
+                        clearInterval(checkinTimer);
+                        document.getElementById('night-checkin-box').style.display = 'flex';
+                        setTimeout(dispatchPSIRAEmergencySOS, 5000);
+                    }
+                }, 60000);
+            }
+        }
+
+        function acknowledgeSafetyCheckin() {
+            document.getElementById('night-checkin-box').style.display = 'none';
+            checkinVal = 30;
+            if (checkinTimer) clearInterval(checkinTimer);
+            startNightCheckinTimer();
         }
 
         function initSatelliteMap() {
@@ -530,6 +846,11 @@
                     { enableHighAccuracy: true, maximumAge: 5000 }
                 );
             }
+        }
+
+        function startLiveGPSNavigation() {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`;
+            window.open(url, '_blank');
         }
 
         function startCountdown() {
@@ -616,6 +937,41 @@
             }, 1200);
         }
 
+        function showQRCode() {
+            const container = document.getElementById('qrcode-canvas');
+            container.innerHTML = '';
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverInfo = `${profile.name || 'Mbombela Driver'} | ${profile.platform || 'Bolt'} | ${profile.plate || 'N/A'}`;
+            document.getElementById('qr-driver-info').innerText = driverInfo;
+            new QRCode(container, { text: `SafeRide-Verified:${driverInfo}`, width: 180, height: 180 });
+            document.getElementById('qr-modal').style.display = 'flex';
+        }
+
+        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
+
+        function saveLocalTrip() {
+            const pickup = document.getElementById('trip-pickup').value;
+            const passenger = document.getElementById('trip-passenger').value || 'Anonymous';
+            const notes = document.getElementById('trip-notes').value || 'None';
+            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
+            trips.unshift({ pickup, passenger, notes, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+            localStorage.setItem('saferide_trips', JSON.stringify(trips));
+            renderLocalTrips();
+            alert('Trip logged!');
+        }
+
+        function renderLocalTrips() {
+            const container = document.getElementById('trip-history-list');
+            if (!container) return;
+            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
+            if (trips.length === 0) { container.innerHTML = `<h4 style="color:var(--text-sub); font-size:0.85rem;">No local trips logged yet.</h4>`; return; }
+            let html = `<h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>`;
+            trips.slice(0, 5).forEach(t => {
+                html += `<div class="info-card" style="margin-bottom: 8px;"><div class="info-left"><h3>${t.pickup} (${t.passenger})</h3><p>Time: ${t.time} | Note: ${t.notes}</p></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
         function saveDriverRegistration() {
             const profile = {
                 name: document.getElementById('reg-name').value,
@@ -629,13 +985,13 @@
 
         function loadDriverRegistration() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (profile.name) document.getElementById('reg-name').value = profile.name;
-            if (profile.platform) document.getElementById('reg-platform').value = profile.platform;
-            if (profile.plate) document.getElementById('reg-plate').value = profile.plate;
-            if (profile.psira) document.getElementById('reg-psira').value = profile.psira;
+            if (profile.name && document.getElementById('reg-name')) document.getElementById('reg-name').value = profile.name;
+            if (profile.platform && document.getElementById('reg-platform')) document.getElementById('reg-platform').value = profile.platform;
+            if (profile.plate && document.getElementById('reg-plate')) document.getElementById('reg-plate').value = profile.plate;
+            if (profile.psira && document.getElementById('reg-psira')) document.getElementById('reg-psira').value = profile.psira;
 
             const token = localStorage.getItem('saferide_payment_token');
-            if (token) {
+            if (token && document.getElementById('token-status-display')) {
                 const tokenDisplay = document.getElementById('token-status-display');
                 tokenDisplay.innerText = `Status: 🟢 Token Linked (${token.substring(0, 10)}...)`;
                 tokenDisplay.style.color = "var(--accent-green)";
