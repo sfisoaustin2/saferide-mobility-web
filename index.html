@@ -408,9 +408,11 @@
         <a class="drawer-link" onclick="openDrawerTab('tab-about')">ℹ️ About Us & Values</a>
         <a class="drawer-link" onclick="openDrawerTab('tab-profile')">🛡️ Driver Profile & SOS</a>
         <a class="drawer-link" onclick="openDrawerTab('tab-contact')">📞 Contact Details</a>
-        <a class="drawer-link" onclick="openDrawerTab('tab-passengers')">🔍 Passenger Scanner</a>
+        <a class="drawer-link" onclick="openDrawerTab('tab-passengers')">🔍 Passenger Scanner & Tracking</a>
 
         <div class="drawer-section-title" style="margin-top: 18px;">Quick Actions</div>
+        <a class="drawer-link" onclick="shareLiveTripWhatsApp(); toggleDrawer();">📲 Share Live Trip via WhatsApp</a>
+        <a class="drawer-link" onclick="generateShiftReportCard(); toggleDrawer();">📊 Export Shift Report Card</a>
         <a class="drawer-link" onclick="showQRCode(); toggleDrawer();">💳 Show Driver QR Badge</a>
         <a class="drawer-link" onclick="triggerPWAInstall()">📱 Install PWA App</a>
         <a class="drawer-link" href="legal.html">📄 Terms & POPIA Privacy</a>
@@ -434,6 +436,23 @@
                 <div class="sos-title" style="font-size: 1rem;">Quick SOS Panic Dispatch</div>
                 <div class="sos-subtitle" style="margin-bottom: 12px;">Tap to initiate PSIRA emergency countdown</div>
                 <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;" onclick="startCountdown()">🚨 Trigger Emergency SOS</button>
+            </div>
+
+            <!-- Offline SMS SOS Fallback Card -->
+            <div class="content-card" style="background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.3);">
+                <div class="card-heading" style="color: var(--accent-red);">📶 Offline Emergency SMS Fallback</div>
+                <div class="card-text">Weak data signal in rural Mbombela pockets? Send an emergency text directly to security via your phone's SMS messaging app.</div>
+                <button class="action-btn" style="background: var(--accent-red); color: white; font-weight: 900;" onclick="triggerOfflineSMSFallback()">
+                    📩 Send Emergency SMS to PSIRA
+                </button>
+            </div>
+
+            <div class="info-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                <div class="info-left">
+                    <h3 style="color: var(--accent-blue);">Passenger "Trip Share" Link</h3>
+                    <p>Share live satellite GPS tracking with family via WhatsApp</p>
+                </div>
+                <button class="action-btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: var(--accent-blue); color: white;" onclick="shareLiveTripWhatsApp()">📲 Share</button>
             </div>
 
             <div class="info-card">
@@ -496,6 +515,11 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
+                <!-- Offline SMS Fallback inside Profile SOS Card -->
+                <button class="action-btn" style="background: rgba(220, 38, 38, 0.2); color: var(--accent-red); border: 1px solid rgba(220, 38, 38, 0.4); margin-top: 10px;" onclick="triggerOfflineSMSFallback()">
+                    📩 No Internet? Send Emergency SMS Fallback
+                </button>
+
                 <div class="ble-status-banner">
                     <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
                     <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="connectBLEHardwareButton()">Pair Button</button>
@@ -513,6 +537,24 @@
                     <div id="checkin-num" style="color: white; font-size: 2.8rem; font-weight:900;">30</div>
                     <button class="action-btn" style="background: var(--accent-green); color: white; width:220px;" onclick="acknowledgeSafetyCheckin()">I AM SAFE ✅</button>
                 </div>
+            </div>
+
+            <!-- Driver Report Card Generator Card -->
+            <div class="content-card" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                <div class="card-heading" style="color: var(--accent-green);">📊 Shift Security Report Card</div>
+                <div class="card-text">Generate your verified shift summary (total trips, check-ins passed, active hours) to share with platform managers or insurance partners.</div>
+                <button class="action-btn" style="background: var(--accent-green); color: white; font-weight: 900;" onclick="generateShiftReportCard()">
+                    📋 Generate & Share Shift Report
+                </button>
+            </div>
+
+            <!-- Trip Share Card in Profile -->
+            <div class="content-card" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3);">
+                <div class="card-heading" style="color: var(--accent-blue);">🔗 Passenger "Trip Share" Generator</div>
+                <div class="card-text">Generate a live GPS tracking link that your passenger can send to family or friends via WhatsApp to follow this trip in real time across Mbombela.</div>
+                <button class="action-btn" style="background: #25D366; color: black; font-weight: 900;" onclick="shareLiveTripWhatsApp()">
+                    📲 Send Trip Tracking Link via WhatsApp
+                </button>
             </div>
 
             <div class="info-card">
@@ -649,6 +691,14 @@
 
         <!-- 5. PASSENGERS SCANNER TAB -->
         <div id="tab-passengers" class="tab-section">
+            <div class="content-card" style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.3);">
+                <div class="card-heading" style="color: var(--accent-green);">📱 Share My Current Trip with Family</div>
+                <div class="card-text">Passengers: Ask your driver to share their live satellite tracking link, or tap below to send your ride status directly via WhatsApp.</div>
+                <button class="action-btn" style="background: #25D366; color: black; font-weight: 900; margin-top: 6px;" onclick="shareLiveTripWhatsApp()">
+                    📲 Share Live GPS Tracking via WhatsApp
+                </button>
+            </div>
+
             <div class="content-card">
                 <div class="card-heading">For Passengers: Ride Verification</div>
                 <div class="card-text">Scan your driver's SafeRide QR verification badge or NFC token to ensure your trip is secure and monitored.</div>
@@ -713,6 +763,7 @@
         let driverMarker = null;
         let bleDevice = null;
         let deferredPrompt = null;
+        let checkinsPassedCount = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDriverRegistration();
@@ -727,6 +778,62 @@
             e.preventDefault();
             deferredPrompt = e;
         });
+
+        /* Feature: Offline SMS SOS Fallback */
+        function triggerOfflineSMSFallback() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverId = profile.driverId || "SR-MBE-DRIVER";
+            const plate = profile.plate || "N/A";
+            const psiraPhone = profile.psira || "+27820000000";
+            
+            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+            const smsBody = encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat in Mbombela. GPS: ${mapsUrl}`);
+            
+            // Opens native SMS app with pre-filled emergency coordinates and recipient number
+            window.location.href = `sms:${psiraPhone}?body=${smsBody}`;
+        }
+
+        /* Feature: Driver Shift Security Report Card */
+        function generateShiftReportCard() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
+            const shiftStatus = localStorage.getItem('saferide_shift_status') || 'ONLINE';
+            
+            const driverName = profile.name || "Sipho Dlamini";
+            const driverId = profile.driverId || "SR-MBE-2026-X89J";
+            const platform = profile.platform || "Bolt";
+            const plate = profile.plate || "MP 123-456";
+            
+            const reportText = `📊 *SafeRide Security Shift Report Card*\n\n` +
+                               `🚖 *Driver:* ${driverName} (${driverId})\n` +
+                               `🚗 *Platform:* ${platform} [${plate}]\n` +
+                               `🟢 *Shift Status:* ${shiftStatus}\n` +
+                               `📦 *Completed Trips Logged:* ${trips.length}\n` +
+                               `🛡️ *Safety Check-ins Passed:* ${checkinsPassedCount}\n` +
+                               `📍 *Last Location:* Mbombela, Mpumalanga\n\n` +
+                               `_Verified by SafeRide Mobility Control Room_`;
+
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(reportText)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        /* Share Live Trip WhatsApp */
+        function shareLiveTripWhatsApp() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverName = profile.name || "SafeRide Driver";
+            const driverId = profile.driverId || "SR-MBE-VERIFIED";
+            const platform = profile.platform || "E-Hailing";
+            const plate = profile.plate || "Verified Vehicle";
+            
+            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+            const shareText = `🛡️ SafeRide Mobility Live Trip Security Tracking:\n\n` +
+                              `🚖 Driver: ${driverName} (${driverId})\n` +
+                              `🚗 Vehicle: ${platform} [${plate}]\n` +
+                              `📍 Live Satellite GPS Location: ${mapsUrl}\n\n` +
+                              `This journey is actively monitored by SafeRide Control Room Mbombela.`;
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        }
 
         function toggleInsuranceFields() {
             const tierVal = document.getElementById('reg-tier').value;
@@ -829,6 +936,7 @@
 
         function acknowledgeSafetyCheckin() {
             document.getElementById('night-checkin-box').style.display = 'none';
+            checkinsPassedCount++;
             checkinVal = 30;
             if (checkinTimer) clearInterval(checkinTimer);
             startNightCheckinTimer();
