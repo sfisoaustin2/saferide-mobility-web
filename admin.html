@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeRide Mobility - Admin Control Room</title>
-    <!-- Favicon & PWA Manifest Links -->
+    <title>SafeRide Mobility - Ultimate Admin Control Room</title>
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
     <link rel="apple-touch-icon" href="/logo.png">
     <!-- Leaflet Satellite Maps -->
@@ -163,6 +163,10 @@
         }
         .action-btn:active { opacity: 0.9; }
 
+        .btn-danger { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #fff; }
+        .btn-whatsapp { background: #25D366; color: #000; }
+        .btn-email { background: var(--accent-blue); color: #fff; }
+
         .sos-alert-banner {
             background: rgba(220, 38, 38, 0.15);
             border: 1px solid rgba(220, 38, 38, 0.4);
@@ -172,6 +176,12 @@
             display: none;
         }
         .sos-alert-banner.active { display: flex; justify-content: space-between; align-items: center; }
+
+        .management-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -234,10 +244,10 @@
             </div>
         </div>
 
-        <!-- Driver Registry Table Card -->
+        <!-- Driver Registry Table Card with Full Management Controls -->
         <div class="content-card">
             <div class="card-heading">
-                <span>📋 Driver Registry & Subscriptions</span>
+                <span>📋 Driver Registry & Management Tools</span>
                 <button class="action-btn" onclick="refreshAdminData()" style="padding: 4px 10px; font-size: 0.72rem;">🔄 Refresh</button>
             </div>
             <div class="table-container">
@@ -247,7 +257,7 @@
                             <th>Driver Details</th>
                             <th>Platform & Plate</th>
                             <th>Protection Tier</th>
-                            <th>Actions</th>
+                            <th>Management Actions</th>
                         </tr>
                     </thead>
                     <tbody id="admin-drivers-tbody">
@@ -365,29 +375,73 @@
 
             let html = '';
             window.adminDrivers.forEach(d => {
+                const cleanPhone = (d.phone || '').replace(/[^0-9+]/g, '');
                 html += `
                     <tr>
                         <td>
-                            <strong>${d.name}</strong><br>
+                            <strong>${d.name || 'Driver'}</strong><br>
                             <span style="font-size: 0.72rem; color: var(--text-sub);">${d.driverId}</span>
                         </td>
                         <td>
-                            ${d.platform} [${d.plate}]<br>
-                            <span style="font-size: 0.72rem; color: var(--accent-amber);">${d.phone}</span>
+                            ${d.platform || 'Bolt'} [${d.plate || 'N/A'}]<br>
+                            <span style="font-size: 0.72rem; color: var(--accent-amber);">${d.phone || 'No Phone'}</span>
                         </td>
                         <td>
-                            <span style="font-weight: 700; color: var(--accent-green);">${d.tier}</span><br>
-                            <span style="font-size: 0.72rem; color: var(--text-sub);">VIN: ${d.vin || 'N/A'}</span>
+                            <span style="font-weight: 700; color: var(--accent-green);">${d.tier || 'Standard'}</span><br>
+                            <span style="font-size: 0.72rem; color: var(--text-sub);">Fine Status: <strong style="color:var(--accent-red);">${d.fineAmount ? 'R' + d.fineAmount : 'None'}</strong></span>
                         </td>
                         <td>
-                            <a href="https://wa.me/${d.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hello ' + d.name + ', SafeRide Control Room checking in on your shift.')}" target="_blank" class="action-btn">
-                                💬 WhatsApp
-                            </a>
+                            <div class="management-toolbar">
+                                <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hello ' + (d.name || 'Driver') + ', SafeRide Control Room checking in on your shift across Mbombela.')}" target="_blank" class="action-btn btn-whatsapp">
+                                    💬 WhatsApp
+                                </a>
+                                <a href="mailto:${d.email || ''}?subject=SafeRide%20Mobility%20Notice&body=Dear%20${encodeURIComponent(d.name || 'Driver')},%0D%0A%0D%0AControl Room notice regarding your SafeRide membership." class="action-btn btn-email">
+                                    ✉️ Email
+                                </a>
+                                <button class="action-btn" style="background:var(--accent-amber); color:#000;" onclick="issueDriverFine('${d.driverId}', '${d.name || 'Driver'}')">
+                                    ⚠️ Fine
+                                </button>
+                                <button class="action-btn btn-danger" onclick="removeDriver('${d.driverId}', '${d.name || 'Driver'}')">
+                                    ❌ Remove
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
             tbody.innerHTML = html;
+        }
+
+        /* Admin Management Functions: Fine, Email, Remove */
+        function issueDriverFine(driverId, driverName) {
+            const reason = prompt(`Enter violation reason for driver ${driverName} (${driverId}):`, "Speeding / Safety Code Violation");
+            if (!reason) return;
+            const amount = prompt("Enter fine amount in ZAR (e.g. 250):", "250");
+            if (!amount) return;
+
+            db.ref('drivers/' + driverId).update({
+                fineReason: reason,
+                fineAmount: amount,
+                fineTimestamp: Date.now()
+            }, (error) => {
+                if (error) {
+                    alert("Error issuing fine: " + error.message);
+                } else {
+                    alert(`Successfully issued R${amount} fine to ${driverName}.`);
+                }
+            });
+        }
+
+        function removeDriver(driverId, driverName) {
+            if (confirm(`Are you sure you want to completely remove ${driverName} (${driverId}) from SafeRide Mobility? This will delete their active profile and unregister them from the fleet.`)) {
+                db.ref('drivers/' + driverId).remove((error) => {
+                    if (error) {
+                        alert("Error removing driver: " + error.message);
+                    } else {
+                        alert(`Driver ${driverName} has been successfully removed from the active fleet.`);
+                    }
+                });
+            }
         }
 
         function renderSOSAuditLog(alerts) {
