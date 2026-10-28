@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Mbombela Driver Safety Net</title>
     <!-- Favicon & PWA Manifest Links -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
     <link rel="manifest" href="/manifest.json">
     <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -14,6 +14,9 @@
     <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Firebase SDK CDNs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         :root {
@@ -369,7 +372,7 @@
 </head>
 <body>
 
-    <!-- Top Header Bar with Logo Integration -->
+    <!-- Top Header Bar with Official Logo Integration -->
     <header>
         <div class="header-left">
             <button class="menu-toggle-btn" onclick="toggleDrawer()">
@@ -515,7 +518,6 @@
                 
                 <div id="location-text" class="location-text">📍 Acquiring live GPS coordinates...</div>
 
-                <!-- Offline SMS Fallback inside Profile SOS Card -->
                 <button class="action-btn" style="background: rgba(220, 38, 38, 0.2); color: var(--accent-red); border: 1px solid rgba(220, 38, 38, 0.4); margin-top: 10px;" onclick="triggerOfflineSMSFallback()">
                     📩 No Internet? Send Emergency SMS Fallback
                 </button>
@@ -582,6 +584,10 @@
                 <div class="form-group">
                     <label>Full Name & Surname</label>
                     <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sipho Dlamini">
+                </div>
+                <div class="form-group">
+                    <label>Driver Email Address</label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="e.g. sipho@example.com">
                 </div>
                 <div class="form-group">
                     <label>E-Hailing Platform</label>
@@ -750,8 +756,22 @@
         </button>
     </nav>
 
-    <!-- App Engine Logic -->
+    <!-- App Engine Logic & Firebase Configuration -->
     <script>
+        // Firebase Configuration Setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyC6vHmfWApAo1BH3H4QkqylqJ2TztpK1Xg",
+            authDomain: "saferide-mobility.firebaseapp.com",
+            databaseURL: "https://saferide-mobility-default-rtdb.firebaseio.com",
+            projectId: "saferide-mobility",
+            storageBucket: "saferide-mobility.firebasestorage.app",
+            messagingSenderId: "169898319830",
+            appId: "1:169898319830:web:b717c0d695df13a8fece77",
+            measurementId: "G-HYHF47E4VZ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let countdownTimer = null;
         let countdownVal = 5;
         let checkinTimer = null;
@@ -789,7 +809,6 @@
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             const smsBody = encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat in Mbombela. GPS: ${mapsUrl}`);
             
-            // Opens native SMS app with pre-filled emergency coordinates and recipient number
             window.location.href = `sms:${psiraPhone}?body=${smsBody}`;
         }
 
@@ -813,8 +832,7 @@
                                `📍 *Last Location:* Mbombela, Mpumalanga\n\n` +
                                `_Verified by SafeRide Mobility Control Room_`;
 
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(reportText)}`;
-            window.open(whatsappUrl, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
         }
 
         /* Share Live Trip WhatsApp */
@@ -903,7 +921,7 @@
 
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
+                navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW Reg Error:', err));
             }
         }
 
@@ -966,6 +984,9 @@
                         if (headerStatus) headerStatus.innerText = "GPS Live";
                         if (coordsBox) coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
                         if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
+                        
+                        // Sync GPS & Profile Data Directly to Firebase Cloud
+                        syncDriverToFirebase();
                     },
                     (error) => { if (locText) locText.innerText = "⚠️ GPS Signal Lost."; },
                     { enableHighAccuracy: true, maximumAge: 5000 }
@@ -1121,6 +1142,31 @@
             container.innerHTML = html;
         }
 
+        /* Firebase Realtime Cloud Sync */
+        function syncDriverToFirebase() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            if (!profile.driverId) return;
+
+            const driverRecord = {
+                driverId: profile.driverId,
+                name: profile.name || "Sipho Dlamini",
+                email: profile.email || "driver@saferide-mobility.co.za",
+                phone: profile.psira || "+27821234567",
+                psira: profile.psira || "+27821234567",
+                platform: profile.platform || "Bolt",
+                plate: profile.plate || "MP 123-456",
+                tier: profile.tier || "Pro Defender (R299/mo)",
+                vin: profile.vin || "N/A",
+                paymentStatus: "PAID",
+                lastPaidDate: new Date().toISOString().split('T')[0],
+                lat: currentLat,
+                lng: currentLng,
+                lastUpdated: Date.now()
+            };
+
+            db.ref('drivers/' + profile.driverId).set(driverRecord);
+        }
+
         function saveDriverRegistration() {
             let existing = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = existing.driverId || generateUniqueDriverID();
@@ -1128,6 +1174,7 @@
             const profile = {
                 driverId: driverId,
                 name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
                 platform: document.getElementById('reg-platform').value,
                 plate: document.getElementById('reg-plate').value,
                 psira: document.getElementById('reg-psira').value,
@@ -1138,7 +1185,9 @@
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
             document.getElementById('unique-id-display').innerText = `Driver ID: ${driverId}`;
-            alert(`Driver profile saved! Package: ${profile.tier} | Unique ID: ${driverId}`);
+            
+            syncDriverToFirebase();
+            alert(`Driver profile saved & synced to Firebase cloud! Package: ${profile.tier} | ID: ${driverId}`);
         }
 
         function loadDriverRegistration() {
@@ -1147,6 +1196,7 @@
                 document.getElementById('unique-id-display').innerText = `Driver ID: ${profile.driverId}`;
             }
             if (profile.name && document.getElementById('reg-name')) document.getElementById('reg-name').value = profile.name;
+            if (profile.email && document.getElementById('reg-email')) document.getElementById('reg-email').value = profile.email;
             if (profile.platform && document.getElementById('reg-platform')) document.getElementById('reg-platform').value = profile.platform;
             if (profile.plate && document.getElementById('reg-plate')) document.getElementById('reg-plate').value = profile.plate;
             if (profile.psira && document.getElementById('reg-psira')) document.getElementById('reg-psira').value = profile.psira;
