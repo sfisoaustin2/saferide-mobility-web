@@ -1025,6 +1025,17 @@
             const psiraPhone = profile.psira || '';
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             const msg = encodeURIComponent(`🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Driver ${profile.driverId || ''} under threat.\n📍 GPS: ${mapsUrl}`);
+            
+            // Push SOS Event to Firebase for Admin Control Desk
+            db.ref('sos_alerts').push({
+                driverId: profile.driverId || 'UNKNOWN',
+                name: profile.name || 'Driver',
+                plate: profile.plate || 'N/A',
+                lat: currentLat,
+                lng: currentLng,
+                timestamp: Date.now()
+            });
+
             window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
         }
 
