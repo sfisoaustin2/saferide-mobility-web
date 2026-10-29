@@ -226,6 +226,8 @@
             display: inline-block;
         }
         .pill-resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .pill-passenger { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); }
+        .pill-driver { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
         .pill-saps { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
         .pill-false { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
     </style>
@@ -260,12 +262,12 @@
     <!-- Emergency SOS Alert Banner -->
     <div id="sos-emergency-banner" class="sos-alert-banner">
         <div>
-            <h3 style="color: var(--accent-red); font-size: 1rem;">🚨 URGENT SOS ALERT RECEIVED!</h3>
+            <h3 style="color: var(--accent-red); font-size: 1rem;">🚨 URGENT SOS EMERGENCY ALERT!</h3>
             <p id="sos-alert-details" style="font-size: 0.85rem; color: #fff; margin-top: 4px;"></p>
         </div>
         <div style="display: flex; gap: 8px;">
             <a id="banner-dispatch-btn" href="#" target="_blank" class="action-btn btn-security" style="font-weight:900;">🚨 Dispatch PSIRA Security</a>
-            <button class="action-btn" style="background: var(--accent-red); color: #fff;" onclick="dismissSOSAlert()">Acknowledge & Clear</button>
+            <button class="action-btn" style="background: var(--accent-red); color: #fff;" onclick="dismissSOSAlert()">Acknowledge</button>
         </div>
     </div>
 
@@ -332,7 +334,7 @@
     <!-- Active SOS Incident Queue Card with Clear All Button -->
     <div class="content-card" style="margin-bottom: 20px;">
         <div class="card-heading">
-            <span>🚨 Active Emergency SOS Incident Queue</span>
+            <span>🚨 Active Emergency SOS Incident Queue (Driver & Passenger Threats)</span>
             <button class="action-btn btn-danger" onclick="clearAllActiveSOS()" style="padding: 4px 10px; font-size: 0.72rem;">
                 🗑️ Clear All Active Alerts
             </button>
@@ -341,11 +343,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Time Triggered</th>
-                        <th>Driver ID & Name</th>
+                        <th>Time</th>
+                        <th>Type & Entity</th>
                         <th>Plate</th>
-                        <th>GPS Location Map Link</th>
-                        <th>PSIRA Dispatch & Resolution Action</th>
+                        <th>GPS Map Link</th>
+                        <th>PSIRA Dispatch & Resolution Actions</th>
                     </tr>
                 </thead>
                 <tbody id="admin-sos-tbody">
@@ -364,14 +366,14 @@
             <button class="action-btn" onclick="listenToFirebaseArchives()" style="padding: 4px 10px; font-size: 0.72rem; background: var(--accent-blue); color: white;">🔄 Refresh Archive</button>
         </div>
         <div style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 6px;">
-            Permanent record of completed SOS dispatches, security responder contact numbers, resolution explanations, and case outcomes stored in Firebase.
+            Permanent audit record of completed SOS dispatches, responder units, resolution notes, and case outcomes stored in Firebase.
         </div>
         <div class="table-container" style="max-height: 320px;">
             <table>
                 <thead>
                     <tr>
                         <th>Ref ID & Date</th>
-                        <th>Driver & Vehicle</th>
+                        <th>Type & Entity Details</th>
                         <th>PSIRA Responder Unit & Contact</th>
                         <th>Threat Category</th>
                         <th>Resolution Notes & Timeline Explanation</th>
@@ -394,9 +396,10 @@
             <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 14px;">Log detailed response information to resolve and archive this dispatch event in Firebase.</p>
             
             <input type="hidden" id="res-sos-key">
-            <input type="hidden" id="res-driver-id">
-            <input type="hidden" id="res-driver-name">
-            <input type="hidden" id="res-driver-plate">
+            <input type="hidden" id="res-entity-id">
+            <input type="hidden" id="res-name">
+            <input type="hidden" id="res-plate">
+            <input type="hidden" id="res-sos-type">
             <input type="hidden" id="res-lat">
             <input type="hidden" id="res-lng">
             <input type="hidden" id="res-trigger-time">
@@ -419,6 +422,8 @@
             <div class="form-group">
                 <label>Threat & Incident Classification</label>
                 <select id="res-threat-category" class="form-control">
+                    <option>Passenger in Vehicle - Driver Threat / Hostile Behavior</option>
+                    <option>Passenger in Vehicle - Route Deviation / Suspicious Route</option>
                     <option>Attempted Hijack / Roadside Ambush</option>
                     <option>Unruly / Aggressive Passenger Threat</option>
                     <option>Roadside Breakdown in High-Risk Zone</option>
@@ -429,13 +434,13 @@
 
             <div class="form-group">
                 <label>Detailed Explanation of How Emergency Was Handled</label>
-                <textarea id="res-notes" class="form-control" rows="3" placeholder="Describe security response timeline, unit arrival, threat neutralization, and driver status..."></textarea>
+                <textarea id="res-notes" class="form-control" rows="3" placeholder="Describe security response timeline, unit arrival, threat neutralization, and entity status..."></textarea>
             </div>
 
             <div class="form-group">
                 <label>Final Case Outcome</label>
                 <select id="res-outcome" class="form-control">
-                    <option value="RESOLVED_SAFE">✅ Resolved - Driver Safe & Secured</option>
+                    <option value="RESOLVED_SAFE">✅ Resolved - Safe & Secured</option>
                     <option value="SAPS_HANDOVER">🚔 Handed Over to SAPS Mbombela</option>
                     <option value="FALSE_ALARM">⚠️ Cleared - False Alarm</option>
                 </select>
@@ -538,9 +543,10 @@
                 const latest = data[latestKey];
                 const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
                 const mapsUrl = `https://maps.google.com/?q=${latest.lat},${latest.lng}`;
-                const alertMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${latest.name} (${latest.driverId})\nPlate: ${latest.plate}\nGPS: ${mapsUrl}`;
+                const labelType = latest.sosType === 'PASSENGER' ? '🚨 PASSENGER THREAT' : '🚨 DRIVER THREAT';
+                const alertMsg = `${labelType} DISPATCH!\nEntity: ${latest.name} (${latest.entityId || latest.driverId})\nPlate: ${latest.plate}\nGPS: ${mapsUrl}`;
                 
-                document.getElementById('sos-alert-details').innerText = `Driver: ${latest.name} (${latest.driverId}) | Plate: ${latest.plate}`;
+                document.getElementById('sos-alert-details').innerText = `${labelType} | Entity: ${latest.name} | Plate: ${latest.plate}`;
                 document.getElementById('banner-dispatch-btn').href = `https://wa.me/${masterPsira}?text=${encodeURIComponent(alertMsg)}`;
                 document.getElementById('sos-emergency-banner').classList.add('active');
 
@@ -572,12 +578,14 @@
             Object.keys(data).reverse().forEach(key => {
                 const a = data[key];
                 const mapLink = `https://maps.google.com/?q=${a.lat},${a.lng}`;
-                const sosMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${a.name} (${a.driverId})\nPlate: ${a.plate}\nGPS: ${mapLink}`;
+                const isPassenger = a.sosType === 'PASSENGER';
+                const typeBadge = isPassenger ? '<span class="status-pill pill-passenger">PASSENGER</span>' : '<span class="status-pill pill-driver">DRIVER</span>';
+                const sosMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nType: ${a.sosType || 'DRIVER'}\nEntity: ${a.name} (${a.entityId || a.driverId})\nPlate: ${a.plate}\nGPS: ${mapLink}`;
                 
                 html += `
                     <tr>
                         <td>${new Date(a.timestamp).toLocaleTimeString()}</td>
-                        <td><strong>${a.name || 'Driver'}</strong> (${a.driverId})</td>
+                        <td>${typeBadge}<br><strong>${a.name || 'Entity'}</strong> (${a.entityId || a.driverId || 'N/A'})</td>
                         <td>${a.plate || 'N/A'}</td>
                         <td><a href="${mapLink}" target="_blank" style="color: var(--accent-blue); font-weight:700;">📍 Open Map</a></td>
                         <td>
@@ -611,10 +619,13 @@
                     if (arc.outcome === 'SAPS_HANDOVER') outcomeBadge = '<span class="status-pill pill-saps">SAPS HANDOVER</span>';
                     if (arc.outcome === 'FALSE_ALARM') outcomeBadge = '<span class="status-pill pill-false">FALSE ALARM</span>';
 
+                    const isPassenger = arc.sosType === 'PASSENGER';
+                    const typeBadge = isPassenger ? '<span class="status-pill pill-passenger">PASSENGER</span>' : '<span class="status-pill pill-driver">DRIVER</span>';
+
                     html += `
                         <tr>
                             <td><strong>${arc.dispatchRef || 'DISP-REF'}</strong><br><span style="font-size:0.7rem; color:var(--text-sub);">${arc.resolvedDate || 'N/A'}</span></td>
-                            <td><strong>${arc.driverName || 'Driver'}</strong> (${arc.driverId})<br><span style="font-size:0.7rem; color:var(--accent-amber);">${arc.plate || 'N/A'}</span></td>
+                            <td>${typeBadge}<br><strong>${arc.name || arc.driverName || 'Entity'}</strong> (${arc.entityId || arc.driverId})<br><span style="font-size:0.7rem; color:var(--accent-amber);">${arc.plate || 'N/A'}</span></td>
                             <td><strong>${arc.psiraUnit || 'PSIRA Unit'}</strong><br><span style="font-size:0.7rem; color:var(--text-sub);">${arc.responderBadge || 'N/A'} | Contact: <a href="tel:${arc.psiraContactNumber}" style="color:var(--accent-blue);">${arc.psiraContactNumber}</a></span></td>
                             <td><strong style="color:var(--accent-red);">${arc.threatCategory || 'Emergency'}</strong></td>
                             <td style="max-width: 280px; font-size: 0.78rem; line-height: 1.3;">${arc.resolutionNotes || 'No notes provided.'}</td>
@@ -631,9 +642,10 @@
             if (!sosItem) return;
 
             document.getElementById('res-sos-key').value = sosKey;
-            document.getElementById('res-driver-id').value = sosItem.driverId || '';
-            document.getElementById('res-driver-name').value = sosItem.name || '';
-            document.getElementById('res-driver-plate').value = sosItem.plate || '';
+            document.getElementById('res-entity-id').value = sosItem.entityId || sosItem.driverId || '';
+            document.getElementById('res-name').value = sosItem.name || sosItem.driverName || '';
+            document.getElementById('res-plate').value = sosItem.plate || '';
+            document.getElementById('res-sos-type').value = sosItem.sosType || 'DRIVER';
             document.getElementById('res-lat').value = sosItem.lat || -25.4753;
             document.getElementById('res-lng').value = sosItem.lng || 30.9694;
             document.getElementById('res-trigger-time').value = sosItem.timestamp || Date.now();
@@ -653,9 +665,10 @@
             const archiveRecord = {
                 dispatchRef: refId,
                 sosKey: sosKey,
-                driverId: document.getElementById('res-driver-id').value,
-                driverName: document.getElementById('res-driver-name').value,
-                plate: document.getElementById('res-driver-plate').value,
+                sosType: document.getElementById('res-sos-type').value,
+                entityId: document.getElementById('res-entity-id').value,
+                name: document.getElementById('res-name').value,
+                plate: document.getElementById('res-plate').value,
                 gpsLocation: `https://maps.google.com/?q=${document.getElementById('res-lat').value},${document.getElementById('res-lng').value}`,
                 psiraUnit: document.getElementById('res-psira-unit').value || 'Tactical Armed Response Unit',
                 responderBadge: document.getElementById('res-responder-badge').value || 'PSIRA Responder',
