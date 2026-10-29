@@ -328,6 +328,17 @@
         #qr-reader { width: 100%; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
         #qr-reader video { width: 100% !important; object-fit: cover; border-radius: 12px; }
 
+        .trip-item {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         nav { 
             background-color: var(--bg-card); 
             border-top: 1px solid #1f2937; 
@@ -445,12 +456,30 @@
             </div>
         </div>
 
-        <!-- 2. ABOUT US TAB -->
+        <!-- 2. ABOUT US & CORE VALUES TAB -->
         <div id="tab-about" class="tab-section">
             <div class="content-card">
-                <div class="card-heading">Company Overview & Core Values</div>
+                <div class="card-heading">Company Overview & Mission</div>
                 <div class="card-text">
-                    SafeRide Mobility (Pty) Ltd is dedicated to driver and passenger safety in Mbombela. We partner exclusively with independent Bolt, Uber, and Maxim operators to ensure rapid armed response dispatch, transparent verification, and community security.
+                    <strong>SafeRide Mobility (Pty) Ltd</strong> is dedicated to elite tactical armed response and community safety for independent e-hailing drivers and passengers operating across Mbombela, Mpumalanga. We empower vulnerable individual drivers on Bolt, Uber, and Maxim platforms with real-time panic dispatch networks and accountability tools.
+                </div>
+            </div>
+
+            <div class="content-card" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3);">
+                <div class="card-heading" style="color: var(--accent-amber);">🌟 Our Core Values & Principles</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+                    <div style="font-size: 0.84rem; line-height: 1.4;">
+                        🛡️ <strong style="color: var(--accent-amber);">1. Safety Above All:</strong> Prioritizing human life and physical well-being through direct PSIRA-accredited armed security coordination.
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.4;">
+                        🤝 <strong style="color: var(--accent-amber);">2. Independent Driver Advocacy:</strong> Protecting solo e-hailing operators on Uber, Bolt, and Maxim who lack traditional fleet security backup.
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.4;">
+                        ⚡ <strong style="color: var(--accent-amber);">3. Technical Excellence:</strong> Deploying real-time Firebase cloud databases, Leaflet satellite tracking, offline SMS panic backups, and anti-flooding controls.
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.4;">
+                        👁️ <strong style="color: var(--accent-amber);">4. Transparency & Accountability:</strong> Maintaining permanent audit archives of all resolved incidents, responder badges, and driver trip logs.
+                    </div>
                 </div>
             </div>
         </div>
@@ -482,6 +511,37 @@
                 <div class="ble-status-banner">
                     <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
                     <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="connectBLEHardwareButton()">Pair Button</button>
+                </div>
+            </div>
+
+            <!-- TRIP RECORDER & LOGGING SECTION -->
+            <div class="content-card" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3);">
+                <div class="card-heading" style="color: var(--accent-amber);">🚖 Driver Trip Recorder & History Logger</div>
+                <div class="card-text">Log trip details to save your shift history and build an audit record for security verification.</div>
+                
+                <div class="form-group">
+                    <label>Pickup Location</label>
+                    <input type="text" id="trip-pickup" class="form-control" placeholder="e.g. Mbombela CBD Plaza">
+                </div>
+                <div class="form-group">
+                    <label>Dropoff Location</label>
+                    <input type="text" id="trip-dropoff" class="form-control" placeholder="e.g. Riverside Mall Hub">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Passenger Name</label>
+                        <input type="text" id="trip-pax-name" class="form-control" placeholder="Optional Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Fare Amount (ZAR)</label>
+                        <input type="number" id="trip-fare" class="form-control" placeholder="R120">
+                    </div>
+                </div>
+                <button class="action-btn" style="background: var(--accent-amber); color: black;" onclick="saveTripRecord()">💾 Log Trip Record</button>
+
+                <div style="margin-top: 10px; font-size: 0.8rem; font-weight: 700; color: white;">Recent Saved Trips:</div>
+                <div id="trip-history-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+                    <div style="font-size: 0.75rem; color: var(--text-sub); text-align: center;">No trip logs recorded for this shift yet.</div>
                 </div>
             </div>
 
@@ -644,6 +704,7 @@
             loadDriverRegistration();
             startLiveGPSWatch();
             registerServiceWorker();
+            renderTripHistory();
         });
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -664,6 +725,66 @@
             }
         }
 
+        function saveTripRecord() {
+            const pickup = document.getElementById('trip-pickup').value;
+            const dropoff = document.getElementById('trip-dropoff').value;
+            const paxName = document.getElementById('trip-pax-name').value || 'Passenger';
+            const fare = document.getElementById('trip-fare').value || '0';
+
+            if (!pickup || !dropoff) {
+                alert('Please enter pickup and dropoff locations.');
+                return;
+            }
+
+            const trips = JSON.parse(localStorage.getItem('saferide_trip_logs') || '[]');
+            const newTrip = {
+                id: 'TRIP-' + Date.now(),
+                pickup: pickup,
+                dropoff: dropoff,
+                paxName: paxName,
+                fare: fare,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            trips.unshift(newTrip);
+            localStorage.setItem('saferide_trip_logs', JSON.stringify(trips));
+
+            document.getElementById('trip-pickup').value = '';
+            document.getElementById('trip-dropoff').value = '';
+            document.getElementById('trip-pax-name').value = '';
+            document.getElementById('trip-fare').value = '';
+
+            renderTripHistory();
+            alert('✅ Trip record saved successfully!');
+        }
+
+        function renderTripHistory() {
+            const listContainer = document.getElementById('trip-history-list');
+            if (!listContainer) return;
+
+            const trips = JSON.parse(localStorage.getItem('saferide_trip_logs') || '[]');
+            if (trips.length === 0) {
+                listContainer.innerHTML = `<div style="font-size: 0.75rem; color: var(--text-sub); text-align: center;">No trip logs recorded for this shift yet.</div>`;
+                return;
+            }
+
+            let html = '';
+            trips.slice(0, 5).forEach(t => {
+                html += `
+                    <div class="trip-item">
+                        <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--accent-amber);">
+                            <span>📍 ${t.pickup} ➔ ${t.dropoff}</span>
+                            <span>R${t.fare}</span>
+                        </div>
+                        <div style="color:var(--text-sub); font-size:0.72rem;">
+                            Pax: ${t.paxName} | Time: ${t.timestamp}
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
         function triggerOfflineSMSFallback() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const entityId = profile.driverId || "SR-MBE-USER";
@@ -674,9 +795,11 @@
 
         function generateShiftReportCard() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const trips = JSON.parse(localStorage.getItem('saferide_trip_logs') || '[]');
             const reportText = `📊 *SafeRide Security Shift Report Card*\n\n` +
                                `🚖 *Driver:* ${profile.name || 'Sipho'} (${profile.driverId || 'SR-MBE'})\n` +
                                `🚗 *Vehicle Plate:* ${profile.plate || 'N/A'}\n` +
+                               `📈 *Completed Trips Today:* ${trips.length}\n` +
                                `📍 *Last Location:* Mbombela, Mpumalanga`;
             window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
         }
