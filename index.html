@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
+    <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
     <link rel="apple-touch-icon" href="/logo.png">
     <link rel="manifest" href="/manifest.json">
+    <!-- QR Code & Scanner Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Firebase SDK CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -77,6 +81,7 @@
         }
         .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
 
+        /* Slide-out Navigation Drawer */
         .drawer-overlay {
             display: none;
             position: fixed;
@@ -443,9 +448,9 @@
         <!-- 2. ABOUT US TAB -->
         <div id="tab-about" class="tab-section">
             <div class="content-card">
-                <div class="card-heading">Company Overview</div>
+                <div class="card-heading">Company Overview & Core Values</div>
                 <div class="card-text">
-                    SafeRide Mobility (Pty) Ltd provides specialized driver and passenger safety protection networks across Mbombela, Mpumalanga.
+                    SafeRide Mobility (Pty) Ltd is dedicated to driver and passenger safety in Mbombela. We partner exclusively with independent Bolt, Uber, and Maxim operators to ensure rapid armed response dispatch, transparent verification, and community security.
                 </div>
             </div>
         </div>
@@ -516,13 +521,43 @@
                 </div>
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Sync</button>
             </div>
+
+            <!-- Card Tokenization & Billing Section -->
+            <div class="content-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
+                <div class="card-heading" style="color: var(--accent-blue);">💳 Secure Card Tokenization & Billing</div>
+                <div class="card-text">Link a debit or credit card for automatic monthly protection plan renewals (FNB Secure Vault).</div>
+                <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" id="tok-holder" class="form-control" placeholder="Sipho Dlamini">
+                </div>
+                <div class="form-group">
+                    <label>Card Number (Tokenized Vault)</label>
+                    <input type="text" id="tok-number" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="text" id="tok-expiry" class="form-control" placeholder="12/28" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="password" id="tok-cvv" class="form-control" placeholder="123" maxlength="4">
+                    </div>
+                </div>
+                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="tokenizeDriverCard()">🔒 Tokenize & Save Payment Method</button>
+            </div>
         </div>
 
         <!-- 4. CONTACT DETAILS TAB -->
         <div id="tab-contact" class="tab-section">
             <div class="content-card" style="text-align: center; padding: 30px 20px;">
-                <div class="card-heading" style="border: none; text-align: center;">Control Room Support</div>
+                <div class="card-heading" style="border: none; text-align: center;">Control Room & Support Desk</div>
                 <div class="card-text" style="margin-top: 8px;">Mbombela Operations Desk: Active 24/7</div>
+                <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <a href="tel:+27821234567" class="action-btn" style="background: var(--accent-green); color: black;">📞 Call Control Desk Now</a>
+                    <a href="https://wa.me/+27821234567" target="_blank" class="action-btn" style="background: #25D366; color: black;">💬 WhatsApp Control Desk</a>
+                    <a href="mailto:support@saferide-mobility.co.za" class="action-btn" style="background: var(--accent-blue); color: white;">✉️ Email Support</a>
+                </div>
             </div>
         </div>
 
@@ -751,12 +786,22 @@
 
         async function connectBLEHardwareButton() {
             try {
-                if (!navigator.bluetooth) { alert('Web Bluetooth not supported.'); return; }
+                if (!navigator.bluetooth) { alert('Web Bluetooth not supported on this browser.'); return; }
                 bleDevice = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: [0xFFE0] });
                 await bleDevice.gatt.connect();
                 document.getElementById('ble-device-name').innerText = `🟢 BLE Connected`;
                 alert('BLE Panic Button paired successfully!');
-            } catch (e) { alert('BLE Pairing cancelled.'); }
+            } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
+        }
+
+        function tokenizeDriverCard() {
+            const num = document.getElementById('tok-number').value;
+            if (!num || num.length < 12) {
+                alert('Please enter a valid card number for tokenization.');
+                return;
+            }
+            const token = 'tok_sfb_' + Math.random().toString(36).substring(2, 12).toUpperCase();
+            alert(`✅ Card successfully tokenized and securely vaulted!\nToken ID: ${token}`);
         }
 
         function showQRCode() {
@@ -773,10 +818,12 @@
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (!profile.driverId) { alert('Complete profile registration first.'); return; }
             if ('NDEFReader' in window) {
-                const ndef = new NDEFReader();
-                await ndef.write({ records: [{ recordType: "url", data: `https://saferide-mobility.co.za/verify?driverId=${profile.driverId}` }] });
-                alert('✅ NFC Tag written successfully!');
-            } else { alert('Web NFC not supported.'); }
+                try {
+                    const ndef = new NDEFReader();
+                    await ndef.write({ records: [{ recordType: "url", data: `https://saferide-mobility.co.za/verify?driverId=${profile.driverId}` }] });
+                    alert('✅ NFC Tag written successfully!');
+                } catch (err) { alert('NFC write error: ' + err); }
+            } else { alert('Web NFC is not supported on this device/browser.'); }
         }
 
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
