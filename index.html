@@ -804,7 +804,7 @@
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || "SR-MBE-DRIVER";
             const plate = profile.plate || "N/A";
-            const psiraPhone = profile.psira || "+27820000000";
+            const psiraPhone = profile.psira ? profile.psira.replace(/[^0-9+]/g, '') : "+27821234567";
             
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             const smsBody = encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat in Mbombela. GPS: ${mapsUrl}`);
@@ -1020,23 +1020,39 @@
             document.getElementById('countdown-box').style.display = 'none';
         }
 
+        /* Fixed & Optimized Emergency SOS Dispatch */
         function dispatchPSIRAEmergencySOS() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const psiraPhone = profile.psira || '';
-            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            const msg = encodeURIComponent(`🚨 URGENT ARMED ASSISTANCE REQUIRED! SafeRide Driver ${profile.driverId || ''} under threat.\n📍 GPS: ${mapsUrl}`);
+            const driverId = profile.driverId || 'SR-MBE-DRIVER';
+            const driverName = profile.name || 'Driver';
+            const driverPlate = profile.plate || 'N/A';
+            const rawPhone = profile.psira || '+27821234567';
+            const psiraPhone = rawPhone.replace(/[^0-9]/g, ''); // Removes +, spaces, dashes for wa.me link
             
-            // Push SOS Event to Firebase for Admin Control Desk
+            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
+            const sosMessage = `🚨 *URGENT ARMED ASSISTANCE REQUIRED!*\n\n` +
+                               `🚖 *Driver:* ${driverName} (${driverId})\n` +
+                               `🚗 *Plate:* ${driverPlate}\n` +
+                               `📍 *Live GPS Location:* ${mapsUrl}\n\n` +
+                               `_Immediate response requested across Mbombela._`;
+
+            // 1. Push SOS Alert to Firebase Realtime Database for Control Room Admin Desk
             db.ref('sos_alerts').push({
-                driverId: profile.driverId || 'UNKNOWN',
-                name: profile.name || 'Driver',
-                plate: profile.plate || 'N/A',
+                driverId: driverId,
+                name: driverName,
+                plate: driverPlate,
                 lat: currentLat,
                 lng: currentLng,
                 timestamp: Date.now()
+            }).then(() => {
+                console.log("SOS successfully logged to Firebase cloud.");
+            }).catch((err) => {
+                console.error("Firebase SOS sync error:", err);
             });
 
-            window.open(psiraPhone ? `https://wa.me/${psiraPhone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
+            // 2. Open WhatsApp Emergency Dispatch Channel with Security Partner
+            const whatsappUrl = `https://wa.me/${psiraPhone}?text=${encodeURIComponent(sosMessage)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         async function connectBLEHardwareButton() {
