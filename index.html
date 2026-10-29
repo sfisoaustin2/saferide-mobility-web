@@ -133,7 +133,7 @@
         .tab-section { display: none; flex-direction: column; gap: 16px; }
         .tab-section.active { display: flex; }
 
-        /* 1. HOME PAGE STYLING */
+        /* HOME PAGE STYLING */
         .home-hero {
             background: linear-gradient(180deg, rgba(9, 13, 22, 0.6) 0%, rgba(9, 13, 22, 0.95) 100%), url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80');
             background-size: cover;
@@ -218,6 +218,7 @@
             outline: none;
         }
         .panic-btn:active { transform: scale(0.94); box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4); }
+        .panic-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
         .panic-btn-sub { font-size: 0.65rem; font-weight: 600; opacity: 0.85; margin-top: 3px; }
 
         .location-text { font-size: 0.8rem; color: var(--accent-green); margin-top: 8px; font-weight: 600; min-height: 20px; }
@@ -437,8 +438,8 @@
             
             <div class="sos-card" style="padding: 16px;">
                 <div class="sos-title" style="font-size: 1rem;">Quick SOS Panic Dispatch</div>
-                <div class="sos-subtitle" style="margin-bottom: 12px;">Tap to initiate PSIRA emergency countdown</div>
-                <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;" onclick="startCountdown()">🚨 Trigger Emergency SOS</button>
+                <div class="sos-subtitle" style="margin-bottom: 12px;">Tap to initiate emergency broadcast</div>
+                <button id="quick-sos-btn" class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;" onclick="startCountdown()">🚨 Trigger Emergency SOS</button>
             </div>
 
             <!-- Offline SMS SOS Fallback Card -->
@@ -483,15 +484,6 @@
                     <strong>Vision:</strong> A fear-free transport ecosystem across Mpumalanga where every driver returns home safely.
                 </div>
             </div>
-
-            <div class="content-card">
-                <div class="card-heading">Core Values & Radical Trust</div>
-                <div class="card-text">
-                    * <strong>Radical Transparency:</strong> Clear, open membership structures with zero hidden fees.<br>
-                    * <strong>Trust & Accountability:</strong> Verified passenger and driver profiles ensuring complete mutual safety.<br>
-                    * <strong>Community Resilience:</strong> Standing united to uplift local drivers against vulnerability on the road.
-                </div>
-            </div>
         </div>
 
         <!-- 3. DRIVER PROFILE TAB -->
@@ -510,9 +502,9 @@
                 <div class="sos-subtitle">PSIRA Private Security & Independent Protection</div>
                 
                 <div class="panic-btn-container">
-                    <button class="panic-btn" onclick="startCountdown()">
+                    <button id="main-panic-btn" class="panic-btn" onclick="startCountdown()">
                         SOS
-                        <span class="panic-btn-sub">ARMED DISPATCH</span>
+                        <span id="panic-btn-sub-label" class="panic-btn-sub">ARMED DISPATCH</span>
                     </button>
                 </div>
                 
@@ -617,8 +609,7 @@
 
                 <div id="insurance-fields" style="display: none; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
                     <label style="color: var(--accent-blue); font-weight: 700; font-size: 0.8rem;">🚗 Partner Car Theft Insurance Verification</label>
-                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; margin-bottom: 8px;">Enter vehicle identification to activate underwritten theft/hijack payout cover.</p>
-                    <div class="form-group">
+                    <div class="form-group" style="margin-top: 8px;">
                         <label>Vehicle VIN Number</label>
                         <input type="text" id="reg-vin" class="form-control" placeholder="e.g. AHTKK123456789">
                     </div>
@@ -626,7 +617,6 @@
 
                 <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-top: 6px; margin-bottom: 6px;">
                     <label style="color: var(--accent-amber); font-weight: 700; font-size: 0.8rem;">💳 Secure Payment Tokenization</label>
-                    <p style="font-size: 0.72rem; color: var(--text-sub); margin-top: 3px; margin-bottom: 8px;">Tokenize your debit/credit card securely for automated safety membership billing.</p>
                     <div id="token-status-display" style="font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px;">Status: No secure token linked</div>
                     <button type="button" class="action-btn" style="background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3);" onclick="simulateCardTokenization()">
                         🔐 Securely Tokenize Card
@@ -634,10 +624,6 @@
                 </div>
 
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Plan Settings</button>
-                
-                <div style="text-align: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                    <a href="legal.html" style="color: var(--accent-amber); font-size: 0.78rem; font-weight: 700; text-decoration: none;">📄 View Terms & Conditions / POPIA Privacy Policy</a>
-                </div>
             </div>
 
             <div class="content-card">
@@ -648,8 +634,6 @@
                         <option>Mbombela Central (CBD)</option>
                         <option>Riverside Mall Hub</option>
                         <option>Sonpark Shopping Centre</option>
-                        <option>West End Shopping Centre</option>
-                        <option>KaNyamazane Route</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -666,14 +650,6 @@
                     <h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>
                 </div>
             </div>
-
-            <div class="info-card">
-                <div class="info-left">
-                    <h3>Direct Police Dispatch</h3>
-                    <p>SAPS Mbombela Emergency Call</p>
-                </div>
-                <a href="tel:10111" class="action-btn" style="width: auto; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); background: var(--bg-card-alt);">Call 10111</a>
-            </div>
         </div>
 
         <!-- 4. CONTACT DETAILS TAB -->
@@ -681,9 +657,7 @@
             <div class="content-card" style="text-align: center; padding: 30px 20px;">
                 <div style="font-size: 2.5rem; margin-bottom: 10px;">📞</div>
                 <div class="card-heading" style="border: none; text-align: center;">Contact Details</div>
-                <div class="card-text" style="margin-top: 8px;">
-                    Direct support and official control room contact channels will be added here at a later stage. Stay tuned for updates!
-                </div>
+                <div class="card-text" style="margin-top: 8px;">Mbombela Operations Desk: Active 24/7</div>
             </div>
         </div>
 
@@ -691,7 +665,6 @@
         <div id="tab-passengers" class="tab-section">
             <div class="content-card" style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.3);">
                 <div class="card-heading" style="color: var(--accent-green);">📱 Share My Current Trip with Family</div>
-                <div class="card-text">Passengers: Ask your driver to share their live satellite tracking link, or tap below to send your ride status directly via WhatsApp.</div>
                 <button class="action-btn" style="background: #25D366; color: black; font-weight: 900; margin-top: 6px;" onclick="shareLiveTripWhatsApp()">
                     📲 Share Live GPS Tracking via WhatsApp
                 </button>
@@ -699,8 +672,6 @@
 
             <div class="content-card">
                 <div class="card-heading">For Passengers: Ride Verification</div>
-                <div class="card-text">Scan your driver's SafeRide QR verification badge or NFC token to ensure your trip is secure and monitored.</div>
-                
                 <div style="padding: 10px; background: var(--bg-card-alt); border-radius: 12px; border: 1px solid var(--border-color);">
                     <div id="qr-reader"></div>
                     <div id="scanner-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-green); font-weight: 700; text-align: center;">Point camera at driver QR badge...</div>
@@ -713,13 +684,9 @@
     <div id="qr-modal" class="modal">
         <div class="modal-content">
             <h3 style="color:#ffffff;">Driver Verification Badge</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub); margin-top:4px;">SafeRide Mbombela Verified</p>
             <div id="qrcode-canvas" style="margin: 16px 0; padding: 10px; background: white; border-radius: 12px;"></div>
             <div id="qr-driver-info" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;"></div>
-            
-            <button class="action-btn" style="background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); margin-bottom: 6px;" onclick="writeToNFCTag()">
-                📡 Write to Physical NFC Tag
-            </button>
+            <button class="action-btn" style="background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); margin-bottom: 6px;" onclick="writeToNFCTag()">📡 Write to Physical NFC Tag</button>
             <button class="close-btn" onclick="closeQRCode()">Close Badge</button>
         </div>
     </div>
@@ -750,7 +717,6 @@
 
     <!-- App Engine Logic & Firebase Configuration -->
     <script>
-        // Firebase Configuration Setup (saferide-mobility-c545a)
         const firebaseConfig = {
             apiKey: "AIzaSyBPzlK3G-EK7vUjFAK8Qq0GR-reoMFvLqs",
             authDomain: "saferide-mobility-c545a.firebaseapp.com",
@@ -776,6 +742,7 @@
         let bleDevice = null;
         let deferredPrompt = null;
         let checkinsPassedCount = 0;
+        let isSosLocked = false; // 15-second debounce anti-spam lock
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDriverRegistration();
@@ -791,87 +758,46 @@
             deferredPrompt = e;
         });
 
-        /* Feature: Offline SMS SOS Fallback */
         function triggerOfflineSMSFallback() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || "SR-MBE-DRIVER";
             const plate = profile.plate || "N/A";
-            const fallbackPhone = "+27821234567";
-            
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            const smsBody = encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat in Mbombela. GPS: ${mapsUrl}`);
-            
-            window.location.href = `sms:${fallbackPhone}?body=${smsBody}`;
+            window.location.href = `sms:+27821234567?body=${encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat. GPS: ${mapsUrl}`)}`;
         }
 
-        /* Feature: Driver Shift Security Report Card */
         function generateShiftReportCard() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
-            const shiftStatus = localStorage.getItem('saferide_shift_status') || 'ONLINE';
-            
-            const driverName = profile.name || "Sipho Dlamini";
-            const driverId = profile.driverId || "SR-MBE-2026-X89J";
-            const platform = profile.platform || "Bolt";
-            const plate = profile.plate || "MP 123-456";
-            
             const reportText = `📊 *SafeRide Security Shift Report Card*\n\n` +
-                               `🚖 *Driver:* ${driverName} (${driverId})\n` +
-                               `🚗 *Platform:* ${platform} [${plate}]\n` +
-                               `🟢 *Shift Status:* ${shiftStatus}\n` +
-                               `📦 *Completed Trips Logged:* ${trips.length}\n` +
-                               `🛡️ *Safety Check-ins Passed:* ${checkinsPassedCount}\n` +
-                               `📍 *Last Location:* Mbombela, Mpumalanga\n\n` +
-                               `_Verified by SafeRide Mobility Control Room_`;
-
+                               `🚖 *Driver:* ${profile.name || 'Sipho'} (${profile.driverId || 'SR-MBE'})\n` +
+                               `🚗 *Platform:* ${profile.platform || 'Bolt'} [${profile.plate || 'N/A'}]\n` +
+                               `📦 *Completed Trips:* ${trips.length}\n` +
+                               `🛡️ *Check-ins Passed:* ${checkinsPassedCount}\n` +
+                               `📍 *Last Location:* Mbombela, Mpumalanga`;
             window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
         }
 
-        /* Share Live Trip WhatsApp */
         function shareLiveTripWhatsApp() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverName = profile.name || "SafeRide Driver";
-            const driverId = profile.driverId || "SR-MBE-VERIFIED";
-            const platform = profile.platform || "E-Hailing";
-            const plate = profile.plate || "Verified Vehicle";
-            
-            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            const shareText = `🛡️ SafeRide Mobility Live Trip Security Tracking:\n\n` +
-                              `🚖 Driver: ${driverName} (${driverId})\n` +
-                              `🚗 Vehicle: ${platform} [${plate}]\n` +
-                              `📍 Live Satellite GPS Location: ${mapsUrl}\n\n` +
-                              `This journey is actively monitored by SafeRide Control Room Mbombela.`;
-
+            const shareText = `🛡️ SafeRide Mobility Live Trip Tracking:\n\n` +
+                              `🚖 Driver: ${profile.name || 'Driver'} (${profile.driverId || 'Verified'})\n` +
+                              `🚗 Vehicle: ${profile.platform || 'E-Hailing'} [${profile.plate || 'Verified'}]\n` +
+                              `📍 Live GPS: https://maps.google.com/?q=${currentLat},${currentLng}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
         }
 
         function toggleInsuranceFields() {
             const tierVal = document.getElementById('reg-tier').value;
-            const fields = document.getElementById('insurance-fields');
-            if (tierVal.includes('Ultimate Shield')) {
-                fields.style.display = 'block';
-            } else {
-                fields.style.display = 'none';
-            }
-        }
-
-        function generateUniqueDriverID() {
-            const randomHash = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const year = new Date().getFullYear();
-            return `SR-MBE-${year}-${randomHash}`;
+            document.getElementById('insurance-fields').style.display = tierVal.includes('Ultimate Shield') ? 'block' : 'none';
         }
 
         function triggerPWAInstall() {
-            if (document.getElementById('drawer-menu').classList.contains('active')) {
-                toggleDrawer();
-            }
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    deferredPrompt = null;
-                });
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
             } else {
-                alert("To install SafeRide Mobility, tap your mobile browser menu (3 dots) and select 'Add to Home screen' or 'Install App'.");
+                alert("To install SafeRide, tap browser menu (3 dots) and select 'Add to Home Screen'.");
             }
         }
 
@@ -882,39 +808,23 @@
 
         function openDrawerTab(tabId) {
             toggleDrawer();
-            const navItems = document.querySelectorAll('.nav-item');
-            const tabMap = { 'tab-home': 0, 'tab-about': 1, 'tab-profile': 2, 'tab-contact': 3, 'tab-passengers': 4 };
-            switchTab(tabId, navItems[tabMap[tabId] || 0]);
+            switchTab(tabId, null);
         }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            if(el) el.classList.add('active');
-
-            if (tabId === 'tab-passengers') {
-                initScanner();
-            } else {
-                stopScanner();
-            }
-
+            if (tabId === 'tab-passengers') { initScanner(); } else { stopScanner(); }
             if (tabId === 'tab-profile') {
                 setTimeout(() => {
-                    if (map) {
-                        map.invalidateSize();
-                        map.setView([currentLat, currentLng], 15);
-                    } else {
-                        initSatelliteMap();
-                    }
+                    if (map) { map.invalidateSize(); map.setView([currentLat, currentLng], 15); }
+                    else { initSatelliteMap(); }
                 }, 150);
             }
         }
 
         function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch((err) => console.log('SW Reg Error:', err));
-            }
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e => {});
         }
 
         function updateShiftStatus() {
@@ -923,9 +833,7 @@
 
         function loadShiftStatus() {
             const saved = localStorage.getItem('saferide_shift_status');
-            if (saved && document.getElementById('driver-shift-status')) {
-                document.getElementById('driver-shift-status').value = saved;
-            }
+            if (saved && document.getElementById('driver-shift-status')) document.getElementById('driver-shift-status').value = saved;
         }
 
         function startNightCheckinTimer() {
@@ -933,8 +841,7 @@
             if (hour >= 18 || hour <= 5) {
                 checkinTimer = setInterval(() => {
                     checkinVal--;
-                    const checkinNum = document.getElementById('checkin-num');
-                    if (checkinNum) checkinNum.innerText = checkinVal;
+                    if (document.getElementById('checkin-num')) document.getElementById('checkin-num').innerText = checkinVal;
                     if (checkinVal <= 0) {
                         clearInterval(checkinTimer);
                         document.getElementById('night-checkin-box').style.display = 'flex';
@@ -956,41 +863,37 @@
             if (!map && document.getElementById('live-satellite-map')) {
                 map = L.map('live-satellite-map', { zoomControl: true, attributionControl: false }).setView([currentLat, currentLng], 15);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
-                L.marker([-25.4735, 30.9702]).addTo(map).bindPopup("<b>Mbombela CBD</b>");
-                L.marker([-25.4492, 30.9851]).addTo(map).bindPopup("<b>Riverside Mall Hub</b>");
                 driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Vehicle</b>");
             }
         }
 
         function startLiveGPSWatch() {
-            const headerStatus = document.getElementById('header-gps-status');
-            const locText = document.getElementById('location-text');
-            const coordsBox = document.getElementById('live-coords-box');
-
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
                     (position) => {
                         currentLat = position.coords.latitude;
                         currentLng = position.coords.longitude;
-                        if (locText) locText.innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
-                        if (headerStatus) headerStatus.innerText = "GPS Live";
-                        if (coordsBox) coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
+                        if (document.getElementById('location-text')) document.getElementById('location-text').innerText = `📍 Live GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                        if (document.getElementById('live-coords-box')) document.getElementById('live-coords-box').innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
                         if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
-                        
                         syncDriverToFirebase();
                     },
-                    (error) => { if (locText) locText.innerText = "⚠️ GPS Signal Lost."; },
+                    (error) => {},
                     { enableHighAccuracy: true, maximumAge: 5000 }
                 );
             }
         }
 
         function startLiveGPSNavigation() {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`;
-            window.open(url, '_blank');
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`, '_blank');
         }
 
         function startCountdown() {
+            if (isSosLocked) {
+                alert('🚨 SOS alert already active! Please wait for control room response.');
+                return;
+            }
+
             countdownVal = 5;
             document.getElementById('countdown-num').innerText = countdownVal;
             document.getElementById('countdown-box').style.display = 'flex';
@@ -1011,111 +914,82 @@
             document.getElementById('countdown-box').style.display = 'none';
         }
 
+        /* Anti-Spam Cooldown SOS Dispatch */
         function dispatchEmergencySOS() {
+            if (isSosLocked) return;
+
+            isSosLocked = true;
+            const mainBtn = document.getElementById('main-panic-btn');
+            const quickBtn = document.getElementById('quick-sos-btn');
+            if (mainBtn) mainBtn.disabled = true;
+            if (quickBtn) quickBtn.disabled = true;
+
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || 'SR-MBE-DRIVER';
-            const driverName = profile.name || 'Driver';
-            const driverPlate = profile.plate || 'N/A';
             
-            db.ref('sos_alerts').push({
+            db.ref('sos_alerts/' + driverId).set({
                 driverId: driverId,
-                name: driverName,
-                plate: driverPlate,
+                name: profile.name || 'Driver',
+                plate: profile.plate || 'N/A',
                 lat: currentLat,
                 lng: currentLng,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                status: "ACTIVE"
             });
 
-            alert('🚨 EMERGENCY SOS DISPATCHED TO CONTROL ROOM!\n\nYour live GPS coordinates have been broadcast to the Mbombela security desk.');
+            alert('🚨 EMERGENCY SOS DISPATCHED TO CONTROL ROOM!');
+
+            let secondsLeft = 15;
+            const subLabel = document.getElementById('panic-btn-sub-label');
+            const lockTimer = setInterval(() => {
+                secondsLeft--;
+                if (subLabel) subLabel.innerText = `LOCKED (${secondsLeft}s)`;
+                if (secondsLeft <= 0) {
+                    clearInterval(lockTimer);
+                    isSosLocked = false;
+                    if (mainBtn) mainBtn.disabled = false;
+                    if (quickBtn) quickBtn.disabled = false;
+                    if (subLabel) subLabel.innerText = "ARMED DISPATCH";
+                }
+            }, 1000);
         }
 
         async function connectBLEHardwareButton() {
-            const bleStatusLabel = document.getElementById('ble-device-name');
             try {
-                if (!navigator.bluetooth) {
-                    alert('Web Bluetooth is not supported on this device/browser.');
-                    return;
-                }
-                
-                bleStatusLabel.innerText = "Scanning for BLE button...";
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['generic_access', 'battery_service', 0xFFE0, 0x1802]
-                });
-
-                const server = await bleDevice.gatt.connect();
-                bleStatusLabel.innerText = `🟢 BLE Connected: ${bleDevice.name || 'Panic Button'}`;
-                bleStatusLabel.style.color = "var(--accent-green)";
-
-                bleDevice.addEventListener('gattserverdisconnected', () => {
-                    bleStatusLabel.innerText = "⚠️ BLE Panic Button Disconnected!";
-                    bleStatusLabel.style.color = "var(--accent-red)";
-                });
-
-                const services = await server.getPrimaryServices();
-                for (const service of services) {
-                    const characteristics = await service.getCharacteristics();
-                    for (const char of characteristics) {
-                        if (char.properties.notify || char.properties.indicate) {
-                            await char.startNotifications();
-                            char.addEventListener('characteristicvaluechanged', (event) => {
-                                startCountdown();
-                            });
-                        }
-                    }
-                }
-                alert(`Successfully paired physical button: ${bleDevice.name || 'BLE Panic Button'}`);
-            } catch (error) {
-                console.log('Bluetooth error:', error);
-                bleStatusLabel.innerText = "🔘 BLE Panic Button: Not Connected";
-            }
+                if (!navigator.bluetooth) { alert('Web Bluetooth not supported.'); return; }
+                bleDevice = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: [0xFFE0] });
+                await bleDevice.gatt.connect();
+                document.getElementById('ble-device-name').innerText = `🟢 BLE Connected`;
+                alert('BLE Panic Button paired successfully!');
+            } catch (e) { alert('BLE Pairing cancelled.'); }
         }
 
         function simulateCardTokenization() {
-            const tokenDisplay = document.getElementById('token-status-display');
-            tokenDisplay.innerText = "Status: Connecting to secure gateway...";
-            
-            setTimeout(() => {
-                const mockToken = "tok_za_" + Math.random().toString(36).substring(2, 12);
-                localStorage.setItem('saferide_payment_token', mockToken);
-                tokenDisplay.innerText = `Status: 🟢 Token Linked (${mockToken.substring(0, 10)}...)`;
-                tokenDisplay.style.color = "var(--accent-green)";
-                alert('Card successfully tokenized and securely stored via gateway reference!');
-            }, 1200);
+            const token = "tok_za_" + Math.random().toString(36).substring(2, 12);
+            localStorage.setItem('saferide_payment_token', token);
+            document.getElementById('token-status-display').innerText = `Status: 🟢 Token Linked`;
+            document.getElementById('token-status-display').style.color = "var(--accent-green)";
+            alert('Card successfully tokenized!');
         }
 
         function showQRCode() {
             const container = document.getElementById('qrcode-canvas');
             container.innerHTML = '';
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverId = profile.driverId || 'REGISTER_REQUIRED';
-            const verifyPayload = `https://saferide-mobility.co.za/verify?driverId=${driverId}&name=${encodeURIComponent(profile.name || 'Driver')}&plate=${encodeURIComponent(profile.plate || 'N/A')}`;
-            
-            document.getElementById('qr-driver-info').innerText = `${profile.name || 'Mbombela Driver'} | ID: ${driverId} | ${profile.platform || 'Bolt'} (${profile.plate || 'N/A'})`;
-            new QRCode(container, { text: verifyPayload, width: 180, height: 180 });
+            const driverId = profile.driverId || 'SR-MBE-DRIVER';
+            document.getElementById('qr-driver-info').innerText = `${profile.name || 'Driver'} | ID: ${driverId}`;
+            new QRCode(container, { text: `https://saferide-mobility.co.za/verify?driverId=${driverId}`, width: 180, height: 180 });
             document.getElementById('qr-modal').style.display = 'flex';
         }
 
         async function writeToNFCTag() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (!profile.driverId) {
-                alert('Please complete registration on Driver Profile first.');
-                return;
-            }
-            const payloadUrl = `https://saferide-mobility.co.za/verify?driverId=${profile.driverId}`;
-
+            if (!profile.driverId) { alert('Complete profile registration first.'); return; }
             if ('NDEFReader' in window) {
-                try {
-                    const ndef = new NDEFReader();
-                    alert('Hold your phone against the blank NFC tag to write...');
-                    await ndef.write({ records: [{ recordType: "url", data: payloadUrl }] });
-                    alert(`✅ Successfully programmed NFC Tag for Driver ID: ${profile.driverId}`);
-                } catch (error) {
-                    alert('NFC Write Error: ' + error.message);
-                }
-            } else {
-                alert(`Web NFC is not supported natively on this browser. You can manually write this payload using any NFC Writer app:\n\nPayload: ${payloadUrl}`);
-            }
+                const ndef = new NDEFReader();
+                await ndef.write({ records: [{ recordType: "url", data: `https://saferide-mobility.co.za/verify?driverId=${profile.driverId}` }] });
+                alert('✅ NFC Tag written successfully!');
+            } else { alert('Web NFC not supported on this browser.'); }
         }
 
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
@@ -1137,8 +1011,8 @@
             const trips = JSON.parse(localStorage.getItem('saferide_trips') || '[]');
             if (trips.length === 0) { container.innerHTML = `<h4 style="color:var(--text-sub); font-size:0.85rem;">No local trips logged yet.</h4>`; return; }
             let html = `<h4 style="color:var(--text-sub); font-size:0.85rem; margin-bottom: 8px;">Recent Local Logs</h4>`;
-            trips.slice(0, 5).forEach(t => {
-                html += `<div class="info-card" style="margin-bottom: 8px;"><div class="info-left"><h3>${t.pickup} (${t.passenger})</h3><p>Time: ${t.time} | Note: ${t.notes}</p></div></div>`;
+            trips.slice(0, 3).forEach(t => {
+                html += `<div class="info-card" style="margin-bottom: 6px;"><div class="info-left"><h3>${t.pickup} (${t.passenger})</h3><p>${t.time} | ${t.notes}</p></div></div>`;
             });
             container.innerHTML = html;
         }
@@ -1146,28 +1020,22 @@
         function syncDriverToFirebase() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (!profile.driverId) return;
-
-            const driverRecord = {
+            db.ref('drivers/' + profile.driverId).update({
                 driverId: profile.driverId,
                 name: profile.name || "Sipho Dlamini",
-                email: profile.email || "driver@saferide-mobility.co.za",
                 phone: profile.phone || "+27821234567",
                 platform: profile.platform || "Bolt",
                 plate: profile.plate || "MP 123-456",
-                tier: profile.tier || "Pro Defender (R299/mo)",
-                vin: profile.vin || "N/A",
+                tier: profile.tier || "Pro Defender",
                 lat: currentLat,
                 lng: currentLng,
                 lastUpdated: Date.now()
-            };
-
-            db.ref('drivers/' + profile.driverId).set(driverRecord);
+            });
         }
 
         function saveDriverRegistration() {
-            let existing = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverId = existing.driverId || generateUniqueDriverID();
-
+            const existing = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverId = existing.driverId || 'SR-MBE-' + Math.random().toString(36).substring(2,6).toUpperCase();
             const profile = {
                 driverId: driverId,
                 name: document.getElementById('reg-name').value,
@@ -1179,17 +1047,14 @@
                 vin: document.getElementById('reg-vin') ? document.getElementById('reg-vin').value : ''
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            document.getElementById('unique-id-display').innerText = `Driver ID: ${driverId}`;
-            
+            if (document.getElementById('unique-id-display')) document.getElementById('unique-id-display').innerText = `Driver ID: ${driverId}`;
             syncDriverToFirebase();
-            alert(`Driver profile saved & synced to Firebase cloud! Package: ${profile.tier} | ID: ${driverId}`);
+            alert(`Profile saved & synced! ID: ${driverId}`);
         }
 
         function loadDriverRegistration() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (profile.driverId) {
-                document.getElementById('unique-id-display').innerText = `Driver ID: ${profile.driverId}`;
-            }
+            if (profile.driverId && document.getElementById('unique-id-display')) document.getElementById('unique-id-display').innerText = `Driver ID: ${profile.driverId}`;
             if (profile.name && document.getElementById('reg-name')) document.getElementById('reg-name').value = profile.name;
             if (profile.phone && document.getElementById('reg-phone')) document.getElementById('reg-phone').value = profile.phone;
             if (profile.email && document.getElementById('reg-email')) document.getElementById('reg-email').value = profile.email;
@@ -1205,7 +1070,7 @@
         function initScanner() {
             if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 200 }, (text) => {
-                document.getElementById('scanner-result').innerText = `✅ Verified Badge: ${text}`;
+                document.getElementById('scanner-result').innerText = `✅ Verified: ${text}`;
             }, () => {});
         }
 
