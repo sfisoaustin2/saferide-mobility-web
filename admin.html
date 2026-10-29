@@ -329,10 +329,13 @@
         </div>
     </div>
 
-    <!-- Active SOS Incident Queue Card -->
+    <!-- Active SOS Incident Queue Card with Clear All Button -->
     <div class="content-card" style="margin-bottom: 20px;">
         <div class="card-heading">
             <span>🚨 Active Emergency SOS Incident Queue</span>
+            <button class="action-btn btn-danger" onclick="clearAllActiveSOS()" style="padding: 4px 10px; font-size: 0.72rem;">
+                🗑️ Clear All Active Alerts
+            </button>
         </div>
         <div class="table-container" style="max-height: 220px;">
             <table>
@@ -545,6 +548,20 @@
             });
         }
 
+        /* One-Click Cleanup Function to Delete All Active SOS Nodes */
+        function clearAllActiveSOS() {
+            if (confirm("Are you sure you want to clear and delete ALL active SOS alerts from the control desk?")) {
+                db.ref('sos_alerts').remove((error) => {
+                    if (!error) {
+                        alert("✅ All active SOS alerts cleared from Firebase!");
+                        dismissSOSAlert();
+                    } else {
+                        alert("Error clearing alerts: " + error.message);
+                    }
+                });
+            }
+        }
+
         function renderSOSQueueTable(data) {
             const tbody = document.getElementById('admin-sos-tbody');
             if (!tbody) return;
@@ -747,4 +764,4 @@
         function refreshAdminData() { listenToFirebaseDrivers(); listenToFirebaseArchives(); alert('Control room re-synced!'); }
     </script>
 </body>
-</html>ss
+</html>
