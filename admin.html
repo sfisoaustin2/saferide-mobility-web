@@ -167,6 +167,7 @@
         .btn-whatsapp { background: #25D366; color: #000; }
         .btn-email { background: var(--accent-blue); color: #fff; }
         .btn-security { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); }
+        .btn-resolve { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
 
         .sos-alert-banner {
             background: rgba(220, 38, 38, 0.15);
@@ -184,6 +185,8 @@
             flex-wrap: wrap;
         }
 
+        .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .form-group label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; }
         .form-control {
             background-color: var(--bg-card-alt);
             border: 1px solid var(--border-color);
@@ -191,7 +194,51 @@
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.85rem;
+            width: 100%;
         }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .close-btn {
+            background: var(--bg-card-alt); 
+            color: white; 
+            border: 1px solid var(--border-color); 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 700;
+            margin-top: 6px;
+            width: 100%;
+        }
+
+        .status-pill {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: inline-block;
+        }
+        .pill-resolved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .pill-saps { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .pill-false { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
     </style>
 </head>
 <body>
@@ -248,8 +295,8 @@
             <div id="stat-incidents" class="stat-value" style="color: var(--accent-green);">0</div>
         </div>
         <div class="stat-box">
-            <div class="stat-label">Region Hub</div>
-            <div class="stat-value" style="font-size: 1.05rem; color: #fff; padding-top: 4px;">Mbombela, MP</div>
+            <div class="stat-label">Archived Resolved Cases</div>
+            <div id="stat-archived-count" class="stat-value" style="color: var(--accent-blue);">0</div>
         </div>
     </div>
 
@@ -267,7 +314,7 @@
             </div>
         </div>
 
-        <!-- Driver Registry Table Card with Full Management Controls -->
+        <!-- Driver Registry Table Card -->
         <div class="content-card">
             <div class="card-heading">
                 <span>📋 Driver Registry & Management Tools</span>
@@ -293,20 +340,20 @@
         </div>
     </div>
 
-    <!-- Emergency SOS Event Log Card -->
+    <!-- Active SOS Incident Log Card -->
     <div class="content-card" style="margin-bottom: 20px;">
         <div class="card-heading">
-            <span>🚨 Emergency SOS & Incident Audit Log</span>
+            <span>🚨 Active Emergency SOS Incident Queue</span>
         </div>
-        <div class="table-container" style="max-height: 200px;">
+        <div class="table-container" style="max-height: 220px;">
             <table>
                 <thead>
                     <tr>
-                        <th>Time</th>
+                        <th>Time Triggered</th>
                         <th>Driver ID & Name</th>
                         <th>Plate</th>
                         <th>GPS Location Map Link</th>
-                        <th>PSIRA Dispatch Action</th>
+                        <th>PSIRA Dispatch & Resolution Action</th>
                     </tr>
                 </thead>
                 <tbody id="admin-sos-tbody">
@@ -315,6 +362,99 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- ARCHIVE CONSOLE: Firebase Dispatch History & Resolved Incident Audit Log -->
+    <div class="content-card" style="margin-bottom: 30px; background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(59, 130, 246, 0.3);">
+        <div class="card-heading" style="color: var(--accent-blue);">
+            <span>📁 Dispatch Resolution Archive Console (Firebase Incident Audit Logs)</span>
+            <button class="action-btn" onclick="listenToFirebaseArchives()" style="padding: 4px 10px; font-size: 0.72rem; background: var(--accent-blue); color: white;">🔄 Refresh Archive</button>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 6px;">
+            Permanent record of completed SOS dispatches, security responder contact numbers, resolution explanations, and case outcomes stored in Firebase.
+        </div>
+        <div class="table-container" style="max-height: 320px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref ID & Date</th>
+                        <th>Driver & Vehicle</th>
+                        <th>PSIRA Responder Unit & Contact</th>
+                        <th>Threat Category</th>
+                        <th>Resolution Notes & Timeline Explanation</th>
+                        <th>Outcome Status</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-archive-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-sub);">Loading dispatch history archives from Firebase...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DISPATCH RESOLUTION MODAL -->
+    <div id="resolve-sos-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: var(--accent-green); font-size: 1.1rem; margin-bottom: 4px;">🛡️ Complete SOS Emergency Resolution Report</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 14px;">Log detailed response information to resolve and archive this dispatch event in Firebase.</p>
+            
+            <input type="hidden" id="res-sos-key">
+            <input type="hidden" id="res-driver-id">
+            <input type="hidden" id="res-driver-name">
+            <input type="hidden" id="res-driver-plate">
+            <input type="hidden" id="res-lat">
+            <input type="hidden" id="res-lng">
+            <input type="hidden" id="res-trigger-time">
+
+            <div class="form-group">
+                <label>PSIRA Armed Response Company / Security Partner</label>
+                <input type="text" id="res-psira-unit" class="form-control" placeholder="e.g. Mbombela Tactical Response Unit 04">
+            </div>
+            
+            <div class="form-group">
+                <label>Security Responder Badge ID / Dispatch Vehicle Number</label>
+                <input type="text" id="res-responder-badge" class="form-control" placeholder="e.g. Responder Badge #PSIRA-9842 (Vehicle 02)">
+            </div>
+
+            <div class="form-group">
+                <label>Direct Security Contact Phone Number Used</label>
+                <input type="text" id="res-psira-phone" class="form-control" placeholder="+27821234567">
+            </div>
+
+            <div class="form-group">
+                <label>Threat & Incident Classification</label>
+                <select id="res-threat-category" class="form-control">
+                    <option>Attempted Hijack / Roadside Ambush</option>
+                    <option>Unruly / Aggressive Passenger Threat</option>
+                    <option>Roadside Breakdown in High-Risk Zone</option>
+                    <option>Physical Assault / Injury</option>
+                    <option>False Alarm / Accidental Trigger</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Detailed Explanation of How Emergency Was Handled</label>
+                <textarea id="res-notes" class="form-control" rows="3" placeholder="Describe security response timeline, unit arrival, threat neutralization, and driver status..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Final Case Outcome</label>
+                <select id="res-outcome" class="form-control">
+                    <option value="RESOLVED_SAFE">✅ Resolved - Driver Safe & Secured</option>
+                    <option value="SAPS_HANDOVER">🚔 Handed Over to SAPS Mbombela</option>
+                    <option value="FALSE_ALARM">⚠️ Cleared - False Alarm</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button type="button" class="action-btn" style="background: var(--accent-green); color: white; flex: 1; justify-content: center; padding: 10px;" onclick="submitSOSResolution()">
+                    📁 Submit & Archive to Firebase
+                </button>
+                <button type="button" class="action-btn btn-danger" style="padding: 10px;" onclick="closeResolveModal()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -337,11 +477,13 @@
         let adminMap = null;
         let adminMarkers = {};
         window.adminDrivers = [];
+        window.rawSOSAlerts = {};
 
         document.addEventListener('DOMContentLoaded', () => {
             initAdminMap();
             listenToFirebaseDrivers();
             listenToFirebaseSOS();
+            listenToFirebaseArchives();
             loadMasterPSIRA();
         });
 
@@ -387,26 +529,170 @@
             });
         }
 
-        /* Real-Time SOS Alert Listener */
+        /* Real-Time SOS Active Queue Listener */
         function listenToFirebaseSOS() {
             db.ref('sos_alerts').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return;
+                if (!data) {
+                    document.getElementById('admin-sos-tbody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub);">No active emergency alerts recorded. System secure.</td></tr>`;
+                    document.getElementById('stat-incidents').innerText = "0";
+                    document.getElementById('stat-incidents').style.color = "var(--accent-green)";
+                    dismissSOSAlert();
+                    return;
+                }
 
-                const alerts = Object.values(data);
-                if (alerts.length > 0) {
-                    const latest = alerts[alerts.length - 1];
-                    const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
-                    const mapsUrl = `https://maps.google.com/?q=${latest.lat},${latest.lng}`;
-                    const alertMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${latest.name} (${latest.driverId})\nPlate: ${latest.plate}\nGPS: ${mapsUrl}`;
-                    
-                    document.getElementById('sos-alert-details').innerText = `Driver: ${latest.name} (${latest.driverId}) | Plate: ${latest.plate}`;
-                    document.getElementById('banner-dispatch-btn').href = `https://wa.me/${masterPsira}?text=${encodeURIComponent(alertMsg)}`;
-                    document.getElementById('sos-emergency-banner').classList.add('active');
-                    document.getElementById('stat-incidents').innerText = alerts.length;
-                    document.getElementById('stat-incidents').style.color = "var(--accent-red)";
-                    
-                    renderSOSAuditLog(alerts);
+                window.rawSOSAlerts = data;
+                const sosKeys = Object.keys(data);
+                document.getElementById('stat-incidents').innerText = sosKeys.length;
+                document.getElementById('stat-incidents').style.color = "var(--accent-red)";
+
+                const latestKey = sosKeys[sosKeys.length - 1];
+                const latest = data[latestKey];
+                const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
+                const mapsUrl = `https://maps.google.com/?q=${latest.lat},${latest.lng}`;
+                const alertMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${latest.name} (${latest.driverId})\nPlate: ${latest.plate}\nGPS: ${mapsUrl}`;
+                
+                document.getElementById('sos-alert-details').innerText = `Driver: ${latest.name} (${latest.driverId}) | Plate: ${latest.plate}`;
+                document.getElementById('banner-dispatch-btn').href = `https://wa.me/${masterPsira}?text=${encodeURIComponent(alertMsg)}`;
+                document.getElementById('sos-emergency-banner').classList.add('active');
+
+                renderSOSQueueTable(data);
+            });
+        }
+
+        function renderSOSQueueTable(data) {
+            const tbody = document.getElementById('admin-sos-tbody');
+            if (!tbody) return;
+
+            let html = '';
+            const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
+
+            Object.keys(data).reverse().forEach(key => {
+                const a = data[key];
+                const mapLink = `https://maps.google.com/?q=${a.lat},${a.lng}`;
+                const sosMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${a.name} (${a.driverId})\nPlate: ${a.plate}\nGPS: ${mapLink}`;
+                
+                html += `
+                    <tr>
+                        <td>${new Date(a.timestamp).toLocaleTimeString()}</td>
+                        <td><strong>${a.name || 'Driver'}</strong> (${a.driverId})</td>
+                        <td>${a.plate || 'N/A'}</td>
+                        <td><a href="${mapLink}" target="_blank" style="color: var(--accent-blue); font-weight:700;">📍 Open GPS Location Map</a></td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="https://wa.me/${masterPsira}?text=${encodeURIComponent(sosMsg)}" target="_blank" class="action-btn btn-security">
+                                    🚨 Dispatch PSIRA
+                                </a>
+                                <button class="action-btn btn-resolve" onclick="openResolveModal('${key}')">
+                                    ✅ Resolve & Archive
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        /* Real-Time Firebase Dispatch History Archive Listener */
+        function listenToFirebaseArchives() {
+            db.ref('dispatch_archives').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const tbody = document.getElementById('admin-archive-tbody');
+                if (!data) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-sub);">No archived dispatch history found in database.</td></tr>`;
+                    document.getElementById('stat-archived-count').innerText = "0";
+                    return;
+                }
+
+                const archives = Object.values(data);
+                document.getElementById('stat-archived-count').innerText = archives.length;
+
+                let html = '';
+                archives.reverse().forEach(arc => {
+                    let outcomeBadge = '<span class="status-pill pill-resolved">RESOLVED SAFE</span>';
+                    if (arc.outcome === 'SAPS_HANDOVER') outcomeBadge = '<span class="status-pill pill-saps">SAPS HANDOVER</span>';
+                    if (arc.outcome === 'FALSE_ALARM') outcomeBadge = '<span class="status-pill pill-false">FALSE ALARM</span>';
+
+                    html += `
+                        <tr>
+                            <td>
+                                <strong>${arc.dispatchRef || 'DISP-REF'}</strong><br>
+                                <span style="font-size:0.7rem; color:var(--text-sub);">${arc.resolvedDate || 'N/A'}</span>
+                            </td>
+                            <td>
+                                <strong>${arc.driverName || 'Driver'}</strong> (${arc.driverId})<br>
+                                <span style="font-size:0.7rem; color:var(--accent-amber);">${arc.plate || 'N/A'}</span>
+                            </td>
+                            <td>
+                                <strong>${arc.psiraUnit || 'PSIRA Unit'}</strong><br>
+                                <span style="font-size:0.7rem; color:var(--text-sub);">${arc.responderBadge || 'N/A'} | Contact: <a href="tel:${arc.psiraContactNumber}" style="color:var(--accent-blue);">${arc.psiraContactNumber}</a></span>
+                            </td>
+                            <td><strong style="color:var(--accent-red);">${arc.threatCategory || 'Emergency'}</strong></td>
+                            <td style="max-width: 280px; font-size: 0.78rem; line-height: 1.3;">${arc.resolutionNotes || 'No notes provided.'}</td>
+                            <td>${outcomeBadge}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            });
+        }
+
+        /* Open & Populate Resolution Modal */
+        function openResolveModal(sosKey) {
+            const sosItem = window.rawSOSAlerts[sosKey];
+            if (!sosItem) return;
+
+            document.getElementById('res-sos-key').value = sosKey;
+            document.getElementById('res-driver-id').value = sosItem.driverId || '';
+            document.getElementById('res-driver-name').value = sosItem.name || '';
+            document.getElementById('res-driver-plate').value = sosItem.plate || '';
+            document.getElementById('res-lat').value = sosItem.lat || -25.4753;
+            document.getElementById('res-lng').value = sosItem.lng || 30.9694;
+            document.getElementById('res-trigger-time').value = sosItem.timestamp || Date.now();
+
+            const savedPsira = localStorage.getItem('saferide_master_psira') || '+27821234567';
+            document.getElementById('res-psira-phone').value = savedPsira;
+
+            document.getElementById('resolve-sos-modal').style.display = 'flex';
+        }
+
+        function closeResolveModal() {
+            document.getElementById('resolve-sos-modal').style.display = 'none';
+        }
+
+        /* Submit Resolution to Firebase & Archive Case */
+        function submitSOSResolution() {
+            const sosKey = document.getElementById('res-sos-key').value;
+            const refId = 'DISP-' + new Date().getFullYear() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            
+            const archiveRecord = {
+                dispatchRef: refId,
+                sosKey: sosKey,
+                driverId: document.getElementById('res-driver-id').value,
+                driverName: document.getElementById('res-driver-name').value,
+                plate: document.getElementById('res-driver-plate').value,
+                gpsLocation: `https://maps.google.com/?q=${document.getElementById('res-lat').value},${document.getElementById('res-lng').value}`,
+                psiraUnit: document.getElementById('res-psira-unit').value || 'Tactical Armed Response Unit',
+                responderBadge: document.getElementById('res-responder-badge').value || 'PSIRA Responder',
+                psiraContactNumber: document.getElementById('res-psira-phone').value || '+27821234567',
+                threatCategory: document.getElementById('res-threat-category').value,
+                resolutionNotes: document.getElementById('res-notes').value || 'Incident handled and verified safe by control room.',
+                outcome: document.getElementById('res-outcome').value,
+                triggerTimestamp: document.getElementById('res-trigger-time').value,
+                resolvedTimestamp: Date.now(),
+                resolvedDate: new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })
+            };
+
+            // 1. Write incident report to Firebase dispatch_archives node
+            db.ref('dispatch_archives/' + refId).set(archiveRecord, (error) => {
+                if (error) {
+                    alert('Error saving archive: ' + error.message);
+                } else {
+                    // 2. Remove active alert from active queue
+                    db.ref('sos_alerts/' + sosKey).remove();
+                    closeResolveModal();
+                    alert(`✅ Incident resolved and logged under archive reference: ${refId}`);
                 }
             });
         }
@@ -454,7 +740,7 @@
             tbody.innerHTML = html;
         }
 
-        /* Admin Management Functions: Fine, Email, Remove */
+        /* Admin Management Functions: Fine & Remove */
         function issueDriverFine(driverId, driverName) {
             const reason = prompt(`Enter violation reason for driver ${driverName} (${driverId}):`, "Speeding / Safety Code Violation");
             if (!reason) return;
@@ -486,33 +772,6 @@
             }
         }
 
-        function renderSOSAuditLog(alerts) {
-            const tbody = document.getElementById('admin-sos-tbody');
-            if (!tbody) return;
-
-            let html = '';
-            const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
-
-            alerts.reverse().forEach(a => {
-                const mapLink = `https://maps.google.com/?q=${a.lat},${a.lng}`;
-                const sosMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${a.name} (${a.driverId})\nPlate: ${a.plate}\nGPS: ${mapLink}`;
-                html += `
-                    <tr>
-                        <td>${new Date(a.timestamp).toLocaleTimeString()}</td>
-                        <td>${a.name} (${a.driverId})</td>
-                        <td>${a.plate || 'N/A'}</td>
-                        <td><a href="${mapLink}" target="_blank" style="color: var(--accent-blue); font-weight:700;">📍 Open GPS Location Map</a></td>
-                        <td>
-                            <a href="https://wa.me/${masterPsira}?text=${encodeURIComponent(sosMsg)}" target="_blank" class="action-btn btn-security">
-                                🚨 Dispatch PSIRA Security
-                            </a>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        }
-
         function updateAdminMapMarkers() {
             if (!adminMap) return;
 
@@ -536,6 +795,7 @@
 
         function refreshAdminData() {
             listenToFirebaseDrivers();
+            listenToFirebaseArchives();
             alert('Admin desk re-synced with Firebase cloud database!');
         }
     </script>
