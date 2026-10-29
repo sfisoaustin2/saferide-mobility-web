@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeRide Mobility - Ultimate Admin Control Room</title>
+    <title>SafeRide Mobility - Admin Control Room</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
     <link rel="apple-touch-icon" href="/logo.png">
@@ -166,6 +166,7 @@
         .btn-danger { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #fff; }
         .btn-whatsapp { background: #25D366; color: #000; }
         .btn-email { background: var(--accent-blue); color: #fff; }
+        .btn-security { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); }
 
         .sos-alert-banner {
             background: rgba(220, 38, 38, 0.15);
@@ -175,12 +176,21 @@
             margin-bottom: 20px;
             display: none;
         }
-        .sos-alert-banner.active { display: flex; justify-content: space-between; align-items: center; }
+        .sos-alert-banner.active { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
         .management-toolbar {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
+        }
+
+        .form-control {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -201,13 +211,26 @@
         </div>
     </header>
 
+    <!-- Control Room Master Settings: PSIRA Armed Response Partner -->
+    <div class="content-card" style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.3);">
+        <div class="card-heading" style="color: var(--accent-amber);">🛡️ Control Room Master Settings: PSIRA Armed Response Partner</div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label style="font-size: 0.82rem; color: var(--text-sub);">Central PSIRA Security WhatsApp / Dispatch Number:</label>
+            <input type="text" id="master-psira-input" class="form-control" placeholder="+27821234567" style="flex: 1; min-width: 200px;">
+            <button class="action-btn" onclick="saveMasterPSIRA()">💾 Save Master Number</button>
+        </div>
+    </div>
+
     <!-- Emergency SOS Alert Banner -->
     <div id="sos-emergency-banner" class="sos-alert-banner">
         <div>
             <h3 style="color: var(--accent-red); font-size: 1rem;">🚨 URGENT SOS ALERT RECEIVED!</h3>
             <p id="sos-alert-details" style="font-size: 0.85rem; color: #fff; margin-top: 4px;"></p>
         </div>
-        <button class="action-btn" style="background: var(--accent-red); color: #fff;" onclick="dismissSOSAlert()">Acknowledge & Clear</button>
+        <div style="display: flex; gap: 8px;">
+            <a id="banner-dispatch-btn" href="#" target="_blank" class="action-btn btn-security" style="font-weight:900;">🚨 Dispatch PSIRA Security</a>
+            <button class="action-btn" style="background: var(--accent-red); color: #fff;" onclick="dismissSOSAlert()">Acknowledge & Clear</button>
+        </div>
     </div>
 
     <!-- Top Stats Bar -->
@@ -280,10 +303,10 @@
                 <thead>
                     <tr>
                         <th>Time</th>
-                        <th>Driver ID</th>
-                        <th>Name</th>
-                        <th>GPS Location</th>
-                        <th>Status</th>
+                        <th>Driver ID & Name</th>
+                        <th>Plate</th>
+                        <th>GPS Location Map Link</th>
+                        <th>PSIRA Dispatch Action</th>
                     </tr>
                 </thead>
                 <tbody id="admin-sos-tbody">
@@ -319,7 +342,21 @@
             initAdminMap();
             listenToFirebaseDrivers();
             listenToFirebaseSOS();
+            loadMasterPSIRA();
         });
+
+        function saveMasterPSIRA() {
+            const num = document.getElementById('master-psira-input').value;
+            localStorage.setItem('saferide_master_psira', num);
+            alert('Master PSIRA security dispatch number saved successfully!');
+        }
+
+        function loadMasterPSIRA() {
+            const saved = localStorage.getItem('saferide_master_psira');
+            if (saved && document.getElementById('master-psira-input')) {
+                document.getElementById('master-psira-input').value = saved;
+            }
+        }
 
         function initAdminMap() {
             if (!adminMap && document.getElementById('admin-satellite-map')) {
@@ -359,7 +396,12 @@
                 const alerts = Object.values(data);
                 if (alerts.length > 0) {
                     const latest = alerts[alerts.length - 1];
-                    document.getElementById('sos-alert-details').innerText = `Driver ID: ${latest.driverId} | Plate: ${latest.plate} | Time: ${new Date(latest.timestamp).toLocaleTimeString()}`;
+                    const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
+                    const mapsUrl = `https://maps.google.com/?q=${latest.lat},${latest.lng}`;
+                    const alertMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${latest.name} (${latest.driverId})\nPlate: ${latest.plate}\nGPS: ${mapsUrl}`;
+                    
+                    document.getElementById('sos-alert-details').innerText = `Driver: ${latest.name} (${latest.driverId}) | Plate: ${latest.plate}`;
+                    document.getElementById('banner-dispatch-btn').href = `https://wa.me/${masterPsira}?text=${encodeURIComponent(alertMsg)}`;
                     document.getElementById('sos-emergency-banner').classList.add('active');
                     document.getElementById('stat-incidents').innerText = alerts.length;
                     document.getElementById('stat-incidents').style.color = "var(--accent-red)";
@@ -449,14 +491,22 @@
             if (!tbody) return;
 
             let html = '';
+            const masterPsira = (localStorage.getItem('saferide_master_psira') || '+27821234567').replace(/[^0-9]/g, '');
+
             alerts.reverse().forEach(a => {
+                const mapLink = `https://maps.google.com/?q=${a.lat},${a.lng}`;
+                const sosMsg = `🚨 ARMED RESPONSE DISPATCH REQUEST!\nDriver: ${a.name} (${a.driverId})\nPlate: ${a.plate}\nGPS: ${mapLink}`;
                 html += `
                     <tr>
                         <td>${new Date(a.timestamp).toLocaleTimeString()}</td>
-                        <td>${a.driverId}</td>
-                        <td>${a.name || 'Driver'}</td>
-                        <td><a href="https://maps.google.com/?q=${a.lat},${a.lng}" target="_blank" style="color: var(--accent-blue);">View GPS Link</a></td>
-                        <td><span style="color: var(--accent-red); font-weight: 700;">DISPATCHED</span></td>
+                        <td>${a.name} (${a.driverId})</td>
+                        <td>${a.plate || 'N/A'}</td>
+                        <td><a href="${mapLink}" target="_blank" style="color: var(--accent-blue); font-weight:700;">📍 Open GPS Location Map</a></td>
+                        <td>
+                            <a href="https://wa.me/${masterPsira}?text=${encodeURIComponent(sosMsg)}" target="_blank" class="action-btn btn-security">
+                                🚨 Dispatch PSIRA Security
+                            </a>
+                        </td>
                     </tr>
                 `;
             });

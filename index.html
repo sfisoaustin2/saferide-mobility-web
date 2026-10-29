@@ -586,6 +586,10 @@
                     <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sipho Dlamini">
                 </div>
                 <div class="form-group">
+                    <label>Driver Phone Number</label>
+                    <input type="text" id="reg-phone" class="form-control" placeholder="+27821234567">
+                </div>
+                <div class="form-group">
                     <label>Driver Email Address</label>
                     <input type="email" id="reg-email" class="form-control" placeholder="e.g. sipho@example.com">
                 </div>
@@ -600,10 +604,6 @@
                 <div class="form-group">
                     <label>Vehicle Registration / Plate Number</label>
                     <input type="text" id="reg-plate" class="form-control" placeholder="e.g., MP 123-456">
-                </div>
-                <div class="form-group">
-                    <label>PSIRA / Security Partner WhatsApp Number</label>
-                    <input type="text" id="reg-psira" class="form-control" placeholder="+27821234567">
                 </div>
 
                 <div class="form-group">
@@ -621,14 +621,6 @@
                     <div class="form-group">
                         <label>Vehicle VIN Number</label>
                         <input type="text" id="reg-vin" class="form-control" placeholder="e.g. AHTKK123456789">
-                    </div>
-                    <div class="form-group">
-                        <label>Engine Number</label>
-                        <input type="text" id="reg-engine" class="form-control" placeholder="e.g. 1KR-FE-98765">
-                    </div>
-                    <div class="form-group">
-                        <label>Vehicle Estimated Market Value (ZAR)</label>
-                        <input type="number" id="reg-market-val" class="form-control" placeholder="e.g. 150000">
                     </div>
                 </div>
 
@@ -804,12 +796,12 @@
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || "SR-MBE-DRIVER";
             const plate = profile.plate || "N/A";
-            const psiraPhone = profile.psira ? profile.psira.replace(/[^0-9+]/g, '') : "+27821234567";
+            const fallbackPhone = "+27821234567";
             
             const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
             const smsBody = encodeURIComponent(`SOS URGENT! Driver ${driverId} (Plate: ${plate}) under threat in Mbombela. GPS: ${mapsUrl}`);
             
-            window.location.href = `sms:${psiraPhone}?body=${smsBody}`;
+            window.location.href = `sms:${fallbackPhone}?body=${smsBody}`;
         }
 
         /* Feature: Driver Shift Security Report Card */
@@ -946,7 +938,7 @@
                     if (checkinVal <= 0) {
                         clearInterval(checkinTimer);
                         document.getElementById('night-checkin-box').style.display = 'flex';
-                        setTimeout(dispatchPSIRAEmergencySOS, 5000);
+                        setTimeout(dispatchEmergencySOS, 5000);
                     }
                 }, 60000);
             }
@@ -985,7 +977,6 @@
                         if (coordsBox) coordsBox.innerText = `Lat: ${currentLat.toFixed(5)} | Lng: ${currentLng.toFixed(5)}`;
                         if (map && driverMarker) driverMarker.setLatLng([currentLat, currentLng]);
                         
-                        // Sync GPS & Profile Data Directly to Firebase Cloud
                         syncDriverToFirebase();
                     },
                     (error) => { if (locText) locText.innerText = "⚠️ GPS Signal Lost."; },
@@ -1010,7 +1001,7 @@
                 if (countdownVal <= 0) {
                     clearInterval(countdownTimer);
                     document.getElementById('countdown-box').style.display = 'none';
-                    dispatchPSIRAEmergencySOS();
+                    dispatchEmergencySOS();
                 }
             }, 1000);
         }
@@ -1020,23 +1011,12 @@
             document.getElementById('countdown-box').style.display = 'none';
         }
 
-        /* Fixed & Optimized Emergency SOS Dispatch */
-        function dispatchPSIRAEmergencySOS() {
+        function dispatchEmergencySOS() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || 'SR-MBE-DRIVER';
             const driverName = profile.name || 'Driver';
             const driverPlate = profile.plate || 'N/A';
-            const rawPhone = profile.psira || '+27821234567';
-            const psiraPhone = rawPhone.replace(/[^0-9]/g, ''); // Removes +, spaces, dashes for wa.me link
             
-            const mapsUrl = `https://maps.google.com/?q=${currentLat},${currentLng}`;
-            const sosMessage = `🚨 *URGENT ARMED ASSISTANCE REQUIRED!*\n\n` +
-                               `🚖 *Driver:* ${driverName} (${driverId})\n` +
-                               `🚗 *Plate:* ${driverPlate}\n` +
-                               `📍 *Live GPS Location:* ${mapsUrl}\n\n` +
-                               `_Immediate response requested across Mbombela._`;
-
-            // 1. Push SOS Alert to Firebase Realtime Database for Control Room Admin Desk
             db.ref('sos_alerts').push({
                 driverId: driverId,
                 name: driverName,
@@ -1044,15 +1024,9 @@
                 lat: currentLat,
                 lng: currentLng,
                 timestamp: Date.now()
-            }).then(() => {
-                console.log("SOS successfully logged to Firebase cloud.");
-            }).catch((err) => {
-                console.error("Firebase SOS sync error:", err);
             });
 
-            // 2. Open WhatsApp Emergency Dispatch Channel with Security Partner
-            const whatsappUrl = `https://wa.me/${psiraPhone}?text=${encodeURIComponent(sosMessage)}`;
-            window.open(whatsappUrl, '_blank');
+            alert('🚨 EMERGENCY SOS DISPATCHED TO CONTROL ROOM!\n\nYour live GPS coordinates have been broadcast to the Mbombela security desk.');
         }
 
         async function connectBLEHardwareButton() {
@@ -1169,7 +1143,6 @@
             container.innerHTML = html;
         }
 
-        /* Firebase Realtime Cloud Sync */
         function syncDriverToFirebase() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (!profile.driverId) return;
@@ -1178,14 +1151,11 @@
                 driverId: profile.driverId,
                 name: profile.name || "Sipho Dlamini",
                 email: profile.email || "driver@saferide-mobility.co.za",
-                phone: profile.psira || "+27821234567",
-                psira: profile.psira || "+27821234567",
+                phone: profile.phone || "+27821234567",
                 platform: profile.platform || "Bolt",
                 plate: profile.plate || "MP 123-456",
                 tier: profile.tier || "Pro Defender (R299/mo)",
                 vin: profile.vin || "N/A",
-                paymentStatus: "PAID",
-                lastPaidDate: new Date().toISOString().split('T')[0],
                 lat: currentLat,
                 lng: currentLng,
                 lastUpdated: Date.now()
@@ -1201,14 +1171,12 @@
             const profile = {
                 driverId: driverId,
                 name: document.getElementById('reg-name').value,
+                phone: document.getElementById('reg-phone').value,
                 email: document.getElementById('reg-email').value,
                 platform: document.getElementById('reg-platform').value,
                 plate: document.getElementById('reg-plate').value,
-                psira: document.getElementById('reg-psira').value,
                 tier: document.getElementById('reg-tier').value,
-                vin: document.getElementById('reg-vin').value,
-                engine: document.getElementById('reg-engine').value,
-                marketVal: document.getElementById('reg-market-val').value
+                vin: document.getElementById('reg-vin') ? document.getElementById('reg-vin').value : ''
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
             document.getElementById('unique-id-display').innerText = `Driver ID: ${driverId}`;
@@ -1223,24 +1191,15 @@
                 document.getElementById('unique-id-display').innerText = `Driver ID: ${profile.driverId}`;
             }
             if (profile.name && document.getElementById('reg-name')) document.getElementById('reg-name').value = profile.name;
+            if (profile.phone && document.getElementById('reg-phone')) document.getElementById('reg-phone').value = profile.phone;
             if (profile.email && document.getElementById('reg-email')) document.getElementById('reg-email').value = profile.email;
             if (profile.platform && document.getElementById('reg-platform')) document.getElementById('reg-platform').value = profile.platform;
             if (profile.plate && document.getElementById('reg-plate')) document.getElementById('reg-plate').value = profile.plate;
-            if (profile.psira && document.getElementById('reg-psira')) document.getElementById('reg-psira').value = profile.psira;
             if (profile.tier && document.getElementById('reg-tier')) {
                 document.getElementById('reg-tier').value = profile.tier;
                 toggleInsuranceFields();
             }
             if (profile.vin && document.getElementById('reg-vin')) document.getElementById('reg-vin').value = profile.vin;
-            if (profile.engine && document.getElementById('reg-engine')) document.getElementById('reg-engine').value = profile.engine;
-            if (profile.marketVal && document.getElementById('reg-market-val')) document.getElementById('reg-market-val').value = profile.marketVal;
-
-            const token = localStorage.getItem('saferide_payment_token');
-            if (token && document.getElementById('token-status-display')) {
-                const tokenDisplay = document.getElementById('token-status-display');
-                tokenDisplay.innerText = `Status: 🟢 Token Linked (${token.substring(0, 10)}...)`;
-                tokenDisplay.style.color = "var(--accent-green)";
-            }
         }
 
         function initScanner() {
