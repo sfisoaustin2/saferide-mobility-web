@@ -607,17 +607,17 @@
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Sync</button>
             </div>
 
-            <!-- Stitch Express Subscription & Billing Section -->
+            <!-- Stitch Subscription & Billing Section -->
             <div class="content-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Express Secure Subscription</div>
-                <div class="card-text">Securely activate your driver subscription tier via Stitch Express checkout.</div>
+                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Secure Subscription</div>
+                <div class="card-text">Securely activate your driver subscription tier via Stitch checkout.</div>
                 
                 <div class="form-group">
                     <label>Subscription Tier Selection</label>
                     <select id="stitch-tier-select" class="form-control">
-                        <option value="199.00|Standard Defender">Standard Defender - R199.00 / month</option>
-                        <option value="299.00|Pro Defender" selected>Pro Defender - R299.00 / month</option>
-                        <option value="499.00|Fleet Commander">Fleet Commander - R499.00 / month</option>
+                        <option value="Standard">Standard Defender - R199.00 / month</option>
+                        <option value="Pro Defender" selected>Pro Defender - R299.00 / month</option>
+                        <option value="Fleet Commander">Fleet Commander - R499.00 / month</option>
                     </select>
                 </div>
                 <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="triggerSelectedStitchPayment()">🔒 Proceed to Stitch Checkout</button>
@@ -962,25 +962,22 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Stitch Express Payment Handler
+        // Corrected Stitch Payment Handler (Aligned with backend backend schema)
         async function triggerSelectedStitchPayment() {
             const selectEl = document.getElementById('stitch-tier-select');
-            const vals = selectEl.value.split('|');
-            const amountInRands = vals[0];
-            const planName = vals[1];
+            const planName = selectEl.value; // e.g. "Pro Defender"
 
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || 'SR-MBE-USER-' + Math.floor(Math.random() * 10000);
 
             try {
-                console.log(`Initiating Stitch payment for ${planName} (R${amountInRands})...`);
+                console.log(`Initiating Stitch payment for plan: ${planName}...`);
 
                 const response = await fetch('/api/stitch-create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         driverId: driverId,
-                        amountInRands: amountInRands,
                         planName: planName
                     }),
                 });
