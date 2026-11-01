@@ -4,7 +4,7 @@
   "description": "SafeRide Mobility backend serverless functions",
   "main": "index.js",
   "engines": {
-    "node": "20.x"
+    "node": "26.x"
   },
   "dependencies": {
     "firebase-admin": "^11.8.0"
