@@ -962,7 +962,7 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Corrected Stitch Payment Handler (Aligned with backend backend schema)
+        // Corrected Stitch Payment Handler (Aligned with backend schema)
         async function triggerSelectedStitchPayment() {
             const selectEl = document.getElementById('stitch-tier-select');
             const planName = selectEl.value; // e.g. "Pro Defender"
@@ -984,8 +984,8 @@
 
                 const data = await response.json();
 
-                if (data.success && data.paymentUrl) {
-                    window.location.href = data.paymentUrl;
+                if (data.success && data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
                 } else {
                     alert('Payment setup error: ' + (data.error || 'Unable to generate payment link.'));
                 }
