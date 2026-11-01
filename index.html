@@ -17,6 +17,8 @@
     <!-- Firebase SDK CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
@@ -63,7 +65,7 @@
         .menu-toggle-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .menu-toggle-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
+        .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; text-decoration: none; }
         .brand-title span { color: var(--accent-amber); }
         .brand-tag { font-size: 0.68rem; color: var(--text-sub); font-weight: 500; }
         
@@ -104,6 +106,7 @@
             flex-direction: column;
             border-right: 1px solid var(--border-color);
             box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+            overflow-y: auto;
         }
         .drawer-menu.active { left: 0; }
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
@@ -339,6 +342,28 @@
             gap: 4px;
         }
 
+        /* Official Contact Hub Grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: border-color 0.2s;
+        }
+        .contact-item:hover { border-color: var(--accent-amber); }
+        .contact-item i { font-size: 1.4rem; color: var(--accent-amber); }
+
         nav { 
             background-color: var(--bg-card); 
             border-top: 1px solid #1f2937; 
@@ -381,7 +406,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
                 <img src="logo.png" alt="SafeRide Logo" style="height: 32px; width: auto; object-fit: contain;">
                 <div>
-                    <div class="brand-title">Safe<span>Ride</span></div>
+                    <a href="https://saferidemobility.co.za" class="brand-title">Safe<span>Ride</span></a>
                     <div class="brand-tag">Mbombela Protection Network</div>
                 </div>
             </div>
@@ -398,7 +423,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
                 <img src="logo.png" alt="SafeRide Logo" style="height: 28px; width: auto; object-fit: contain;">
                 <div>
-                    <div class="brand-title" style="font-size: 1.05rem;">Safe<span>Ride</span></div>
+                    <a href="https://saferidemobility.co.za" class="brand-title" style="font-size: 1.05rem;">Safe<span>Ride</span></a>
                     <div style="font-size: 0.62rem; color: var(--text-sub);">Safety Console</div>
                 </div>
             </div>
@@ -417,7 +442,7 @@
         <a class="drawer-link" onclick="generateShiftReportCard(); toggleDrawer();">📊 Export Shift Report Card</a>
         <a class="drawer-link" onclick="showQRCode(); toggleDrawer();">💳 Show Driver QR Badge</a>
         <a class="drawer-link" onclick="triggerPWAInstall()">📱 Install PWA App</a>
-        <a class="drawer-link" href="legal.html">📄 Terms & POPIA Privacy</a>
+        <a class="drawer-link" href="https://saferidemobility.co.za">📄 Official Web Portal</a>
     </div>
 
     <main>
@@ -582,41 +607,61 @@
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Sync</button>
             </div>
 
-            <!-- Card Tokenization & Billing Section -->
+            <!-- Stitch Express Subscription & Billing Section -->
             <div class="content-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div class="card-heading" style="color: var(--accent-blue);">💳 Secure Card Tokenization & Billing</div>
-                <div class="card-text">Link a debit or credit card for automatic monthly protection plan renewals (FNB Secure Vault).</div>
+                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Express Secure Subscription</div>
+                <div class="card-text">Securely activate your driver subscription tier via Stitch Express checkout.</div>
+                
                 <div class="form-group">
-                    <label>Cardholder Name</label>
-                    <input type="text" id="tok-holder" class="form-control" placeholder="Sipho Dlamini">
+                    <label>Subscription Tier Selection</label>
+                    <select id="stitch-tier-select" class="form-control">
+                        <option value="199.00|Standard Defender">Standard Defender - R199.00 / month</option>
+                        <option value="299.00|Pro Defender" selected>Pro Defender - R299.00 / month</option>
+                        <option value="499.00|Fleet Commander">Fleet Commander - R499.00 / month</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label>Card Number (Tokenized Vault)</label>
-                    <input type="text" id="tok-number" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label>Expiry (MM/YY)</label>
-                        <input type="text" id="tok-expiry" class="form-control" placeholder="12/28" maxlength="5">
-                    </div>
-                    <div class="form-group">
-                        <label>CVV</label>
-                        <input type="password" id="tok-cvv" class="form-control" placeholder="123" maxlength="4">
-                    </div>
-                </div>
-                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="tokenizeDriverCard()">🔒 Tokenize & Save Payment Method</button>
+                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="triggerSelectedStitchPayment()">🔒 Proceed to Stitch Checkout</button>
             </div>
         </div>
 
-        <!-- 4. CONTACT DETAILS TAB -->
+        <!-- 4. CONTACT DETAILS & OFFICIAL MAILBOXES TAB -->
         <div id="tab-contact" class="tab-section">
-            <div class="content-card" style="text-align: center; padding: 30px 20px;">
-                <div class="card-heading" style="border: none; text-align: center;">Control Room & Support Desk</div>
-                <div class="card-text" style="margin-top: 8px;">Mbombela Operations Desk: Active 24/7</div>
-                <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div class="content-card" style="text-align: center; padding: 24px 16px;">
+                <div class="card-heading" style="border: none; text-align: center;">Control Room & Official Mailboxes</div>
+                <div class="card-text" style="margin-top: 4px;">Mbombela Operations Desk: Active 24/7</div>
+                
+                <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
                     <a href="tel:+27821234567" class="action-btn" style="background: var(--accent-green); color: black;">📞 Call Control Desk Now</a>
                     <a href="https://wa.me/+27821234567" target="_blank" class="action-btn" style="background: #25D366; color: black;">💬 WhatsApp Control Desk</a>
-                    <a href="mailto:support@saferide-mobility.co.za" class="action-btn" style="background: var(--accent-blue); color: white;">✉️ Email Support</a>
+                </div>
+
+                <!-- Official Mailbox Desks -->
+                <div class="contact-grid" style="margin-top: 18px; text-align: left;">
+                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 4px;">Official Domain Desks (`@saferidemobility.co.za`):</div>
+                    
+                    <a href="mailto:support@saferidemobility.co.za?subject=SafeRide%20Support%20Inquiry" class="contact-item">
+                        <i class="fas fa-headset"></i>
+                        <div>
+                            <strong style="font-size: 0.88rem; display: block;">Driver & App Support</strong>
+                            <small style="color: var(--text-sub);">support@saferidemobility.co.za</small>
+                        </div>
+                    </a>
+
+                    <a href="mailto:dispatch@saferidemobility.co.za?subject=URGENT:%20Dispatch%20Query" class="contact-item">
+                        <i class="fas fa-shield-alt" style="color: var(--accent-red);"></i>
+                        <div>
+                            <strong style="font-size: 0.88rem; display: block;">Control Room Desk</strong>
+                            <small style="color: var(--text-sub);">dispatch@saferidemobility.co.za</small>
+                        </div>
+                    </a>
+
+                    <a href="mailto:admin@saferidemobility.co.za?subject=Executive%20Inquiry" class="contact-item">
+                        <i class="fas fa-briefcase"></i>
+                        <div>
+                            <strong style="font-size: 0.88rem; display: block;">Executive & Legal Office</strong>
+                            <small style="color: var(--text-sub);">admin@saferidemobility.co.za</small>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -917,14 +962,40 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        function tokenizeDriverCard() {
-            const num = document.getElementById('tok-number').value;
-            if (!num || num.length < 12) {
-                alert('Please enter a valid card number for tokenization.');
-                return;
+        // Stitch Express Payment Handler
+        async function triggerSelectedStitchPayment() {
+            const selectEl = document.getElementById('stitch-tier-select');
+            const vals = selectEl.value.split('|');
+            const amountInRands = vals[0];
+            const planName = vals[1];
+
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverId = profile.driverId || 'SR-MBE-USER-' + Math.floor(Math.random() * 10000);
+
+            try {
+                console.log(`Initiating Stitch payment for ${planName} (R${amountInRands})...`);
+
+                const response = await fetch('/api/stitch-create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        driverId: driverId,
+                        amountInRands: amountInRands,
+                        planName: planName
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.paymentUrl) {
+                    window.location.href = data.paymentUrl;
+                } else {
+                    alert('Payment setup error: ' + (data.error || 'Unable to generate payment link.'));
+                }
+            } catch (err) {
+                console.error('Stitch Checkout Error:', err);
+                alert('Failed to connect to backend payment service.');
             }
-            const token = 'tok_sfb_' + Math.random().toString(36).substring(2, 12).toUpperCase();
-            alert(`✅ Card successfully tokenized and securely vaulted!\nToken ID: ${token}`);
         }
 
         function showQRCode() {
@@ -933,7 +1004,7 @@
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId || 'SR-MBE-DRIVER';
             document.getElementById('qr-driver-info').innerText = `${profile.name || 'Driver'} | ID: ${driverId}`;
-            new QRCode(container, { text: `https://saferide-mobility.co.za/verify?driverId=${driverId}`, width: 180, height: 180 });
+            new QRCode(container, { text: `https://saferidemobility.co.za/verify?driverId=${driverId}`, width: 180, height: 180 });
             document.getElementById('qr-modal').style.display = 'flex';
         }
 
@@ -943,7 +1014,7 @@
             if ('NDEFReader' in window) {
                 try {
                     const ndef = new NDEFReader();
-                    await ndef.write({ records: [{ recordType: "url", data: `https://saferide-mobility.co.za/verify?driverId=${profile.driverId}` }] });
+                    await ndef.write({ records: [{ recordType: "url", data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}` }] });
                     alert('✅ NFC Tag written successfully!');
                 } catch (err) { alert('NFC write error: ' + err); }
             } else { alert('Web NFC is not supported on this device/browser.'); }
