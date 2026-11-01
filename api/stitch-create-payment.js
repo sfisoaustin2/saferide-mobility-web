@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin safely
+// 1. Safe Firebase Admin Initialization
 if (!admin.apps.length) {
   const rawKey = process.env.FIREBASE_PRIVATE_KEY;
   const privateKey = rawKey ? rawKey.replace(/\\n/g, '\n') : undefined;
@@ -18,63 +18,50 @@ if (!admin.apps.length) {
     } catch (err) {
       console.error('Firebase Admin initialization error:', err.message);
     }
+  } else {
+    console.warn('Firebase configuration missing in environment variables.');
   }
 }
 
-// Robust Helper Function to Fetch External APIs
-async function fetchWithTimeout(resource, options = {}) {
-  const { timeout = 8000 } = options;
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(resource, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'SafeRideMobility/1.0',
-        ...options.headers,
-      },
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    throw new Error(`Fetch to ${resource} failed: ${error.message}`);
-  }
-}
-
-// Get Stitch Access Token
+// 2. Fetch Stitch Access Token with Clean URL-Encoded Payload
 async function getStitchToken() {
   const clientId = process.env.STITCH_CLIENT_ID;
   const clientSecret = process.env.STITCH_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET is not configured on Vercel.');
+    throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET environment variable is missing on Vercel.');
   }
 
-  const params = new URLSearchParams();
-  params.append('grant_type', 'client_credentials');
-  params.append('client_id', clientId);
-  params.append('client_secret', clientSecret);
-  params.append('scope', 'client_paymentrequest');
+  // Clean URL-encoded body creation
+  const bodyParams = new URLSearchParams();
+  bodyParams.append('grant_type', 'client_credentials');
+  bodyParams.append('client_id', clientId.trim());
+  bodyParams.append('client_secret', clientSecret.trim());
+  bodyParams.append('scope', 'client_paymentrequest');
 
-  const res = await fetchWithTimeout('https://connect.stitch.money/connect/token', {
+  const tokenRes = await fetch('https://connect.stitch.money/connect/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'User-Agent': 'SafeRideMobility/1.0'
+    },
+    body: bodyParams.toString()
   });
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error_description || data.error || 'Failed to fetch Stitch access token');
+  const tokenData = await tokenRes.json();
+
+  if (!tokenRes.ok) {
+    const errorMsg = tokenData.error_description || tokenData.error || 'Failed to authenticate with Stitch API';
+    throw new Error(`Stitch OAuth Token Error (${tokenRes.status}): ${errorMsg}`);
   }
 
-  return data.access_token;
+  return tokenData.access_token;
 }
 
+// 3. Vercel Serverless Function Handler
 export default async function handler(req, res) {
-  // CORS Headers
+  // Global CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -83,6 +70,7 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
+  // Instantly resolve browser OPTIONS preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -98,8 +86,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing planName or driverId in request body.' });
     }
 
+    // Resolve subscription tier price
+    let planPrices = {
+      'Standard': 199,
+      'Pro Defender': 299,
+      'Fleet Commander': 499,
+    };
+
+    if (process.env.PAYMENT_PLANS_JSON) {
+      try {
+        planPrices = JSON.parse(process.env.PAYMENT_PLANS_JSON);
+      } catch (e) {
+        console.warn('Could not parse PAYMENT_PLANS_JSON, falling back to standard plan pricing.');
+      }
+    }
+
+    const amountInRands = planPrices[planName] || 299;
+    const formattedAmount = amountInRands.toFixed(2);
+
+    // Get Stitch OAuth Token
     const token = await getStitchToken();
 
+    // Stitch GraphQL Payment Initiation Mutation
     const graphqlQuery = `
       mutation CreatePayment($amount: MoneyInput!, $payerRef: String!, $beneficiaryRef: String!) {
         clientPaymentInitiationRequestCreate(input: {
@@ -116,16 +124,17 @@ export default async function handler(req, res) {
     `;
 
     const graphqlVariables = {
-      amount: { quantity: '299.00', currency: 'ZAR' },
+      amount: { quantity: formattedAmount, currency: 'ZAR' },
       payerRef: `DRV-${driverId}`.substring(0, 18),
       beneficiaryRef: `SRM-${planName.replace(/\s+/g, '')}`.substring(0, 18),
     };
 
-    const stitchRes = await fetchWithTimeout('https://api.stitch.money/graphql', {
+    const stitchRes = await fetch('https://api.stitch.money/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        'Authorization': `Bearer ${token}`,
+        'User-Agent': 'SafeRideMobility/1.0'
       },
       body: JSON.stringify({
         query: graphqlQuery,
@@ -136,19 +145,34 @@ export default async function handler(req, res) {
     const stitchData = await stitchRes.json();
 
     if (stitchData.errors && stitchData.errors.length > 0) {
+      console.error('Stitch GraphQL Errors:', stitchData.errors);
       return res.status(400).json({ error: stitchData.errors[0].message });
     }
 
-    const paymentUrl = stitchData?.data?.clientPaymentInitiationRequestCreate?.paymentInitiationRequest?.url;
+    const redirectUrl = stitchData?.data?.clientPaymentInitiationRequestCreate?.paymentInitiationRequest?.url;
 
-    if (!paymentUrl) {
-      return res.status(500).json({ error: 'Stitch did not return a valid redirect URL.' });
+    if (!redirectUrl) {
+      return res.status(500).json({ error: 'Stitch did not return a checkout redirect URL.' });
     }
 
-    return res.status(200).json({ success: true, redirectUrl: paymentUrl });
+    // Optional Realtime DB Logging
+    if (admin.apps.length) {
+      try {
+        await admin.database().ref(`payments/${driverId}`).push({
+          planName,
+          amountInRands,
+          status: 'initiated',
+          timestamp: new Date().toISOString(),
+        });
+      } catch (dbErr) {
+        console.warn('Database logging note:', dbErr.message);
+      }
+    }
+
+    return res.status(200).json({ success: true, redirectUrl });
 
   } catch (err) {
-    console.error('Fetch execution crash:', err.message);
-    return res.status(500).json({ error: err.message || 'Fetch failed' });
+    console.error('Stitch Checkout Handler Error:', err.message);
+    return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
