@@ -15,6 +15,15 @@ if (!admin.apps.length) {
 }
 
 export default async function handler(req, res) {
+  // 1. Enable CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -26,50 +35,71 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Fetch 15-minute Bearer Token from Stitch Express API
-    const tokenRes = await fetch('https://express.stitch.money/api/v1/token', {
+    // 2. Fetch Bearer Token from Stitch Secure Authentication API
+    const tokenRes = await fetch('https://secure.stitch.money/connect/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        grant_type: 'client_credentials',
         client_id: process.env.STITCH_CLIENT_ID,
         client_secret: process.env.STITCH_CLIENT_SECRET,
+        audience: 'https://api.stitch.money/'
       }),
     });
 
     const tokenData = await tokenRes.json();
-    if (!tokenRes.ok) throw new Error(tokenData.message || 'Token authentication failed');
+    if (!tokenRes.ok) {
+      console.error('Stitch Token Error:', tokenData);
+      throw new Error(tokenData.error_description || tokenData.message || 'Token authentication failed');
+    }
 
     const accessToken = tokenData.access_token;
 
-    // 2. Convert Rands to integer South African Cents (e.g. R299.00 -> 29900)
-    const amountInCents = Math.round(parseFloat(amountInRands) * 100);
-
-    // 3. Create Payment Link
-    const paymentRes = await fetch('https://express.stitch.money/api/v1/payment-links', {
+    // 3. Call Stitch GraphQL API to initialize client payment
+    const graphqlRes = await fetch('https://api.stitch.money/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        amount: amountInCents,
-        currency: 'ZAR',
-        description: `${planName} - SafeRide Protection`,
-        external_reference: driverId,
-        redirect_url: 'https://saferidemobility.co.za?payment=success',
+        query: `
+          mutation CreateClientPayment($input: ClientPaymentInitInput!) {
+            clientPaymentInit(input: $input) {
+              paymentId
+              checkoutUrl
+            }
+          }
+        `,
+        variables: {
+          input: {
+            amount: {
+              quantity: parseFloat(amountInRands),
+              currency: 'ZAR'
+            },
+            reference: `SafeRide-${driverId}-${Date.now()}`
+          }
+        }
       }),
     });
 
-    const paymentData = await paymentRes.json();
-    if (!paymentRes.ok) throw new Error(paymentData.message || 'Payment link creation failed');
+    const graphqlData = await graphqlRes.json();
+
+    if (graphqlData.errors) {
+      console.error('Stitch GraphQL Errors:', graphqlData.errors);
+      throw new Error(graphqlData.errors[0].message || 'Payment link creation failed');
+    }
+
+    const paymentResult = graphqlData.data.clientPaymentInit;
 
     return res.status(200).json({
       success: true,
-      paymentUrl: paymentData.url || paymentData.redirect_url,
-      paymentId: paymentData.id,
+      paymentUrl: paymentResult.checkoutUrl,
+      paymentId: paymentResult.paymentId,
     });
+
   } catch (error) {
-    console.error('Stitch Express API Error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Stitch API Exception:', error);
+    return res.status(500).json({ error: error.message || 'Failed to connect to backend payment service' });
   }
 }
