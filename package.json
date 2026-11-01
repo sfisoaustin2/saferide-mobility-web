@@ -1,16 +1,12 @@
 {
   "name": "saferide-mobility",
   "version": "1.0.0",
-  "description": "SafeRide Mobility backend serverless functions and web platform",
+  "description": "SafeRide Mobility backend serverless functions",
   "main": "index.js",
-  "scripts": {
-    "start": "serve ."
-  },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "dependencies": {
-    "firebase-admin": "^11.8.0",
-    "node-fetch": "^2.6.9"
+    "firebase-admin": "^11.8.0"
   }
 }
