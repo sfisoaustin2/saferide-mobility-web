@@ -1,19 +1,20 @@
-import admin from 'firebase-admin';
+import crypto from 'crypto';
+import { db } from '../src/firebase.js';
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY
-        ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        : undefined,
-    }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
+export const config = {
+  api: {
+    bodyParser: false, // Required for raw body signature verification
+  },
+};
+
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', (err) => reject(err));
   });
 }
-
-const db = admin.database();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,34 +22,38 @@ export default async function handler(req, res) {
   }
 
   try {
-    const event = req.body;
+    const rawBody = await getRawBody(req);
+    const signature = req.headers['x-stitch-signature'];
+    const secret = process.env.STITCH_WEBHOOK_SECRET;
 
-    if (event.event_type === 'payment.paid' || event.status === 'paid') {
-      const driverId = event.external_reference || event.data?.external_reference;
-      const amountInCents = event.amount || event.data?.amount;
-      const amountInRands = amountInCents ? amountInCents / 100 : 0;
+    // Verify webhook signature if secret is present
+    if (secret && signature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(rawBody)
+        .digest('hex');
 
-      if (driverId) {
-        let subscriptionTier = 'Standard Defender';
-        if (amountInRands >= 499) subscriptionTier = 'Fleet Commander';
-        else if (amountInRands >= 299) subscriptionTier = 'Pro Defender';
-
-        // Instant Realtime Database Update
-        await db.ref(`drivers/${driverId}`).update({
-          subscriptionStatus: 'ACTIVE',
-          subscriptionTier: subscriptionTier,
-          lastPaymentDate: new Date().toISOString(),
-          paymentGateway: 'Stitch Express',
-          updatedAt: admin.database.ServerValue.TIMESTAMP,
-        });
-
-        console.log(`Driver ${driverId} subscription activated via Stitch Webhook.`);
+      if (signature !== expectedSignature) {
+        return res.status(401).json({ error: 'Invalid webhook signature' });
       }
     }
 
-    return res.status(200).send('OK');
+    const payload = JSON.parse(rawBody.toString('utf8'));
+    const { externalReference, status, id: stitchTransactionId } = payload;
+
+    if (externalReference) {
+      const isSuccess = status === 'completed' || status === 'paid';
+      
+      await db.ref(`transactions/${externalReference}`).update({
+        status: isSuccess ? 'success' : status.toLowerCase(),
+        stitchTransactionId: stitchTransactionId || null,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    return res.status(200).json({ received: true });
   } catch (error) {
-    console.error('Stitch Webhook Error:', error);
-    return res.status(500).send('Webhook Handler Error');
+    console.error('Webhook Handler Error:', error);
+    return res.status(500).json({ error: 'Webhook handler processing error' });
   }
 }
