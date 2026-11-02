@@ -52,7 +52,7 @@
 
         header { 
             background-color: var(--bg-card); 
-            padding: 14px 20px; 
+            padding: 12px 16px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -66,23 +66,23 @@
         .menu-toggle-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .menu-toggle-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        .brand-title { font-size: 1.15rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; text-decoration: none; }
+        .brand-title { font-size: 1.1rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; text-decoration: none; }
         .brand-title span { color: var(--accent-amber); }
-        .brand-tag { font-size: 0.68rem; color: var(--text-sub); font-weight: 500; }
+        .brand-tag { font-size: 0.62rem; color: var(--text-sub); font-weight: 500; }
         
         .status-badge { 
             background-color: rgba(16, 185, 129, 0.15); 
             color: var(--accent-green); 
-            padding: 4px 10px; 
+            padding: 3px 8px; 
             border-radius: 20px; 
-            font-size: 0.72rem; 
+            font-size: 0.68rem; 
             font-weight: 700; 
             border: 1px solid rgba(16, 185, 129, 0.3);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
-        .status-dot { width: 6px; height: 6px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
+        .status-dot { width: 5px; height: 5px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 6px var(--accent-green); }
 
         /* Slide-out Navigation Drawer */
         .drawer-overlay {
@@ -405,16 +405,22 @@
                 <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <img src="logo.png" alt="SafeRide Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <img src="logo.png" alt="SafeRide Logo" style="height: 28px; width: auto; object-fit: contain;">
                 <div>
                     <a href="https://saferidemobility.co.za" class="brand-title">Safe<span>Ride</span></a>
-                    <div class="brand-tag">Mbombela Protection Network</div>
+                    <div class="brand-tag">Mbombela Network</div>
                 </div>
             </div>
         </div>
-        <div class="status-badge">
-            <div class="status-dot"></div>
-            <span id="header-gps-status">GPS Active</span>
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="auth-btn" class="action-btn" style="padding: 5px 10px; font-size: 0.7rem; width: auto;" onclick="handleAuthAction()">
+                <i class="fab fa-google"></i> Sign In
+            </button>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span>Active</span>
+            </div>
         </div>
     </header>
 
@@ -429,6 +435,12 @@
                 </div>
             </div>
             <button class="drawer-close-btn" onclick="toggleDrawer()">✕</button>
+        </div>
+
+        <!-- Authenticated User Profile Drawer Banner -->
+        <div id="drawer-user-info" style="padding: 10px; background: var(--bg-card-alt); border-radius: 10px; margin-bottom: 12px; display: none; border: 1px solid var(--border-color);">
+            <div id="user-display-name" style="font-size: 0.85rem; font-weight: 700; color: white;"></div>
+            <div id="user-display-email" style="font-size: 0.7rem; color: var(--text-sub); word-break: break-all;"></div>
         </div>
 
         <div class="drawer-section-title">Navigation Tabs</div>
@@ -736,6 +748,8 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
 
         let currentLat = -25.4753;
         let currentLng = 30.9694;
@@ -755,6 +769,57 @@
             registerServiceWorker();
             renderTripHistory();
         });
+
+        // Firebase Auth State Listener & Header / Drawer UI updater
+        auth.onAuthStateChanged((user) => {
+            const authBtn = document.getElementById('auth-btn');
+            const drawerUserInfo = document.getElementById('drawer-user-info');
+            const nameEl = document.getElementById('user-display-name');
+            const emailEl = document.getElementById('user-display-email');
+
+            if (user) {
+                if (authBtn) {
+                    authBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
+                    authBtn.style.background = '#374151';
+                    authBtn.style.color = '#ffffff';
+                }
+                if (drawerUserInfo) drawerUserInfo.style.display = 'block';
+                if (nameEl) nameEl.innerText = user.displayName || 'Verified User';
+                if (emailEl) emailEl.innerText = user.email || '';
+                
+                const nameInput = document.getElementById('reg-name');
+                if (nameInput && !nameInput.value && user.displayName) {
+                    nameInput.value = user.displayName;
+                }
+            } else {
+                if (authBtn) {
+                    authBtn.innerHTML = `<i class="fab fa-google"></i> Sign In`;
+                    authBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                    authBtn.style.color = '#000000';
+                }
+                if (drawerUserInfo) drawerUserInfo.style.display = 'none';
+            }
+        });
+
+        // Google Popup Login / Logout handler
+        async function handleAuthAction() {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await auth.signOut();
+                    alert("Signed out successfully.");
+                } catch (err) {
+                    alert("Sign out error: " + err.message);
+                }
+            } else {
+                try {
+                    await auth.signInWithPopup(googleProvider);
+                } catch (err) {
+                    console.error("Google Auth Error:", err);
+                    alert("Google Sign-In failed: " + err.message);
+                }
+            }
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -968,7 +1033,7 @@
 
         // Integrated Stitch Express & Firebase Payment Handler
         async function payWithStitch(orderId) {
-            const user = firebase.auth().currentUser;
+            const user = auth.currentUser;
 
             if (!user) {
                 alert("Please log in first via Google Sign-In.");
