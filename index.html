@@ -14,8 +14,9 @@
     <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Firebase SDK CDNs -->
+    <!-- Firebase SDK CDNs (Compat & Auth for Google Sign-In) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -607,20 +608,23 @@
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Sync</button>
             </div>
 
-            <!-- Stitch Subscription & Billing Section -->
+            <!-- Stitch Express Subscription & Billing Section -->
             <div class="content-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Secure Subscription</div>
-                <div class="card-text">Securely activate your driver subscription tier via Stitch checkout.</div>
+                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Express Secure Subscription</div>
+                <div class="card-text">Securely activate your driver subscription tier via Stitch Express checkout.</div>
                 
                 <div class="form-group">
                     <label>Subscription Tier Selection</label>
                     <select id="stitch-tier-select" class="form-control">
-                        <option value="Standard">Standard Defender - R199.00 / month</option>
-                        <option value="Pro Defender" selected>Pro Defender - R299.00 / month</option>
-                        <option value="Fleet Commander">Fleet Commander - R499.00 / month</option>
+                        <option value="199.00|Standard Defender">Standard Defender - R199.00 / month</option>
+                        <option value="299.00|Pro Defender" selected>Pro Defender - R299.00 / month</option>
+                        <option value="499.00|Fleet Commander">Fleet Commander - R499.00 / month</option>
                     </select>
                 </div>
-                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="triggerSelectedStitchPayment()">🔒 Proceed to Stitch Checkout</button>
+                
+                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="payWithStitch('SAAPS10001')">
+                  Pay Now via Stitch
+                </button>
             </div>
         </div>
 
@@ -962,36 +966,51 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Corrected Stitch Payment Handler (Aligned with backend schema)
-        async function triggerSelectedStitchPayment() {
-            const selectEl = document.getElementById('stitch-tier-select');
-            const planName = selectEl.value; // e.g. "Pro Defender"
+        // Integrated Stitch Express & Firebase Payment Handler
+        async function payWithStitch(orderId) {
+            const user = firebase.auth().currentUser;
 
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            const driverId = profile.driverId || 'SR-MBE-USER-' + Math.floor(Math.random() * 10000);
+            if (!user) {
+                alert("Please log in first via Google Sign-In.");
+                return;
+            }
+
+            const selectEl = document.getElementById('stitch-tier-select');
+            const vals = selectEl.value.split('|');
+            const amountInRands = parseFloat(vals[0]);
 
             try {
-                console.log(`Initiating Stitch payment for plan: ${planName}...`);
+                const idToken = await user.getIdToken(true);
 
-                const response = await fetch('/api/stitch-create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        driverId: driverId,
-                        planName: planName
-                    }),
-                });
+                const response = await fetch(
+                    "/api/create-payment",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${idToken}`
+                        },
+                        body: JSON.stringify({ 
+                            amount: amountInRands,
+                            userId: user.uid,
+                            rideId: orderId 
+                        })
+                    }
+                );
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success && data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
-                } else {
-                    alert('Payment setup error: ' + (data.error || 'Unable to generate payment link.'));
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Payment could not be initiated"
+                    );
                 }
-            } catch (err) {
-                console.error('Stitch Checkout Error:', err);
-                alert('Failed to connect to backend payment service.');
+
+                window.location.href = result.paymentUrl;
+
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
             }
         }
 
