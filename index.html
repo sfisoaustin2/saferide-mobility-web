@@ -741,7 +741,7 @@
             authDomain: "saferide-mobility-c545a.firebaseapp.com",
             databaseURL: "https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "saferide-mobility-c545a",
-            storageBucket: "saferide-mobility-c545a.firebasestorage.app",
+            storageBucket: "saferide-mobility-c545a.appspot.com",
             messagingSenderId: "466500105377",
             appId: "1:466500105377:web:22ffc29489ef63284d6ce0",
             measurementId: "G-P5Y565XLTS"
@@ -801,7 +801,7 @@
             }
         });
 
-        // Google Popup Login / Logout handler
+        // Google Redirect Login / Logout handler (Optimized for mobile browsers)
         async function handleAuthAction() {
             const user = auth.currentUser;
             if (user) {
@@ -813,7 +813,7 @@
                 }
             } else {
                 try {
-                    await auth.signInWithPopup(googleProvider);
+                    await auth.signInWithRedirect(googleProvider);
                 } catch (err) {
                     console.error("Google Auth Error:", err);
                     alert("Google Sign-In failed: " + err.message);
@@ -1031,9 +1031,22 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Integrated Stitch Express & Firebase Payment Handler
+        // Helper to guarantee we wait for Firebase Auth state to settle after redirect
+        function getCurrentUser() {
+            return new Promise((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        // Integrated Stitch Express & Firebase Payment Handler with Auth Check Fix
         async function payWithStitch(orderId) {
-            const user = auth.currentUser;
+            let user = auth.currentUser;
+            if (!user) {
+                user = await getCurrentUser();
+            }
 
             if (!user) {
                 alert("Please log in first via Google Sign-In.");
@@ -1074,7 +1087,7 @@
                 window.location.href = result.paymentUrl;
 
             } catch (error) {
-                console.error(error);
+                console.error("Stitch Payment Error:", error);
                 alert(error.message);
             }
         }
