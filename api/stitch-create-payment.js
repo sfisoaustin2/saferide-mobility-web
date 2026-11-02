@@ -23,7 +23,7 @@ if (!admin.apps.length) {
   }
 }
 
-// 2. Fetch Stitch Access Token with Clean URL-Encoded Payload
+// 2. Fetch Stitch Access Token with Correct Secure Token Endpoint
 async function getStitchToken() {
   const clientId = process.env.STITCH_CLIENT_ID;
   const clientSecret = process.env.STITCH_CLIENT_SECRET;
@@ -32,14 +32,14 @@ async function getStitchToken() {
     throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET environment variable is missing on Vercel.');
   }
 
-  // Clean URL-encoded body creation
   const bodyParams = new URLSearchParams();
   bodyParams.append('grant_type', 'client_credentials');
   bodyParams.append('client_id', clientId.trim());
   bodyParams.append('client_secret', clientSecret.trim());
   bodyParams.append('scope', 'client_paymentrequest');
 
-  const tokenRes = await fetch('https://connect.stitch.money/connect/token', {
+  // Corrected Stitch token URL
+  const tokenRes = await fetch('https://secure.stitch.money/connect/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -61,7 +61,6 @@ async function getStitchToken() {
 
 // 3. Vercel Serverless Function Handler
 export default async function handler(req, res) {
-  // Global CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -70,7 +69,6 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
-  // Instantly resolve browser OPTIONS preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -86,7 +84,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing planName or driverId in request body.' });
     }
 
-    // Resolve subscription tier price
     let planPrices = {
       'Standard': 199,
       'Pro Defender': 299,
@@ -104,10 +101,8 @@ export default async function handler(req, res) {
     const amountInRands = planPrices[planName] || 299;
     const formattedAmount = amountInRands.toFixed(2);
 
-    // Get Stitch OAuth Token
     const token = await getStitchToken();
 
-    // Stitch GraphQL Payment Initiation Mutation
     const graphqlQuery = `
       mutation CreatePayment($amount: MoneyInput!, $payerRef: String!, $beneficiaryRef: String!) {
         clientPaymentInitiationRequestCreate(input: {
@@ -155,7 +150,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Stitch did not return a checkout redirect URL.' });
     }
 
-    // Optional Realtime DB Logging
     if (admin.apps.length) {
       try {
         await admin.database().ref(`payments/${driverId}`).push({
