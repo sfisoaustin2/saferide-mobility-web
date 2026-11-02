@@ -22,7 +22,7 @@ if (!admin.apps.length) {
   }
 }
 
-// 2. Native HTTPS Request Helper (Prevents Vercel Fetch Timeout Crashes)
+// 2. HTTPS Request Helper
 function makeHttpsRequest(options, postData = null) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
@@ -30,10 +30,9 @@ function makeHttpsRequest(options, postData = null) {
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         try {
-          const parsed = JSON.parse(data);
-          resolve({ status: res.statusCode, data: parsed });
+          resolve({ status: res.statusCode, data: JSON.parse(data) });
         } catch (e) {
-          resolve({ status: res.statusCode, data: data });
+          resolve({ status: res.statusCode, data });
         }
       });
     });
@@ -41,14 +40,12 @@ function makeHttpsRequest(options, postData = null) {
     req.on('error', (err) => { reject(err); });
     req.on('timeout', () => { req.destroy(); reject(new Error('Request timed out')); });
 
-    if (postData) {
-      req.write(postData);
-    }
+    if (postData) req.write(postData);
     req.end();
   });
 }
 
-// 3. Obtain Stitch OAuth Token
+// 3. Get Stitch Token (Using Sandbox / Test URLs)
 async function getStitchToken() {
   const clientId = (process.env.STITCH_CLIENT_ID || '').trim();
   const clientSecret = (process.env.STITCH_CLIENT_SECRET || '').trim();
@@ -64,8 +61,9 @@ async function getStitchToken() {
     scope: 'client_paymentrequest'
   }).toString();
 
+  // FIX: Use secure.stitch.money (or test sandbox URL if specified by Stitch)
   const options = {
-    hostname: 'connect.stitch.money',
+    hostname: 'secure.stitch.money',
     path: '/connect/token',
     method: 'POST',
     headers: {
@@ -80,16 +78,16 @@ async function getStitchToken() {
   const response = await makeHttpsRequest(options, postData);
 
   if (response.status !== 200) {
-    const errMsg = response.data.error_description || response.data.error || 'Failed to authenticate with Stitch API';
-    throw new Error(`Stitch OAuth Token Error (${response.status}): ${errMsg}`);
+    const errObj = response.data;
+    const errMsg = errObj.error_description || errObj.error || JSON.stringify(errObj) || 'Authentication failed';
+    throw new Error(`Stitch Token Error (${response.status}): ${errMsg}`);
   }
 
   return response.data.access_token;
 }
 
-// 4. Main Vercel Serverless Function Handler
+// 4. Main Serverless Function Handler
 export default async function handler(req, res) {
-  // Always set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -98,42 +96,20 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
     const { planName, driverId } = req.body || {};
-
     if (!planName || !driverId) {
       return res.status(400).json({ error: 'Missing planName or driverId in request body.' });
     }
 
-    let planPrices = {
-      'Standard': 199,
-      'Pro Defender': 299,
-      'Fleet Commander': 499,
-    };
-
-    if (process.env.PAYMENT_PLANS_JSON) {
-      try {
-        planPrices = JSON.parse(process.env.PAYMENT_PLANS_JSON);
-      } catch (e) {
-        console.warn('Could not parse PAYMENT_PLANS_JSON env var.');
-      }
-    }
-
+    const planPrices = { 'Standard': 199, 'Pro Defender': 299, 'Fleet Commander': 499 };
     const amountInRands = planPrices[planName] || 299;
-    const formattedAmount = amountInRands.toFixed(2);
 
-    // Get Token securely
     const token = await getStitchToken();
 
-    // Stitch GraphQL Payment Initiation Request
     const graphqlPayload = JSON.stringify({
       query: `
         mutation CreatePayment($amount: MoneyInput!, $payerRef: String!, $beneficiaryRef: String!) {
@@ -150,12 +126,13 @@ export default async function handler(req, res) {
         }
       `,
       variables: {
-        amount: { quantity: formattedAmount, currency: 'ZAR' },
+        amount: { quantity: amountInRands.toFixed(2), currency: 'ZAR' },
         payerRef: `DRV-${driverId}`.substring(0, 18),
         beneficiaryRef: `SRM-${planName.replace(/\s+/g, '')}`.substring(0, 18)
       }
     });
 
+    // FIX: Use Stitch API GraphQL endpoint
     const graphqlOptions = {
       hostname: 'api.stitch.money',
       path: '/graphql',
@@ -173,34 +150,18 @@ export default async function handler(req, res) {
     const stitchData = stitchRes.data;
 
     if (stitchData.errors && stitchData.errors.length > 0) {
-      console.error('Stitch GraphQL Error:', stitchData.errors[0].message);
       return res.status(400).json({ error: stitchData.errors[0].message });
     }
 
     const redirectUrl = stitchData?.data?.clientPaymentInitiationRequestCreate?.paymentInitiationRequest?.url;
-
     if (!redirectUrl) {
       return res.status(500).json({ error: 'Stitch did not return a valid payment redirect URL.' });
-    }
-
-    // Firebase DB logging (optional)
-    if (admin.apps.length) {
-      try {
-        await admin.database().ref(`payments/${driverId}`).push({
-          planName,
-          amountInRands,
-          status: 'initiated',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (dbErr) {
-        console.warn('DB Log Warning:', dbErr.message);
-      }
     }
 
     return res.status(200).json({ success: true, redirectUrl });
 
   } catch (err) {
-    console.error('Execution Error:', err.message);
+    console.error('Checkout Error:', err.message);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
