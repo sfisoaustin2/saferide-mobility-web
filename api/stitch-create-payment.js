@@ -18,38 +18,55 @@ if (!admin.apps.length) {
     } catch (err) {
       console.error('Firebase Admin initialization error:', err.message);
     }
-  } else {
-    console.warn('Firebase configuration missing in environment variables.');
   }
 }
 
-// 2. Fetch Stitch Access Token with Correct Secure Token Endpoint
+// 2. Dual-Authentication Stitch Token Retrieval
 async function getStitchToken() {
-  const clientId = process.env.STITCH_CLIENT_ID;
-  const clientSecret = process.env.STITCH_CLIENT_SECRET;
+  const clientId = (process.env.STITCH_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.STITCH_CLIENT_SECRET || '').trim();
 
   if (!clientId || !clientSecret) {
     throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET environment variable is missing on Vercel.');
   }
 
+  // Fallback 1: Standard URL-encoded Post Body
   const bodyParams = new URLSearchParams();
   bodyParams.append('grant_type', 'client_credentials');
-  bodyParams.append('client_id', clientId.trim());
-  bodyParams.append('client_secret', clientSecret.trim());
+  bodyParams.append('client_id', clientId);
+  bodyParams.append('client_secret', clientSecret);
   bodyParams.append('scope', 'client_paymentrequest');
 
-  // Corrected Stitch token URL
-  const tokenRes = await fetch('https://secure.stitch.money/connect/token', {
+  let tokenRes = await fetch('https://connect.stitch.money/connect/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json',
-      'User-Agent': 'SafeRideMobility/1.0'
+      'Accept': 'application/json'
     },
     body: bodyParams.toString()
   });
 
-  const tokenData = await tokenRes.json();
+  let tokenData = await tokenRes.json();
+
+  // Fallback 2: Basic Auth Header (If post body fails with invalid_client)
+  if (!tokenRes.ok && (tokenData.error === 'invalid_client' || tokenRes.status === 400)) {
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const basicParams = new URLSearchParams();
+    basicParams.append('grant_type', 'client_credentials');
+    basicParams.append('scope', 'client_paymentrequest');
+
+    tokenRes = await fetch('https://connect.stitch.money/connect/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${basicAuth}`,
+        'Accept': 'application/json'
+      },
+      body: basicParams.toString()
+    });
+
+    tokenData = await tokenRes.json();
+  }
 
   if (!tokenRes.ok) {
     const errorMsg = tokenData.error_description || tokenData.error || 'Failed to authenticate with Stitch API';
@@ -128,8 +145,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'User-Agent': 'SafeRideMobility/1.0'
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         query: graphqlQuery,
