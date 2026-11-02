@@ -1,5 +1,5 @@
 import { createStitchPaymentLink } from '../src/services/stitch.js';
-import { db } from '../src/firebase.js';
+import { adminDb } from '../src/firebaseAdmin.js'; // Ensure you use Firebase Admin for serverless writes
 
 export default async function handler(req, res) {
   // CORS setup
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -37,27 +37,32 @@ export default async function handler(req, res) {
       description: `SafeRide Mobility Ride #${rideId || 'General'}`,
     });
 
-    // Save initial transaction state in Firebase Realtime Database
-    await db.ref(`transactions/${reference}`).set({
+    const paymentUrl = paymentData.url || paymentData.paymentUrl;
+    if (!paymentUrl) {
+      throw new Error('Stitch API did not return a valid payment URL.');
+    }
+
+    // Save initial transaction state in Firebase Realtime Database using Admin SDK
+    await adminDb.ref(`transactions/${reference}`).set({
       userId,
       rideId: rideId || null,
       amount: parseFloat(amount),
       amountInCents,
       status: 'pending',
-      paymentUrl: paymentData.url || paymentData.paymentUrl,
+      paymentUrl,
       createdAt: new Date().toISOString(),
     });
 
     return res.status(200).json({
       success: true,
       reference,
-      paymentUrl: paymentData.url || paymentData.paymentUrl,
+      paymentUrl,
     });
   } catch (error) {
     console.error('Create Payment Error:', error);
     return res.status(500).json({
       error: 'Failed to initiate Stitch Express payment',
-      details: error.message || error,
+      details: error.message || String(error),
     });
   }
 }
