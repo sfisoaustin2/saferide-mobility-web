@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import https from 'https';
 
-// 1. Safe Firebase Admin Initialization
+// Safe Firebase Admin Initialization
 if (!admin.apps.length) {
   const rawKey = process.env.FIREBASE_PRIVATE_KEY;
   const privateKey = rawKey ? rawKey.replace(/\\n/g, '\n') : undefined;
@@ -22,7 +22,7 @@ if (!admin.apps.length) {
   }
 }
 
-// 2. HTTPS Request Helper
+// HTTPS Helper for Vercel Serverless
 function makeHttpsRequest(options, postData = null) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
@@ -45,29 +45,27 @@ function makeHttpsRequest(options, postData = null) {
   });
 }
 
-// 3. Get Stitch Token (Using Sandbox / Test URLs)
-async function getStitchToken() {
+// Get Stitch Express Token
+async function getExpressToken() {
   const clientId = (process.env.STITCH_CLIENT_ID || '').trim();
   const clientSecret = (process.env.STITCH_CLIENT_SECRET || '').trim();
 
   if (!clientId || !clientSecret) {
-    throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET environment variable is missing on Vercel.');
+    throw new Error('STITCH_CLIENT_ID or STITCH_CLIENT_SECRET is missing on Vercel.');
   }
 
-  const postData = new URLSearchParams({
-    grant_type: 'client_credentials',
+  const postData = JSON.stringify({
     client_id: clientId,
     client_secret: clientSecret,
-    scope: 'client_paymentrequest'
-  }).toString();
+    grant_type: 'client_credentials'
+  });
 
-  // FIX: Use secure.stitch.money (or test sandbox URL if specified by Stitch)
   const options = {
-    hostname: 'secure.stitch.money',
-    path: '/connect/token',
+    hostname: 'express.stitch.money',
+    path: '/api/v1/token',
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(postData),
       'Accept': 'application/json',
       'User-Agent': 'SafeRideMobility/1.0'
@@ -78,15 +76,13 @@ async function getStitchToken() {
   const response = await makeHttpsRequest(options, postData);
 
   if (response.status !== 200) {
-    const errObj = response.data;
-    const errMsg = errObj.error_description || errObj.error || JSON.stringify(errObj) || 'Authentication failed';
-    throw new Error(`Stitch Token Error (${response.status}): ${errMsg}`);
+    throw new Error(`Stitch Express Token Error (${response.status}): ${JSON.stringify(response.data)}`);
   }
 
-  return response.data.access_token;
+  return response.data.access_token || response.data.data?.access_token;
 }
 
-// 4. Main Serverless Function Handler
+// Vercel Serverless Function Handler
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -105,63 +101,56 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing planName or driverId in request body.' });
     }
 
-    const planPrices = { 'Standard': 199, 'Pro Defender': 299, 'Fleet Commander': 499 };
-    const amountInRands = planPrices[planName] || 299;
+    // Pricing in South African Cents (e.g. R299.00 = 29900 cents)
+    const planPricesCents = {
+      'Standard': 19900,
+      'Pro Defender': 29900,
+      'Fleet Commander': 49900,
+    };
 
-    const token = await getStitchToken();
+    const amountInCents = planPricesCents[planName] || 29900;
 
-    const graphqlPayload = JSON.stringify({
-      query: `
-        mutation CreatePayment($amount: MoneyInput!, $payerRef: String!, $beneficiaryRef: String!) {
-          clientPaymentInitiationRequestCreate(input: {
-            amount: $amount,
-            payerReference: $payerRef,
-            beneficiaryReference: $beneficiaryRef
-          }) {
-            paymentInitiationRequest {
-              id
-              url
-            }
-          }
-        }
-      `,
-      variables: {
-        amount: { quantity: amountInRands.toFixed(2), currency: 'ZAR' },
-        payerRef: `DRV-${driverId}`.substring(0, 18),
-        beneficiaryRef: `SRM-${planName.replace(/\s+/g, '')}`.substring(0, 18)
-      }
+    // Get Express Token
+    const token = await getExpressToken();
+
+    // Create Payment Link via Stitch Express REST API
+    const paymentLinkPayload = JSON.stringify({
+      amount: amountInCents,
+      payerName: `Driver ${driverId}`,
+      merchantReference: `SRM-${driverId}-${Date.now().toString().slice(-4)}`
     });
 
-    // FIX: Use Stitch API GraphQL endpoint
-    const graphqlOptions = {
-      hostname: 'api.stitch.money',
-      path: '/graphql',
+    const paymentLinkOptions = {
+      hostname: 'express.stitch.money',
+      path: '/api/v1/payment-links',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'Content-Length': Buffer.byteLength(graphqlPayload),
+        'Content-Length': Buffer.byteLength(paymentLinkPayload),
+        'Accept': 'application/json',
         'User-Agent': 'SafeRideMobility/1.0'
       },
       timeout: 10000
     };
 
-    const stitchRes = await makeHttpsRequest(graphqlOptions, graphqlPayload);
-    const stitchData = stitchRes.data;
+    const linkRes = await makeHttpsRequest(paymentLinkOptions, paymentLinkPayload);
 
-    if (stitchData.errors && stitchData.errors.length > 0) {
-      return res.status(400).json({ error: stitchData.errors[0].message });
+    if (linkRes.status !== 200 && linkRes.status !== 201) {
+      throw new Error(`Stitch Payment Link Creation Failed (${linkRes.status}): ${JSON.stringify(linkRes.data)}`);
     }
 
-    const redirectUrl = stitchData?.data?.clientPaymentInitiationRequestCreate?.paymentInitiationRequest?.url;
+    // Extract checkout link from Stitch Express response schema
+    const redirectUrl = linkRes.data?.data?.payment?.link || linkRes.data?.link;
+
     if (!redirectUrl) {
-      return res.status(500).json({ error: 'Stitch did not return a valid payment redirect URL.' });
+      return res.status(500).json({ error: 'Stitch Express did not return a valid payment URL.' });
     }
 
     return res.status(200).json({ success: true, redirectUrl });
 
   } catch (err) {
-    console.error('Checkout Error:', err.message);
+    console.error('Stitch Express Checkout Error:', err.message);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
