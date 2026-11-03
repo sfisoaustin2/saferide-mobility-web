@@ -1,8 +1,64 @@
-import { createStitchPaymentLink } from '../src/services/stitch.js';
-import { adminDb } from '../src/firebaseAdmin.js'; // Ensure you use Firebase Admin for serverless writes
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin securely
+if (!admin.apps.length) {
+  const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  if (serviceAccountBase64) {
+    const serviceAccountJson = Buffer.from(serviceAccountBase64, 'base64').toString('utf8');
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: "https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app"
+    });
+  } else {
+    admin.initializeApp();
+  }
+}
+
+const adminDb = admin.database();
+const STITCH_BASE_URL = "https://express.stitch.money";
+
+let cachedToken = null;
+let tokenExpiresAt = 0;
+
+async function getStitchAccessToken() {
+  if (cachedToken && Date.now() < tokenExpiresAt) {
+    return cachedToken;
+  }
+
+  const clientId = process.env.STITCH_EXPRESS_CLIENT_ID;
+  const clientSecret = process.env.STITCH_EXPRESS_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error("STITCH_CREDENTIALS_MISSING");
+  }
+
+  const response = await fetch(`${STITCH_BASE_URL}/api/v1/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      clientId,
+      clientSecret,
+      scope: "client_paymentrequest"
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok || !result.success || !result.data?.accessToken) {
+    console.error("Stitch token request failed:", { status: response.status, response: result });
+    throw new Error("STITCH_AUTHENTICATION_FAILED");
+  }
+
+  cachedToken = result.data.accessToken;
+  tokenExpiresAt = Date.now() + (14 * 60 * 1000); // 14 minutes
+  return cachedToken;
+}
 
 export default async function handler(req, res) {
-  // CORS setup
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -26,23 +82,43 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters (amount, userId)' });
     }
 
-    // Convert Rand to Cents
+    const accessToken = await getStitchAccessToken();
     const amountInCents = Math.round(parseFloat(amount) * 100);
     const reference = `SRM-${Date.now()}-${userId.substring(0, 5)}`;
 
-    // Create Payment Link via Stitch Express API
-    const paymentData = await createStitchPaymentLink({
-      amountInCents,
-      externalReference: reference,
-      description: `SafeRide Mobility Ride #${rideId || 'General'}`,
+    // Request Payment Link from Stitch Express API
+    const paymentResponse = await fetch(`${STITCH_BASE_URL}/api/v1/payment-requests`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        amount: {
+          currency: "ZAR",
+          quantity: parseFloat(amount)
+        },
+        reference: reference,
+        externalReference: reference,
+        description: `SafeRide Mobility Subscription #${rideId || 'General'}`
+      })
     });
 
-    const paymentUrl = paymentData.url || paymentData.paymentUrl;
-    if (!paymentUrl) {
-      throw new Error('Stitch API did not return a valid payment URL.');
+    const paymentResult = await paymentResponse.json().catch(() => ({}));
+
+    if (!paymentResponse.ok || !paymentResult.success) {
+      console.error("Stitch payment creation failed:", paymentResult);
+      throw new Error(paymentResult.error?.message || "STITCH_PAYMENT_CREATION_FAILED");
     }
 
-    // Save initial transaction state in Firebase Realtime Database using Admin SDK
+    const paymentUrl = paymentResult.data?.url || paymentResult.data?.paymentUrl;
+
+    if (!paymentUrl) {
+      throw new Error("STITCH_PAYMENT_URL_MISSING_IN_RESPONSE");
+    }
+
+    // Save pending transaction state in Firebase Realtime Database
     await adminDb.ref(`transactions/${reference}`).set({
       userId,
       rideId: rideId || null,
