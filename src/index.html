@@ -1080,11 +1080,15 @@
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || "Payment could not be initiated"
+                        result.error || result.details || "Payment could not be initiated"
                     );
                 }
 
-                window.location.href = result.paymentUrl;
+                if (result.paymentUrl) {
+                    window.location.href = result.paymentUrl;
+                } else {
+                    throw new Error("Payment URL not returned from server.");
+                }
 
             } catch (error) {
                 console.error("Stitch Payment Error:", error);
