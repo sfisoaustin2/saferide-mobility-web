@@ -1041,7 +1041,7 @@
             });
         }
 
-        // Integrated Stitch Express & Firebase Payment Handler with Auth Check Fix
+        // Updated Stitch Express Payment Handler pointing to the correct /api/stitch-create-payment endpoint
         async function payWithStitch(orderId) {
             let user = auth.currentUser;
             if (!user) {
@@ -1061,7 +1061,7 @@
                 const idToken = await user.getIdToken(true);
 
                 const response = await fetch(
-                    "/api/create-payment",
+                    "/api/stitch-create-payment",
                     {
                         method: "POST",
                         headers: {
