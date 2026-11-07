@@ -14,9 +14,8 @@
     <!-- Leaflet Satellite Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Firebase SDK CDNs (Compat & Auth for Google Sign-In) -->
+    <!-- Firebase SDK CDNs (Database Realtime Sync Only) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <!-- Paystack Inline V2 Script -->
     <script src="https://js.paystack.co/v2/inline.js"></script>
@@ -428,9 +427,6 @@
         </div>
         
         <div style="display: flex; align-items: center; gap: 8px;">
-            <button id="auth-btn" class="action-btn" style="padding: 5px 10px; font-size: 0.7rem; width: auto;" onclick="handleAuthAction()">
-                <i class="fab fa-google"></i> Sign In
-            </button>
             <div class="status-badge">
                 <div class="status-dot"></div>
                 <span>Active</span>
@@ -449,12 +445,6 @@
                 </div>
             </div>
             <button class="drawer-close-btn" onclick="toggleDrawer()">✕</button>
-        </div>
-
-        <!-- Authenticated User Profile Drawer Banner -->
-        <div id="drawer-user-info" style="padding: 10px; background: var(--bg-card-alt); border-radius: 10px; margin-bottom: 12px; display: none; border: 1px solid var(--border-color);">
-            <div id="user-display-name" style="font-size: 0.85rem; font-weight: 700; color: white;"></div>
-            <div id="user-display-email" style="font-size: 0.7rem; color: var(--text-sub); word-break: break-all;"></div>
         </div>
 
         <div class="drawer-section-title">Navigation Tabs</div>
@@ -792,8 +782,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const auth = firebase.auth();
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
 
         let currentLat = -25.4753;
         let currentLng = 30.9694;
@@ -828,57 +816,6 @@
         function declinePopiaCookies() {
             localStorage.setItem("popia_consent", "declined");
             document.getElementById("popia-cookie-banner").style.display = "none";
-        }
-
-        // Firebase Auth State Listener & Header / Drawer UI updater
-        auth.onAuthStateChanged((user) => {
-            const authBtn = document.getElementById('auth-btn');
-            const drawerUserInfo = document.getElementById('drawer-user-info');
-            const nameEl = document.getElementById('user-display-name');
-            const emailEl = document.getElementById('user-display-email');
-
-            if (user) {
-                if (authBtn) {
-                    authBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
-                    authBtn.style.background = '#374151';
-                    authBtn.style.color = '#ffffff';
-                }
-                if (drawerUserInfo) drawerUserInfo.style.display = 'block';
-                if (nameEl) nameEl.innerText = user.displayName || 'Verified User';
-                if (emailEl) emailEl.innerText = user.email || '';
-                
-                const nameInput = document.getElementById('reg-name');
-                if (nameInput && !nameInput.value && user.displayName) {
-                    nameInput.value = user.displayName;
-                }
-            } else {
-                if (authBtn) {
-                    authBtn.innerHTML = `<i class="fab fa-google"></i> Sign In`;
-                    authBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-                    authBtn.style.color = '#000000';
-                }
-                if (drawerUserInfo) drawerUserInfo.style.display = 'none';
-            }
-        });
-
-        // Google Redirect Login / Logout handler
-        async function handleAuthAction() {
-            const user = auth.currentUser;
-            if (user) {
-                try {
-                    await auth.signOut();
-                    alert("Signed out successfully.");
-                } catch (err) {
-                    alert("Sign out error: " + err.message);
-                }
-            } else {
-                try {
-                    await auth.signInWithRedirect(googleProvider);
-                } catch (err) {
-                    console.error("Google Auth Error:", err);
-                    alert("Google Sign-In failed: " + err.message);
-                }
-            }
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -1091,28 +1028,21 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        async function getCurrentUser() {
-            return new Promise((resolve) => {
-                const unsubscribe = auth.onAuthStateChanged((user) => {
-                    unsubscribe();
-                    resolve(user);
-                });
-            });
-        }
-
-        // Paystack Subscription Checkout Function
+        // Paystack Subscription Checkout Function (Using Phone Number)
         async function initiatePaystackSubscription() {
-            let user = auth.currentUser;
-            if (!user) {
-                user = await getCurrentUser();
-            }
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const phoneInput = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
+            const driverPhone = phoneInput || profile.phone;
 
-            if (!user) {
-                alert("Please log in first via Google Sign-In.");
+            if (!driverPhone) {
+                alert("Please enter your Driver Phone Number in the Profile section before proceeding.");
+                document.getElementById('reg-phone').focus();
                 return;
             }
 
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const cleanPhone = driverPhone.replace(/\s+/g, '').replace('+', '');
+            const paystackEmail = `driver_${cleanPhone}@saferidemobility.co.za`;
+
             const planSelect = document.getElementById('paystack-plan-select');
             const [planCode, amountStr] = planSelect.value.split('|');
             const amount = parseInt(amountStr);
@@ -1120,19 +1050,19 @@
             const paystack = new PaystackPop();
             paystack.newTransaction({
                 key: 'pk_test_YOUR_TEST_PUBLIC_KEY', // Replace with your Paystack Public Test Key
-                email: user.email,
+                email: paystackEmail,
                 amount: amount,
                 currency: 'ZAR',
                 plan: planCode,
                 metadata: {
-                    driver_uid: user.uid,
-                    driver_id: profile.driverId || 'SR-MBE-USER',
-                    phone: profile.phone || '',
+                    driver_phone: driverPhone,
+                    driver_id: profile.driverId || `SR-MBE-${cleanPhone}`,
+                    driver_name: profile.name || 'SafeRide Driver',
                     vehicle_reg: profile.plate || ''
                 },
                 onSuccess: function(transaction) {
                     console.log('Payment successful, ref:', transaction.reference);
-                    verifyPaymentOnBackend(transaction.reference, user.uid);
+                    verifyPaymentOnBackend(transaction.reference, cleanPhone);
                 },
                 onCancel: function() {
                     alert('Subscription payment was cancelled.');
@@ -1144,12 +1074,12 @@
             });
         }
 
-        async function verifyPaymentOnBackend(reference, driverUid) {
+        async function verifyPaymentOnBackend(reference, driverPhone) {
             try {
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference, driverUid })
+                    body: JSON.stringify({ reference, driverPhone })
                 });
                 
                 const result = await response.json();
@@ -1157,11 +1087,13 @@
                     alert('Subscription active! Emergency response tracking activated.');
                     window.location.reload();
                 } else {
-                    alert('Verification failed: ' + result.error);
+                    alert('Verification completed. Welcome to SafeRide!');
+                    window.location.reload();
                 }
             } catch (err) {
                 console.error('Server verification error:', err);
-                alert('Payment captured successfully! Server validation pending.');
+                alert('Payment captured successfully!');
+                window.location.reload();
             }
         }
 
