@@ -1,30 +1,46 @@
-import { db } from '../src/firebase.js';
+const axios = require('axios');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { ref } = req.query;
+  const { reference } = req.query;
 
-  if (!ref) {
-    return res.status(400).json({ error: 'Reference parameter (ref) is required' });
+  if (!reference) {
+    return res.status(400).json({ success: false, error: 'Missing transaction reference' });
   }
 
   try {
-    const snapshot = await db.ref(`transactions/${ref}`).once('value');
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
+    // Query Paystack API to check transaction status
+    const paystackRes = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` // Uses your secret key
+        }
+      }
+    );
+
+    const txData = paystackRes.data.data;
 
     return res.status(200).json({
       success: true,
-      transaction: snapshot.val(),
+      status: txData.status, // e.g., 'success', 'failed', 'pending'
+      amount: txData.amount / 100, // Convert cents back to ZAR
+      customer: txData.customer.email,
+      reference: txData.reference
     });
+
   } catch (error) {
-    console.error('Fetch Status Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Paystack status check error:', error.response ? error.response.data : error.message);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to retrieve payment status from Paystack' 
+    });
   }
-}
+};

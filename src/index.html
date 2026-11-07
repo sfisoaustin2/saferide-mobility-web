@@ -18,6 +18,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Paystack Inline V2 Script -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -130,7 +132,7 @@
         }
         .drawer-link:active, .drawer-link:hover { background: var(--bg-card-alt); color: var(--accent-amber); }
 
-        main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 90px; }
+        main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 110px; }
 
         .tab-section { display: none; flex-direction: column; gap: 16px; }
         .tab-section.active { display: flex; }
@@ -395,6 +397,18 @@
         }
         .nav-item.active { color: var(--accent-amber); }
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
+
+        /* POPIA Footer Style */
+        .popia-footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            margin-top: 20px;
+        }
+        .popia-footer a { color: var(--accent-amber); text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -617,25 +631,34 @@
                         <option value="Ultimate Shield (R599/mo)">Tier 3: Ultimate Shield - R599/mo</option>
                     </select>
                 </div>
+                
+                <!-- POPIA Form Consent Checkbox -->
+                <div class="form-group" style="margin: 10px 0; font-size: 0.78rem; color: var(--text-sub); display: flex; flex-direction: row; align-items: flex-start; gap: 8px;">
+                    <input type="checkbox" id="popia-consent" name="popia_consent" required style="margin-top: 3px; cursor: pointer; accent-color: var(--accent-amber);">
+                    <label for="popia-consent" style="line-height: 1.4; cursor: pointer; color: var(--text-sub);">
+                        I consent to SafeRide Mobility collecting and processing my personal information in accordance with <a href="/privacy-policy" target="_blank" style="color: var(--accent-amber); text-decoration: underline;">POPIA</a> for emergency dispatch and service delivery.
+                    </label>
+                </div>
+
                 <button class="action-btn" onclick="saveDriverRegistration()">Save Profile & Sync</button>
             </div>
 
-            <!-- Stitch Express Subscription & Billing Section -->
+            <!-- Paystack Secure Subscription Section -->
             <div class="content-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div class="card-heading" style="color: var(--accent-blue);">💳 Stitch Express Secure Subscription</div>
-                <div class="card-text">Securely activate your driver subscription tier via Stitch Express checkout.</div>
+                <div class="card-heading" style="color: var(--accent-blue);">💳 Paystack Secure Subscription</div>
+                <div class="card-text">Securely activate your monthly recurring driver subscription via Paystack checkout.</div>
                 
                 <div class="form-group">
                     <label>Subscription Tier Selection</label>
-                    <select id="stitch-tier-select" class="form-control">
-                        <option value="199.00|Standard Defender">Standard Defender - R199.00 / month</option>
-                        <option value="299.00|Pro Defender" selected>Pro Defender - R299.00 / month</option>
-                        <option value="499.00|Fleet Commander">Fleet Commander - R499.00 / month</option>
+                    <select id="paystack-plan-select" class="form-control">
+                        <option value="PLN_YOUR_BASIC_PLAN|14900">Basic Defender - R149.00 / month</option>
+                        <option value="PLN_YOUR_PRO_PLAN|19900" selected>Pro Defender - R199.00 / month</option>
+                        <option value="PLN_YOUR_ULTIMATE_PLAN|29900">Ultimate Shield - R299.00 / month</option>
                     </select>
                 </div>
                 
-                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="payWithStitch('SAAPS10001')">
-                  Pay Now via Stitch
+                <button class="action-btn" style="background: var(--accent-blue); color: white;" onclick="initiatePaystackSubscription()">
+                  Subscribe via Paystack
                 </button>
             </div>
         </div>
@@ -709,6 +732,27 @@
         </div>
     </main>
 
+    <!-- POPIA Footer Section -->
+    <div class="popia-footer">
+        <p>© 2026 SafeRide Mobility (Pty) Ltd. All rights reserved.</p>
+        <p style="margin-top: 4px;">
+            <a href="/privacy-policy">POPIA Privacy Notice</a> | <a href="/terms">Terms of Service</a>
+        </p>
+    </div>
+
+    <!-- POPIA Cookie Consent Banner -->
+    <div id="popia-cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #111827; color: #f3f4f6; padding: 14px 16px; z-index: 9999; border-top: 2px solid #f59e0b; box-shadow: 0 -4px 15px rgba(0,0,0,0.8); font-size: 0.8rem;">
+        <div style="max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
+            <p style="margin: 0; line-height: 1.4;">
+                We use cookies and process personal data under <strong>POPIA</strong> to ensure emergency safety coordination. Read our <a href="/privacy-policy" style="color: #f59e0b; text-decoration: underline;">Privacy Policy</a>.
+            </p>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="acceptPopiaCookies()" style="flex: 1; background-color: #f59e0b; color: #000; border: none; padding: 8px; font-size: 0.8rem; font-weight: bold; border-radius: 6px; cursor: pointer;">Accept All</button>
+                <button onclick="declinePopiaCookies()" style="flex: 1; background-color: #374151; color: #fff; border: 1px solid #4b5563; padding: 8px; font-size: 0.8rem; border-radius: 6px; cursor: pointer;">Decline Non-Essential</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Countdown Modal Overlay -->
     <div id="countdown-box" class="overlay-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:200; justify-content:center; align-items:center; flex-direction:column; gap:12px;">
         <div style="font-size:0.85rem; font-weight:700; color:white;" id="countdown-title">DISPATCHING SOS IN</div>
@@ -768,7 +812,23 @@
             startLiveGPSWatch();
             registerServiceWorker();
             renderTripHistory();
+            checkPopiaConsent();
         });
+
+        // POPIA Cookie Banner Controller
+        function checkPopiaConsent() {
+            if (!localStorage.getItem("popia_consent")) {
+                document.getElementById("popia-cookie-banner").style.display = "block";
+            }
+        }
+        function acceptPopiaCookies() {
+            localStorage.setItem("popia_consent", "accepted");
+            document.getElementById("popia-cookie-banner").style.display = "none";
+        }
+        function declinePopiaCookies() {
+            localStorage.setItem("popia_consent", "declined");
+            document.getElementById("popia-cookie-banner").style.display = "none";
+        }
 
         // Firebase Auth State Listener & Header / Drawer UI updater
         auth.onAuthStateChanged((user) => {
@@ -801,7 +861,7 @@
             }
         });
 
-        // Google Redirect Login / Logout handler (Optimized for mobile browsers)
+        // Google Redirect Login / Logout handler
         async function handleAuthAction() {
             const user = auth.currentUser;
             if (user) {
@@ -1031,8 +1091,7 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Helper to guarantee we wait for Firebase Auth state to settle after redirect
-        function getCurrentUser() {
+        async function getCurrentUser() {
             return new Promise((resolve) => {
                 const unsubscribe = auth.onAuthStateChanged((user) => {
                     unsubscribe();
@@ -1041,8 +1100,8 @@
             });
         }
 
-        // Updated Stitch Express Payment Handler pointing to the correct /api/create-payment endpoint
-        async function payWithStitch(orderId) {
+        // Paystack Subscription Checkout Function
+        async function initiatePaystackSubscription() {
             let user = auth.currentUser;
             if (!user) {
                 user = await getCurrentUser();
@@ -1053,46 +1112,56 @@
                 return;
             }
 
-            const selectEl = document.getElementById('stitch-tier-select');
-            const vals = selectEl.value.split('|');
-            const amountInRands = parseFloat(vals[0]);
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const planSelect = document.getElementById('paystack-plan-select');
+            const [planCode, amountStr] = planSelect.value.split('|');
+            const amount = parseInt(amountStr);
 
+            const paystack = new PaystackPop();
+            paystack.newTransaction({
+                key: 'pk_test_YOUR_TEST_PUBLIC_KEY', // Replace with your Paystack Public Test Key
+                email: user.email,
+                amount: amount,
+                currency: 'ZAR',
+                plan: planCode,
+                metadata: {
+                    driver_uid: user.uid,
+                    driver_id: profile.driverId || 'SR-MBE-USER',
+                    phone: profile.phone || '',
+                    vehicle_reg: profile.plate || ''
+                },
+                onSuccess: function(transaction) {
+                    console.log('Payment successful, ref:', transaction.reference);
+                    verifyPaymentOnBackend(transaction.reference, user.uid);
+                },
+                onCancel: function() {
+                    alert('Subscription payment was cancelled.');
+                },
+                onError: function(error) {
+                    console.error('Paystack error:', error);
+                    alert('Payment processing error: ' + error.message);
+                }
+            });
+        }
+
+        async function verifyPaymentOnBackend(reference, driverUid) {
             try {
-                const idToken = await user.getIdToken(true);
-
-                const response = await fetch(
-                    "/api/create-payment",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${idToken}`
-                        },
-                        body: JSON.stringify({ 
-                            amount: amountInRands,
-                            userId: user.uid,
-                            rideId: orderId 
-                        })
-                    }
-                );
-
+                const response = await fetch('https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/verifyPaystackPayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reference, driverUid })
+                });
+                
                 const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.error || result.details || "Payment could not be initiated"
-                    );
-                }
-
-                if (result.paymentUrl) {
-                    window.location.href = result.paymentUrl;
+                if (result.success) {
+                    alert('Subscription active! Emergency response tracking activated.');
+                    window.location.reload();
                 } else {
-                    throw new Error("Payment URL not returned from server.");
+                    alert('Verification failed: ' + result.message);
                 }
-
-            } catch (error) {
-                console.error("Stitch Payment Error:", error);
-                alert(error.message);
+            } catch (err) {
+                console.error('Server verification error:', err);
+                alert('Payment captured successfully! Server validation pending.');
             }
         }
 
@@ -1135,6 +1204,12 @@
         }
 
         function saveDriverRegistration() {
+            const consentCheckbox = document.getElementById('popia-consent');
+            if (consentCheckbox && !consentCheckbox.checked) {
+                alert('Please accept the POPIA consent checkbox to proceed with profile registration.');
+                return;
+            }
+
             const existing = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = existing.driverId || 'SR-MBE-' + Math.random().toString(36).substring(2,6).toUpperCase();
             const profile = {
