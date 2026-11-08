@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Content Security Policy: Whitelisting Paystack API and Firebase Realtime Database -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:;">
     <title>SafeRide Mobility - Admin Control Room</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -462,7 +464,7 @@
             authDomain: "saferide-mobility-c545a.firebaseapp.com",
             databaseURL: "https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "saferide-mobility-c545a",
-            storageBucket: "saferide-mobility-c545a.firebasestorage.app",
+            storageBucket: "saferide-mobility-c545a.appspot.com",
             messagingSenderId: "466500105377",
             appId: "1:466500105377:web:22ffc29489ef63284d6ce0",
             measurementId: "G-P5Y565XLTS"
