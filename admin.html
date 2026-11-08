@@ -699,6 +699,9 @@
             let html = '';
             window.adminDrivers.forEach(d => {
                 const cleanPhone = (d.phone || '').replace(/[^0-9+]/g, '');
+                // Correctly mapping protection tier from Firebase data node
+                const driverTier = d.tier || d.protectionTier || 'Standard EVO7B (R300/mo)';
+
                 html += `
                     <tr>
                         <td>
@@ -710,7 +713,7 @@
                             <span style="font-size: 0.72rem; color: var(--accent-amber);">${d.phone || 'No Phone'}</span>
                         </td>
                         <td>
-                            <span style="font-weight: 700; color: var(--accent-green);">${d.tier || 'Standard'}</span><br>
+                            <span style="font-weight: 700; color: var(--accent-green);">${driverTier}</span><br>
                             <span style="font-size: 0.72rem; color: var(--text-sub);">Fine Status: <strong style="color:var(--accent-red);">${d.fineAmount ? 'R' + d.fineAmount : 'None'}</strong></span>
                         </td>
                         <td>
@@ -763,7 +766,8 @@
 
             window.adminDrivers.forEach(d => {
                 if (d.lat && d.lng) {
-                    const popupContent = `<b>${d.name}</b><br>ID: ${d.driverId}<br>Platform: ${d.platform} (${d.plate})<br>Tier: ${d.tier}`;
+                    const driverTier = d.tier || d.protectionTier || 'Standard';
+                    const popupContent = `<b>${d.name}</b><br>ID: ${d.driverId}<br>Plate: ${d.plate}<br>Tier: ${driverTier}`;
                     
                     if (adminMarkers[d.driverId]) {
                         adminMarkers[d.driverId].setLatLng([d.lat, d.lng]).setPopupContent(popupContent);
