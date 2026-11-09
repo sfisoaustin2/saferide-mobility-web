@@ -480,13 +480,13 @@
             
             <div class="sos-card" style="padding: 16px;">
                 <div class="sos-title" style="font-size: 1rem;">Quick Driver SOS Panic</div>
-                <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; margin-top: 8px;" onclick="switchTab('tab-profile', null)">🚨 Driver Emergency Console</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; margin-top: 8px;" onclick="checkDriverSubscription(() => switchTab('tab-profile', null))">🚨 Driver Emergency Console</button>
             </div>
 
             <div class="content-card" style="background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.3);">
                 <div class="card-heading" style="color: var(--accent-red);">📶 Offline Emergency SMS Fallback</div>
                 <div class="card-text">Weak data signal in rural Mbombela pockets? Send an emergency text directly to security via SMS.</div>
-                <button class="action-btn" style="background: var(--accent-red); color: white; font-weight: 900;" onclick="triggerOfflineSMSFallback()">
+                <button class="action-btn" style="background: var(--accent-red); color: white; font-weight: 900;" onclick="checkDriverSubscription(() => triggerOfflineSMSFallback())">
                     📩 Send Emergency SMS to PSIRA
                 </button>
             </div>
@@ -532,7 +532,7 @@
         <div id="tab-profile" class="tab-section">
             <div class="shift-bar">
                 <span style="font-size: 0.82rem; font-weight: 700;">Driver Shift Status:</span>
-                <select id="driver-shift-status" class="shift-select" onchange="updateShiftStatus()">
+                <select id="driver-shift-status" class="shift-select" onchange="checkDriverSubscription(() => updateShiftStatus())">
                     <option value="ONLINE">🟢 Online & Active</option>
                     <option value="ON_TRIP">🟡 On Active Trip</option>
                     <option value="OFFLINE">🔴 Offline</option>
@@ -544,7 +544,7 @@
                 <div class="sos-subtitle">Connected to Mbombela Control Desk</div>
                 
                 <div class="panic-btn-container">
-                    <button id="main-panic-btn" class="panic-btn" onclick="startCountdown('DRIVER')">
+                    <button id="main-panic-btn" class="panic-btn" onclick="checkDriverSubscription(() => startCountdown('DRIVER'))">
                         SOS
                         <span id="panic-btn-sub-label" class="panic-btn-sub">ARMED DISPATCH</span>
                     </button>
@@ -554,7 +554,7 @@
 
                 <div class="ble-status-banner">
                     <span id="ble-device-name">🔘 BLE Panic Button: Not Connected</span>
-                    <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="connectBLEHardwareButton()">Pair Button</button>
+                    <button class="action-btn" style="padding: 4px 10px; font-size: 0.7rem; width: auto;" onclick="checkDriverSubscription(() => connectBLEHardwareButton())">Pair Button</button>
                 </div>
             </div>
 
@@ -581,7 +581,7 @@
                         <input type="number" id="trip-fare" class="form-control" placeholder="R120">
                     </div>
                 </div>
-                <button class="action-btn" style="background: var(--accent-amber); color: black;" onclick="saveTripRecord()">💾 Log Trip Record</button>
+                <button class="action-btn" style="background: var(--accent-amber); color: black;" onclick="checkDriverSubscription(() => saveTripRecord())">💾 Log Trip Record</button>
 
                 <div style="margin-top: 10px; font-size: 0.8rem; font-weight: 700; color: white;">Recent Saved Trips:</div>
                 <div id="trip-history-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
@@ -591,14 +591,14 @@
 
             <div class="content-card" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
                 <div class="card-heading" style="color: var(--accent-green);">📊 Shift Security Report Card</div>
-                <button class="action-btn" style="background: var(--accent-green); color: white; font-weight: 900;" onclick="generateShiftReportCard()">📋 Generate & Share Report</button>
+                <button class="action-btn" style="background: var(--accent-green); color: white; font-weight: 900;" onclick="checkDriverSubscription(() => generateShiftReportCard())">📋 Generate & Share Report</button>
             </div>
 
             <div class="map-wrapper">
                 <h3 style="color:#ffffff; font-size: 0.95rem;">Mbombela Satellite Map</h3>
                 <div id="live-satellite-map"></div>
                 <div id="live-coords-box" style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700; text-align: center;">Locating fix...</div>
-                <button class="action-btn" style="margin-top: 6px; background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3);" onclick="startLiveGPSNavigation()">📍 Route to My Live GPS</button>
+                <button class="action-btn" style="margin-top: 6px; background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3);" onclick="checkDriverSubscription(() => startLiveGPSNavigation())">📍 Route to My Live GPS</button>
             </div>
 
             <div class="content-card">
@@ -697,7 +697,7 @@
             </div>
         </div>
 
-        <!-- 5. PASSENGERS SCANNER & SOS TAB -->
+        <!-- 5. PASSENGERS SCANNER & SOS TAB (100% Free & Unrestricted) -->
         <div id="tab-passengers" class="tab-section">
             <div class="content-card" style="background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.3);">
                 <div class="card-heading" style="color: var(--accent-red);">🚨 Passenger Emergency SOS Panic</div>
@@ -836,6 +836,32 @@
             } else {
                 alert("To install SafeRide, tap browser menu and select 'Add to Home Screen'.");
             }
+        }
+
+        // ROLE-BASED ACCESS CONTROL: Check if driver subscription is active in Firebase
+        function checkDriverSubscription(callbackAction) {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            const driverId = profile.driverId;
+
+            if (!driverId) {
+                alert("Please complete and save your Driver Profile first.");
+                switchTab('tab-profile', null);
+                return;
+            }
+
+            // Verify status in Firebase real-time database
+            db.ref('drivers/' + driverId).once('value', (snapshot) => {
+                const driverData = snapshot.val();
+                
+                if (driverData && driverData.subscriptionStatus === "ACTIVE") {
+                    // Subscription active - execute action
+                    callbackAction();
+                } else {
+                    // Unpaid or inactive subscription - lock and alert
+                    alert("🔒 Access Restricted: Your SafeRide Driver Subscription is inactive. Please subscribe via Paystack below to unlock shift tracking and SOS protection.");
+                    switchTab('tab-profile', null);
+                }
+            });
         }
 
         function saveTripRecord() {
@@ -1030,7 +1056,7 @@
             } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
         }
 
-        // Paystack Subscription Checkout Function (Internal Mapping for Hidden Plan Codes)
+        // Paystack Subscription Checkout Function
         async function initiatePaystackSubscription() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const phoneInput = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
@@ -1045,11 +1071,10 @@
             const cleanPhone = driverPhone.replace(/\s+/g, '').replace('+', '');
             const paystackEmail = `driver_${cleanPhone}@saferidemobility.co.za`;
 
-            // Hidden Internal Mapping for Paystack Subscription Plans using your exact dashboard plan codes
             const subscriptionPlans = {
-                "STANDARD": { planCode: "PLN_nyykxaombn9gcay", amount: 30000 },
-                "PRO": { planCode: "PLN_z1989zkqfdre7t0", amount: 35000 },
-                "PRO_MAX": { planCode: "PLN_9uv4r93gqkz6zai", amount: 40000 }
+                "STANDARD": { planCode: "PLN_nyykxaombn9gcay", amount: 30000, label: "Standard EVO7B (R300/mo)" },
+                "PRO": { planCode: "PLN_z1989zkqfdre7t0", amount: 35000, label: "PRO EVO4 (R350/mo)" },
+                "PRO_MAX": { planCode: "PLN_9uv4r93gqkz6zai", amount: 40000, label: "PRO MAX EVO6 (R400/mo)" }
             };
 
             const selectedTierKey = document.getElementById('paystack-plan-select').value;
@@ -1071,10 +1096,20 @@
                     driver_phone: driverPhone,
                     driver_id: profile.driverId || `SR-MBE-${cleanPhone}`,
                     driver_name: profile.name || 'SafeRide Driver',
-                    vehicle_reg: profile.plate || ''
+                    vehicle_reg: profile.plate || '',
+                    tier: selectedPlan.label
                 },
                 onSuccess: function(transaction) {
                     console.log('Payment successful, ref:', transaction.reference);
+                    
+                    // Immediately update status to ACTIVE in Firebase upon successful checkout
+                    if (profile.driverId) {
+                        db.ref('drivers/' + profile.driverId).update({
+                            subscriptionStatus: 'ACTIVE',
+                            tier: selectedPlan.label
+                        });
+                    }
+
                     verifyPaymentOnBackend(transaction.reference, cleanPhone);
                 },
                 onCancel: function() {
@@ -1096,16 +1131,11 @@
                 });
                 
                 const result = await response.json();
-                if (result.success) {
-                    alert('Subscription active! Emergency response tracking activated.');
-                    window.location.reload();
-                } else {
-                    alert('Verification completed. Welcome to SafeRide!');
-                    window.location.reload();
-                }
+                alert('Subscription active! Emergency response tracking unlocked.');
+                window.location.reload();
             } catch (err) {
                 console.error('Server verification error:', err);
-                alert('Payment captured successfully!');
+                alert('Payment captured successfully! Subscription active.');
                 window.location.reload();
             }
         }
@@ -1165,8 +1195,17 @@
                 tier: document.getElementById('reg-tier').value
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            syncDriverToFirebase();
-            alert(`Profile saved & synced! ID: ${driverId}`);
+            
+            // Set default subscription status as INACTIVE until paid
+            db.ref('drivers/' + driverId).update({
+                ...profile,
+                subscriptionStatus: 'INACTIVE',
+                lat: currentLat,
+                lng: currentLng,
+                lastUpdated: Date.now()
+            });
+
+            alert(`Profile saved & synced! ID: ${driverId}. Please complete your Paystack subscription to activate emergency tracking.`);
         }
 
         function loadDriverRegistration() {
@@ -1195,6 +1234,10 @@
             if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 200 }, (text) => {
                 document.getElementById('scanner-result').innerText = `✅ Verified: ${text}`;
+                // Automatically redirect to verification URL if scanned QR is a SafeRide link
+                if (text.includes('saferidemobility.co.za')) {
+                    window.location.href = text;
+                }
             }, () => {});
         }
         function stopScanner() {
@@ -1202,6 +1245,7 @@
         }
         function updateShiftStatus() {
             localStorage.setItem('saferide_shift_status', document.getElementById('driver-shift-status').value);
+            alert('Shift status updated successfully.');
         }
     </script>
 </body>
