@@ -286,7 +286,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.88);
-            z-index: 100;
+            z-index: 10000;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -297,11 +297,13 @@
             padding: 24px;
             border-radius: 20px;
             text-align: center;
-            max-width: 340px;
+            max-width: 440px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .close-btn {
             background: var(--bg-card-alt); 
@@ -409,7 +411,15 @@
             background-color: var(--bg-card);
             margin-top: 20px;
         }
-        .popia-footer a { color: var(--accent-amber); text-decoration: underline; }
+        .popia-footer button { 
+            background: none; 
+            border: none; 
+            color: var(--accent-amber); 
+            text-decoration: underline; 
+            font-size: 0.72rem; 
+            cursor: pointer; 
+            padding: 0 4px;
+        }
     </style>
 </head>
 <body>
@@ -461,7 +471,8 @@
         <a class="drawer-link" onclick="generateShiftReportCard(); toggleDrawer();">📊 Export Shift Report Card</a>
         <a class="drawer-link" onclick="showQRCode(); toggleDrawer();">💳 Show Driver QR Badge</a>
         <a class="drawer-link" onclick="triggerPWAInstall()">📱 Install PWA App</a>
-        <a class="drawer-link" href="https://saferidemobility.co.za">📄 Official Web Portal</a>
+        <a class="drawer-link" onclick="openPrivacyModal(); toggleDrawer();">🔒 POPIA Privacy Policy</a>
+        <a class="drawer-link" onclick="openTermsModal(); toggleDrawer();">📄 Terms & Conditions</a>
     </div>
 
     <main>
@@ -628,7 +639,7 @@
                 <div class="form-group" style="margin: 10px 0; font-size: 0.78rem; color: var(--text-sub); display: flex; flex-direction: row; align-items: flex-start; gap: 8px;">
                     <input type="checkbox" id="popia-consent" name="popia_consent" required style="margin-top: 3px; cursor: pointer; accent-color: var(--accent-amber);">
                     <label for="popia-consent" style="line-height: 1.4; cursor: pointer; color: var(--text-sub);">
-                        I consent to SafeRide Mobility collecting and processing my personal information in accordance with <a href="/privacy-policy" target="_blank" style="color: var(--accent-amber); text-decoration: underline;">POPIA</a> for emergency dispatch and service delivery.
+                        I consent to SafeRide Mobility collecting and processing my personal information in accordance with the <button type="button" onclick="openPrivacyModal()" style="color: var(--accent-amber); text-decoration: underline; background:none; border:none; font-size:0.78rem; padding:0; cursor:pointer;">POPIA Privacy Policy</button> for emergency dispatch and service delivery.
                     </label>
                 </div>
 
@@ -728,7 +739,8 @@
     <div class="popia-footer">
         <p>© 2026 SafeRide Mobility (Pty) Ltd. All rights reserved.</p>
         <p style="margin-top: 4px;">
-            <a href="/privacy-policy">POPIA Privacy Notice</a> | <a href="/terms">Terms of Service</a>
+            <button type="button" onclick="openPrivacyModal()">POPIA Privacy Notice</button> | 
+            <button type="button" onclick="openTermsModal()">Terms of Service</button>
         </p>
     </div>
 
@@ -736,7 +748,7 @@
     <div id="popia-cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #111827; color: #f3f4f6; padding: 14px 16px; z-index: 9999; border-top: 2px solid #f59e0b; box-shadow: 0 -4px 15px rgba(0,0,0,0.8); font-size: 0.8rem;">
         <div style="max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
             <p style="margin: 0; line-height: 1.4;">
-                We use cookies and process personal data under <strong>POPIA</strong> to ensure emergency safety coordination. Read our <a href="/privacy-policy" style="color: #f59e0b; text-decoration: underline;">Privacy Policy</a>.
+                We use cookies and process personal data under <strong>POPIA</strong> to ensure emergency safety coordination. Read our <button type="button" onclick="openPrivacyModal()" style="color: #f59e0b; text-decoration: underline; background:none; border:none; font-size:0.8rem; cursor:pointer; padding:0;">Privacy Policy</button>.
             </p>
             <div style="display: flex; gap: 8px;">
                 <button onclick="acceptPopiaCookies()" style="flex: 1; background-color: #f59e0b; color: #000; border: none; padding: 8px; font-size: 0.8rem; font-weight: bold; border-radius: 6px; cursor: pointer;">Accept All</button>
@@ -760,6 +772,34 @@
             <div id="qr-driver-info" style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;"></div>
             <button class="action-btn" style="background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); margin-bottom: 6px;" onclick="writeToNFCTag()">📡 Write to NFC Tag</button>
             <button class="close-btn" onclick="closeQRCode()">Close Badge</button>
+        </div>
+    </div>
+
+    <!-- POPIA Privacy Policy Modal -->
+    <div id="privacy-modal" class="modal">
+        <div class="modal-content" style="text-align: left;">
+            <h3 style="color: var(--accent-amber); margin-bottom: 10px;">🔒 POPIA Privacy Policy</h3>
+            <div style="font-size: 0.8rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 14px;">
+                <p><strong>SafeRide Mobility (Pty) Ltd</strong> complies fully with the Protection of Personal Information Act (POPIA) of South Africa.</p><br>
+                <p><strong>1. Data Collection:</strong> We collect your name, phone number, vehicle plate details, and live GPS coordinates strictly for emergency dispatch and fleet verification.</p><br>
+                <p><strong>2. Emergency Sharing:</strong> In the event of an SOS trigger, location details are shared with PSIRA-accredited armed response providers and control desk dispatchers.</p><br>
+                <p><strong>3. Data Protection:</strong> Your personal data is encrypted and stored securely within Firebase Realtime Database and will never be sold or used for marketing without your consent.</p>
+            </div>
+            <button class="close-btn" onclick="closePrivacyModal()">Close Privacy Notice</button>
+        </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div id="terms-modal" class="modal">
+        <div class="modal-content" style="text-align: left;">
+            <h3 style="color: var(--accent-amber); margin-bottom: 10px;">📄 Terms of Service</h3>
+            <div style="font-size: 0.8rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 14px;">
+                <p><strong>SafeRide Mobility Service Terms</strong></p><br>
+                <p><strong>1. Driver Subscriptions:</strong> Active monthly Paystack subscription is required to unlock driver panic tracking, shift logging, and control desk response features.</p><br>
+                <p><strong>2. Operational Coverage:</strong> Armed response dispatch services are currently active across Mbombela, Mpumalanga and surrounding operational zones.</p><br>
+                <p><strong>3. Abuse Policy:</strong> Repeated false alarms or misuse of the SOS emergency dispatch system may lead to driver membership suspension or fines.</p>
+            </div>
+            <button class="close-btn" onclick="closeTermsModal()">Close Terms</button>
         </div>
     </div>
 
@@ -804,6 +844,12 @@
             renderTripHistory();
             checkPopiaConsent();
         });
+
+        // Modal Controllers for Legal & Privacy Notices
+        function openPrivacyModal() { document.getElementById('privacy-modal').style.display = 'flex'; }
+        function closePrivacyModal() { document.getElementById('privacy-modal').style.display = 'none'; }
+        function openTermsModal() { document.getElementById('terms-modal').style.display = 'flex'; }
+        function closeTermsModal() { document.getElementById('terms-modal').style.display = 'none'; }
 
         // POPIA Cookie Banner Controller
         function checkPopiaConsent() {
@@ -854,10 +900,8 @@
                 const driverData = snapshot.val();
                 
                 if (driverData && driverData.subscriptionStatus === "ACTIVE") {
-                    // Subscription active - execute action
                     callbackAction();
                 } else {
-                    // Unpaid or inactive subscription - lock and alert
                     alert("🔒 Access Restricted: Your SafeRide Driver Subscription is inactive. Please subscribe via Paystack below to unlock shift tracking and SOS protection.");
                     switchTab('tab-profile', null);
                 }
@@ -1101,8 +1145,6 @@
                 },
                 onSuccess: function(transaction) {
                     console.log('Payment successful, ref:', transaction.reference);
-                    
-                    // Immediately update status to ACTIVE in Firebase upon successful checkout
                     if (profile.driverId) {
                         db.ref('drivers/' + profile.driverId).update({
                             subscriptionStatus: 'ACTIVE',
@@ -1196,7 +1238,6 @@
             };
             localStorage.setItem('saferide_profile', JSON.stringify(profile));
             
-            // Set default subscription status as INACTIVE until paid
             db.ref('drivers/' + driverId).update({
                 ...profile,
                 subscriptionStatus: 'INACTIVE',
@@ -1234,7 +1275,6 @@
             if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 200 }, (text) => {
                 document.getElementById('scanner-result').innerText = `✅ Verified: ${text}`;
-                // Automatically redirect to verification URL if scanned QR is a SafeRide link
                 if (text.includes('saferidemobility.co.za')) {
                     window.location.href = text;
                 }
