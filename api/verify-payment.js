@@ -73,4 +73,4 @@ module.exports = async (req, res) => {
       error: 'Server error verifying Paystack transaction.' 
     });
   }
-};s
+};
