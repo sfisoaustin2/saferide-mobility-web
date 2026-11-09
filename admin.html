@@ -15,6 +15,8 @@
     <!-- Firebase SDK CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- QR Code Library CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         :root {
@@ -457,6 +459,22 @@
         </div>
     </div>
 
+    <!-- ADMIN QR PRINT MODAL -->
+    <div id="admin-qr-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="color: #ffffff; margin-bottom: 8px;">SafeRide Fleet Vinyl Sticker Badge</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px;">High-resolution QR code linked to live driver verification route.</p>
+            
+            <div id="admin-qrcode-canvas" style="margin: 16px auto; padding: 14px; background: white; border-radius: 12px; display: inline-block; width: fit-content;"></div>
+            <div id="admin-qr-driver-info" style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 16px; font-weight: 700;"></div>
+            
+            <div style="display: flex; gap: 8px;">
+                <button class="action-btn" style="background: var(--accent-blue); color: white; flex: 1; justify-content: center;" onclick="printDriverBadge()">🖨️ Print Vinyl Sticker</button>
+                <button class="action-btn btn-danger" style="padding: 10px;" onclick="closeAdminQRModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Control Script & Firebase Listener -->
     <script>
         const firebaseConfig = {
@@ -718,6 +736,9 @@
                         </td>
                         <td>
                             <div class="management-toolbar">
+                                <button class="action-btn" style="background: var(--accent-amber); color: #000;" onclick="showAdminQRCode('${d.driverId}', '${d.name || 'Driver'}', '${d.plate || 'N/A'}')">
+                                    🖨️ QR Badge
+                                </button>
                                 <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hello ' + (d.name || 'Driver') + ', SafeRide Control Room checking in on your shift across Mbombela.')}" target="_blank" class="action-btn btn-whatsapp">
                                     💬 WhatsApp
                                 </a>
@@ -736,6 +757,56 @@
                 `;
             });
             tbody.innerHTML = html;
+        }
+
+        function showAdminQRCode(driverId, driverName, plate) {
+            const container = document.getElementById('admin-qrcode-canvas');
+            container.innerHTML = '';
+            const verifyUrl = `https://saferidemobility.co.za/verify?driverId=${driverId}`;
+            
+            document.getElementById('admin-qr-driver-info').innerHTML = `${driverName} <br><span style="color:var(--accent-amber); font-size:0.78rem;">ID: ${driverId} | Plate: ${plate}</span>`;
+            
+            new QRCode(container, { 
+                text: verifyUrl, 
+                width: 220, 
+                height: 220,
+                correctLevel: QRCode.CorrectLevel.H 
+            });
+
+            document.getElementById('admin-qr-modal').style.display = 'flex';
+        }
+
+        function closeAdminQRModal() {
+            document.getElementById('admin-qr-modal').style.display = 'none';
+        }
+
+        function printDriverBadge() {
+            const qrCanvas = document.getElementById('admin-qrcode-canvas').innerHTML;
+            const driverInfo = document.getElementById('admin-qr-driver-info').innerHTML;
+            
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>SafeRide Vinyl Badge Print</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { background: white; color: black; font-family: sans-serif; text-align: center; padding: 30px; }');
+            printWindow.document.write('.badge-card { border: 2px dashed #000; padding: 25px; border-radius: 16px; display: inline-block; width: 320px; }');
+            printWindow.document.write('h2 { margin-bottom: 5px; font-size: 1.2rem; }');
+            printWindow.document.write('p { font-size: 0.9rem; margin-top: 10px; font-weight: bold; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<div class="badge-card">');
+            printWindow.document.write('<h2>SafeRide Mobility</h2>');
+            printWindow.document.write('<p style="font-size:0.75rem; color:#555; margin-bottom:15px;">OFFICIAL VERIFIED VEHICLE BADGE</p>');
+            printWindow.document.write(qrCanvas);
+            printWindow.document.write(`<p>${driverInfo}</p>`);
+            printWindow.document.write('<p style="font-size: 0.7rem; color: #777; margin-top: 15px;">Scan with smartphone to verify driver safety status.</p>');
+            printWindow.document.write('</div>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 400);
         }
 
         function issueDriverFine(driverId, driverName) {
