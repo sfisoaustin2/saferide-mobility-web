@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Content Security Policy: Whitelisting Firebase WebSockets & Paystack APIs -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://standard.paystack.co https://checkout.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://standard.paystack.co https://checkout.paystack.co;">
+    <!-- Updated Content Security Policy for Paystack V2 & Firebase -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://checkout.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://checkout.paystack.co;">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -19,6 +19,8 @@
     <!-- Firebase SDK CDNs (Database Realtime Sync Only) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Official Paystack Inline V2 SDK -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -788,7 +790,6 @@
             registerServiceWorker();
             renderTripHistory();
             checkPopiaConsent();
-            checkUrlPaymentReturn();
         });
 
         async function startLiveCamera() {
@@ -1083,8 +1084,13 @@
             });
         }
 
-        // Direct Hosted Redirect Checkout (Eliminates all iframe blocks & CSP policy errors)
+        // Standard Paystack Inline V2 Payment Method (Using Live Subscription Plan Codes)
         function initiatePaystackSubscription() {
+            if (typeof PaystackPop === 'undefined') {
+                alert('Paystack SDK loading... Please wait a second and try again.');
+                return;
+            }
+
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const phoneInput = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
             const driverPhone = phoneInput || profile.phone;
@@ -1112,29 +1118,36 @@
                 return;
             }
 
-            const publicKey = 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75';
-            const callbackUrl = window.location.origin + window.location.pathname + '?payment=success&tier=' + selectedTierKey;
-            
-            const paystackCheckoutUrl = `https://checkout.paystack.com/pay?key=${publicKey}&email=${encodeURIComponent(paystackEmail)}&plan=${selectedPlanCode}&callback_url=${encodeURIComponent(callbackUrl)}`;
-            
-            window.location.href = paystackCheckoutUrl;
-        }
-
-        function checkUrlPaymentReturn() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('payment') === 'success') {
-                const tier = urlParams.get('tier') || 'PRO';
-                const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-                if (profile.driverId) {
-                    db.ref('drivers/' + profile.driverId).update({
-                        subscriptionStatus: 'ACTIVE',
-                        tier: tier
-                    });
+            const paystack = new PaystackPop();
+            paystack.newTransaction({
+                key: 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75',
+                email: paystackEmail,
+                plan: selectedPlanCode,
+                currency: 'ZAR',
+                metadata: {
+                    driver_phone: driverPhone,
+                    driver_id: profile.driverId || `SR-MBE-${cleanPhone}`,
+                    driver_name: profile.name || 'SafeRide Driver',
+                    tier: selectedTierKey
+                },
+                onSuccess: (transaction) => {
+                    console.log('Subscription payment successful:', transaction.reference);
+                    if (profile.driverId) {
+                        db.ref('drivers/' + profile.driverId).update({
+                            subscriptionStatus: 'ACTIVE',
+                            tier: selectedTierKey
+                        });
+                    }
+                    alert('🎉 Payment successful! Your SafeRide subscription is now ACTIVE.');
+                    window.location.reload();
+                },
+                onCancel: () => {
+                    alert('Subscription payment was cancelled.');
+                },
+                onError: (error) => {
+                    alert('Paystack Error: ' + error.message);
                 }
-                alert('🎉 Payment successful! Your SafeRide subscription is now ACTIVE.');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                switchTab('tab-profile', null);
-            }
+            });
         }
 
         function showQRCode() {
@@ -1166,14 +1179,30 @@
             if (!profile.driverId) return;
             db.ref('drivers/' + profile.driverId).update({
                 driverId: profile.driverId,
+                name: profile.name || 'Driver',
+                phone: profile.phone || '',
+                email: profile.email || '',
+                vehicleModel: profile.vehicleModel || '',
+                vehiclePlate: profile.vehiclePlate || '',
+                status: profile.status || 'offline',
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+            }).catch((err) => console.error('Error syncing driver to Firebase:', err));
+        }
+        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
+
+        function syncDriverToFirebase() {
+            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+            if (!profile.driverId) return;
+            db.ref('drivers/' + profile.driverId).update({
+                driverId: profile.driverId,
                 name: profile.name || "Sipho Dlamini",
                 phone: profile.phone || "+27821234567",
                 plate: profile.plate || "MP 123-456",
                 selfie: profile.selfie || "",
                 lat: currentLat,
                 lng: currentLng,
-                lastUpdated: Date.now(),
-    });
+                lastUpdated: Date.now()
+            });
         }
 
         function saveDriverRegistration() {
@@ -1260,4 +1289,4 @@
         }
     </script>
 </body>
-</html>s
+</html>
