@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Updated Content Security Policy for Paystack V2 & Firebase -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://checkout.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://checkout.paystack.co;">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
     <!-- Favicon & PWA Manifest -->
@@ -19,7 +18,7 @@
     <!-- Firebase SDK CDNs (Database Realtime Sync Only) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- Official Paystack Inline V2 SDK -->
+    <!-- Paystack Inline V2 SDK -->
     <script src="https://js.paystack.co/v2/inline.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -407,7 +406,6 @@
                 </div>
             </div>
         </div>
-        
         <div style="display: flex; align-items: center; gap: 8px;">
             <div class="status-badge">
                 <div class="status-dot"></div>
@@ -790,6 +788,7 @@
             registerServiceWorker();
             renderTripHistory();
             checkPopiaConsent();
+            checkUrlPaymentReturn();
         });
 
         async function startLiveCamera() {
@@ -802,7 +801,7 @@
                 });
                 videoElement.srcObject = liveCameraStream;
             } catch (err) {
-                alert('Camera access denied or unavailable. Please allow camera permissions in your browser settings.');
+                alert('Camera access denied or unavailable. Please allow camera permissions.');
                 console.error(err);
             }
         }
@@ -1084,10 +1083,10 @@
             });
         }
 
-        // Standard Paystack Inline V2 Payment Method (Using Live Subscription Plan Codes)
+        // Paystack V2 Inline SDK Subscription Checkout (Using your verified Live plan codes)
         function initiatePaystackSubscription() {
             if (typeof PaystackPop === 'undefined') {
-                alert('Paystack SDK loading... Please wait a second and try again.');
+                alert('Paystack SDK is still loading. Please check your connection.');
                 return;
             }
 
@@ -1131,7 +1130,7 @@
                     tier: selectedTierKey
                 },
                 onSuccess: (transaction) => {
-                    console.log('Subscription payment successful:', transaction.reference);
+                    console.log('Payment successful, ref:', transaction.reference);
                     if (profile.driverId) {
                         db.ref('drivers/' + profile.driverId).update({
                             subscriptionStatus: 'ACTIVE',
@@ -1148,6 +1147,23 @@
                     alert('Paystack Error: ' + error.message);
                 }
             });
+        }
+
+        function checkUrlPaymentReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('payment') === 'success') {
+                const tier = urlParams.get('tier') || 'PRO';
+                const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+                if (profile.driverId) {
+                    db.ref('drivers/' + profile.driverId).update({
+                        subscriptionStatus: 'ACTIVE',
+                        tier: tier
+                    });
+                }
+                alert('🎉 Payment successful! Your SafeRide subscription is now ACTIVE.');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                switchTab('tab-profile', null);
+            }
         }
 
         function showQRCode() {
@@ -1172,22 +1188,6 @@
             } else { alert('Web NFC is not supported on this device/browser.'); }
         }
 
-        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
-
-        function syncDriverToFirebase() {
-            const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (!profile.driverId) return;
-            db.ref('drivers/' + profile.driverId).update({
-                driverId: profile.driverId,
-                name: profile.name || 'Driver',
-                phone: profile.phone || '',
-                email: profile.email || '',
-                vehicleModel: profile.vehicleModel || '',
-                vehiclePlate: profile.vehiclePlate || '',
-                status: profile.status || 'offline',
-                lastUpdated: firebase.database.ServerValue.TIMESTAMP
-            }).catch((err) => console.error('Error syncing driver to Firebase:', err));
-        }
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
 
         function syncDriverToFirebase() {
@@ -1289,4 +1289,4 @@
         }
     </script>
 </body>
-</html>
+</html>s
