@@ -2,10 +2,6 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/src/index.html"
-    },
-    {
       "source": "/admin",
       "destination": "/src/admin.html"
     },
@@ -16,6 +12,10 @@
     {
       "source": "/legal",
       "destination": "/src/legal.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/src/$1"
     }
   ]
 }
