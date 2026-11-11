@@ -70,4 +70,4 @@ module.exports = async (req, res) => {
     console.error('Webhook error:', err);
     return res.status(500).send('Server error');
   }
-};s
+};
