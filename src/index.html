@@ -614,6 +614,16 @@
 
             <div class="content-card">
                 <div class="card-heading">Driver Profile & Vehicle Information</div>
+                
+                <!-- NEW FEATURE: Driver Selfie Capture Field -->
+                <div class="form-group">
+                    <label style="color: var(--accent-amber); font-weight: 700;">📸 Driver Profile Selfie (Camera / Photo)</label>
+                    <input type="file" id="reg-selfie-file" accept="image/*" capture="user" class="form-control" style="padding: 8px;" onchange="previewSelfieImage(this)">
+                    <div id="selfie-preview-container" style="margin-top: 8px; text-align: center; display: none;">
+                        <img id="selfie-preview-img" src="" alt="Selfie Preview" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-amber);">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Full Name & Surname</label>
                     <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sipho Dlamini">
@@ -781,7 +791,7 @@
             <h3 style="color: var(--accent-amber); margin-bottom: 10px;">🔒 POPIA Privacy Policy</h3>
             <div style="font-size: 0.8rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 14px;">
                 <p><strong>SafeRide Mobility (Pty) Ltd</strong> complies fully with the Protection of Personal Information Act (POPIA) of South Africa.</p><br>
-                <p><strong>1. Data Collection:</strong> We collect your name, phone number, vehicle plate details, and live GPS coordinates strictly for emergency dispatch and fleet verification.</p><br>
+                <p><strong>1. Data Collection:</strong> We collect your name, phone number, vehicle plate details, selfie photo, and live GPS coordinates strictly for emergency dispatch and fleet verification.</p><br>
                 <p><strong>2. Emergency Sharing:</strong> In the event of an SOS trigger, location details are shared with PSIRA-accredited armed response providers and control desk dispatchers.</p><br>
                 <p><strong>3. Data Protection:</strong> Your personal data is encrypted and stored securely within Firebase Realtime Database and will never be sold or used for marketing without your consent.</p>
             </div>
@@ -1214,12 +1224,28 @@
                 name: profile.name || "Sipho Dlamini",
                 phone: profile.phone || "+27821234567",
                 plate: profile.plate || "MP 123-456",
+                selfie: profile.selfie || "",
                 lat: currentLat,
                 lng: currentLng,
                 lastUpdated: Date.now()
             });
         }
 
+        // Preview image in the registration form
+        function previewSelfieImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewImg = document.getElementById('selfie-preview-img');
+                    const previewContainer = document.getElementById('selfie-preview-container');
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // UPDATED: Save Driver Registration including compressed Selfie Base64
         function saveDriverRegistration() {
             const consentCheckbox = document.getElementById('popia-consent');
             if (consentCheckbox && !consentCheckbox.checked) {
@@ -1227,26 +1253,64 @@
                 return;
             }
 
+            const fileInput = document.getElementById('reg-selfie-file');
             const existing = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = existing.driverId || 'SR-MBE-' + Math.random().toString(36).substring(2,6).toUpperCase();
-            const profile = {
-                driverId: driverId,
-                name: document.getElementById('reg-name').value,
-                phone: document.getElementById('reg-phone').value,
-                plate: document.getElementById('reg-plate').value,
-                tier: document.getElementById('reg-tier').value
-            };
-            localStorage.setItem('saferide_profile', JSON.stringify(profile));
-            
-            db.ref('drivers/' + driverId).update({
-                ...profile,
-                subscriptionStatus: 'INACTIVE',
-                lat: currentLat,
-                lng: currentLng,
-                lastUpdated: Date.now()
-            });
 
-            alert(`Profile saved & synced! ID: ${driverId}. Please complete your Paystack subscription to activate emergency tracking.`);
+            const processProfileWithImage = (selfieBase64) => {
+                const profile = {
+                    driverId: driverId,
+                    name: document.getElementById('reg-name').value,
+                    phone: document.getElementById('reg-phone').value,
+                    plate: document.getElementById('reg-plate').value,
+                    tier: document.getElementById('reg-tier').value,
+                    selfie: selfieBase64 || existing.selfie || ''
+                };
+
+                localStorage.setItem('saferide_profile', JSON.stringify(profile));
+                
+                db.ref('drivers/' + driverId).update({
+                    ...profile,
+                    subscriptionStatus: existing.subscriptionStatus || 'INACTIVE',
+                    lat: currentLat,
+                    lng: currentLng,
+                    lastUpdated: Date.now()
+                });
+
+                alert(`Profile & Selfie saved successfully! ID: ${driverId}. Please complete your Paystack subscription to activate emergency tracking.`);
+            };
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 300;
+                        const MAX_HEIGHT = 300;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        processProfileWithImage(compressedBase64);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                processProfileWithImage(null);
+            }
         }
 
         function loadDriverRegistration() {
@@ -1255,6 +1319,10 @@
             if (profile.phone && document.getElementById('reg-phone')) document.getElementById('reg-phone').value = profile.phone;
             if (profile.plate && document.getElementById('reg-plate')) document.getElementById('reg-plate').value = profile.plate;
             if (profile.tier && document.getElementById('reg-tier')) document.getElementById('reg-tier').value = profile.tier;
+            if (profile.selfie && document.getElementById('selfie-preview-img')) {
+                document.getElementById('selfie-preview-img').src = profile.selfie;
+                document.getElementById('selfie-preview-container').style.display = 'block';
+            }
         }
 
         function toggleDrawer() { document.getElementById('drawer-overlay').classList.toggle('active'); document.getElementById('drawer-menu').classList.toggle('active'); }
