@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Content Security Policy: Whitelisting all Paystack API/Checkout domains and Firebase WebSockets -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://standard.paystack.co https://checkout.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://standard.paystack.co;">
+    <!-- Content Security Policy: Whitelisting Firebase WebSockets & Paystack APIs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://standard.paystack.co https://checkout.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://standard.paystack.co https://checkout.paystack.co;">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -19,8 +19,6 @@
     <!-- Firebase SDK CDNs (Database Realtime Sync Only) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- Paystack Inline V2 Script -->
-    <script src="https://js.paystack.co/v2/inline.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -790,6 +788,7 @@
             registerServiceWorker();
             renderTripHistory();
             checkPopiaConsent();
+            checkUrlPaymentReturn();
         });
 
         async function startLiveCamera() {
@@ -1084,28 +1083,27 @@
             });
         }
 
+        // Direct Hosted Redirect Checkout (Eliminates all iframe blocks & CSP policy errors)
         function initiatePaystackSubscription() {
-            if (typeof PaystackPop === 'undefined') {
-                alert('Paystack SDK is still loading or blocked. Please check your connection.');
-                return;
-            }
-
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const phoneInput = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
             const driverPhone = phoneInput || profile.phone;
+            
             if (!driverPhone) {
                 alert("Please enter your Driver Phone Number in the Profile section before proceeding.");
                 document.getElementById('reg-phone').focus();
                 return;
             }
+            
             const cleanPhone = driverPhone.replace(/\s+/g, '').replace('+', '');
             const paystackEmail = `driver_${cleanPhone}@saferidemobility.co.za`;
             
             const subscriptionPlans = {
-                "STANDARD": "PLN_nyykxaombn9gcay",
-                "PRO": "PLN_z1989zkqfdre7t0",
-                "PRO_MAX": "PLN_9uv4r93gqkz6zai"
+                "STANDARD": "PLN_uhz7mwpm753yl6a",
+                "PRO": "PLN_qimhvjmpp7xf6lf",
+                "PRO_MAX": "PLN_h7nwvrr7n5p54lt"
             };
+            
             const selectedTierKey = document.getElementById('paystack-plan-select').value;
             const selectedPlanCode = subscriptionPlans[selectedTierKey];
             
@@ -1114,50 +1112,28 @@
                 return;
             }
 
-            // Using PaystackPop.setup (v2 standard syntax) to prevent key and transaction errors
-            PaystackPop.setup({
-                key: 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75',
-                email: paystackEmail,
-                plan: selectedPlanCode,
-                currency: 'ZAR',
-                metadata: {
-                    driver_phone: driverPhone,
-                    driver_id: profile.driverId || `SR-MBE-${cleanPhone}`,
-                    driver_name: profile.name || 'SafeRide Driver',
-                    vehicle_reg: profile.plate || '',
-                    tier: selectedTierKey
-                },
-                callback: function(response) {
-                    console.log('Payment successful, ref:', response.reference);
-                    if (profile.driverId) {
-                        db.ref('drivers/' + profile.driverId).update({
-                            subscriptionStatus: 'ACTIVE',
-                            tier: selectedTierKey
-                        });
-                    }
-                    verifyPaymentOnBackend(response.reference, cleanPhone);
-                },
-                onClose: function() {
-                    alert('Subscription payment was cancelled.');
-                }
-            }).openIframe();
+            const publicKey = 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75';
+            const callbackUrl = window.location.origin + window.location.pathname + '?payment=success&tier=' + selectedTierKey;
+            
+            const paystackCheckoutUrl = `https://checkout.paystack.com/pay?key=${publicKey}&email=${encodeURIComponent(paystackEmail)}&plan=${selectedPlanCode}&callback_url=${encodeURIComponent(callbackUrl)}`;
+            
+            window.location.href = paystackCheckoutUrl;
         }
 
-        async function verifyPaymentOnBackend(reference, driverPhone) {
-            try {
-                const response = await fetch('/api/create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference, driverPhone })
-                });
-                
-                const result = await response.json();
-                alert('Subscription active! Emergency response tracking unlocked.');
-                window.location.reload();
-            } catch (err) {
-                console.error('Server verification error:', err);
-                alert('Payment captured successfully! Subscription active.');
-                window.location.reload();
+        function checkUrlPaymentReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('payment') === 'success') {
+                const tier = urlParams.get('tier') || 'PRO';
+                const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
+                if (profile.driverId) {
+                    db.ref('drivers/' + profile.driverId).update({
+                        subscriptionStatus: 'ACTIVE',
+                        tier: tier
+                    });
+                }
+                alert('🎉 Payment successful! Your SafeRide subscription is now ACTIVE.');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                switchTab('tab-profile', null);
             }
         }
 
@@ -1174,25 +1150,15 @@
         async function writeToNFCTag() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (!profile.driverId) { alert('Complete profile registration first.'); return; }
-
             if ('NDEFReader' in window) {
                 try {
                     const ndef = new NDEFReader();
-                    await ndef.write({
-                        records: [{
-                            recordType: 'url',
-                            data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}`
-                        }]
-                    });
-                    alert('NFC tag updated successfully.');
-                } catch (error) {
-                    console.error('NFC write failed:', error);
-                    alert('Unable to write to NFC tag. Keep the tag close and try again.');
-                }
-            } else {
-                alert('NFC writing is not supported on this device/browser.');
-            }
+                    await ndef.write({ records: [{ recordType: "url", data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}` }] });
+                    alert('✅ NFC Tag written successfully!');
+                } catch (err) { alert('NFC write error: ' + err); }
+            } else { alert('Web NFC is not supported on this device/browser.'); }
         }
+
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
 
         function syncDriverToFirebase() {
@@ -1206,8 +1172,8 @@
                 selfie: profile.selfie || "",
                 lat: currentLat,
                 lng: currentLng,
-                lastUpdated: Date.now()
-            });
+                lastUpdated: Date.now(),
+    });
         }
 
         function saveDriverRegistration() {
@@ -1294,4 +1260,4 @@
         }
     </script>
 </body>
-</html>
+</html>s
