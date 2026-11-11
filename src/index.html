@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Content Security Policy: Whitelisting Paystack API and Firebase Realtime Database -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:;">
+    <!-- Content Security Policy: Whitelisting Paystack and Firebase WebSockets -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:;">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -1085,7 +1085,6 @@
         }
 
         async function initiatePaystackSubscription() {
-            // Safety check for Paystack V2 library
             if (typeof PaystackPop === 'undefined') {
                 alert('Paystack SDK is still loading or blocked. Please check your connection.');
                 return;
@@ -1101,14 +1100,16 @@
             }
             const cleanPhone = driverPhone.replace(/\s+/g, '').replace('+', '');
             const paystackEmail = `driver_${cleanPhone}@saferidemobility.co.za`;
+            
             const subscriptionPlans = {
-                "STANDARD": { planCode: "PLN_nyykxaombn9gcay", amount: 30000, label: "Standard EVO7B (R300/mo)" },
-                "PRO": { planCode: "PLN_z1989zkqfdre7t0", amount: 35000, label: "PRO EVO4 (R350/mo)" },
-                "PRO_MAX": { planCode: "PLN_9uv4r93gqkz6zai", amount: 40000, label: "PRO MAX EVO6 (R400/mo)" }
+                "STANDARD": "PLN_nyykxaombn9gcay",
+                "PRO": "PLN_z1989zkqfdre7t0",
+                "PRO_MAX": "PLN_9uv4r93gqkz6zai"
             };
             const selectedTierKey = document.getElementById('paystack-plan-select').value;
-            const selectedPlan = subscriptionPlans[selectedTierKey];
-            if (!selectedPlan) {
+            const selectedPlanCode = subscriptionPlans[selectedTierKey];
+            
+            if (!selectedPlanCode) {
                 alert("Please select a valid subscription tier.");
                 return;
             }
@@ -1117,22 +1118,21 @@
             paystack.newTransaction({
                 key: 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75',
                 email: paystackEmail,
-                amount: selectedPlan.amount,
+                plan: selectedPlanCode, // Passing plan code without conflicting custom amount eliminates 400 errors
                 currency: 'ZAR',
-                plan: selectedPlan.planCode,
                 metadata: {
                     driver_phone: driverPhone,
                     driver_id: profile.driverId || `SR-MBE-${cleanPhone}`,
                     driver_name: profile.name || 'SafeRide Driver',
                     vehicle_reg: profile.plate || '',
-                    tier: selectedPlan.label
+                    tier: selectedTierKey
                 },
                 onSuccess: function(transaction) {
                     console.log('Payment successful, ref:', transaction.reference);
                     if (profile.driverId) {
                         db.ref('drivers/' + profile.driverId).update({
                             subscriptionStatus: 'ACTIVE',
-                            tier: selectedPlan.label
+                            tier: selectedTierKey
                         });
                     }
                     verifyPaymentOnBackend(transaction.reference, cleanPhone);
@@ -1177,30 +1177,25 @@
 
         async function writeToNFCTag() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (!profile.driverId) {
-                alert('Driver profile not found. Please log in again.');
-                return;
-            }
+            if (!profile.driverId) { alert('Complete profile registration first.'); return; }
 
-            try {
-                if (!('NDEFReader' in window)) {
-                    alert('NFC writing is not supported on this device or browser.');
-                    return;
-                }
-
-                const ndef = new NDEFReader();
-                await ndef.write({
-                    records: [
-                        {
+            if ('NDEFReader' in window) {
+                try {
+                    const ndef = new NDEFReader();
+                    const driverUrl = `https://saferidemobility.co.za/verify?driverId=${profile.driverId}`;
+                    await ndef.write({
+                        records: [{
                             recordType: 'url',
-                            data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}`
-                        }
-                    ]
-                });
-                alert('Driver verification tag updated successfully.');
-            } catch (err) {
-                console.error('NFC write error:', err);
-                alert('Unable to write to NFC tag. Please ensure NFC is enabled and the tag is close to your device.');
+                            data: driverUrl
+                        }]
+                    });
+                    alert('NFC tag updated with driver verification link.');
+                } catch (error) {
+                    console.error('NFC write failed:', error);
+                    alert('Could not write to NFC tag. Make sure it is nearby and writable.');
+                }
+            } else {
+                alert('This device/browser does not support NFC tag writing.');
             }
         }
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
