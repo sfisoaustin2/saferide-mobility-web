@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Approved Content Security Policy for Paystack, Firebase, and Leaflet Maps -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://*.paystack.com https://api.paystack.co https://checkout.paystack.com https://standard.paystack.co https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://*.paystack.com https://checkout.paystack.com https://standard.paystack.co;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://*.paystack.com https://api.paystack.co https://checkout.paystack.com https://standard.paystack.co https://standard.paystack.com https://*.firebasedatabase.app wss://*.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:; frame-src https://*.paystack.co https://*.paystack.com https://checkout.paystack.com https://standard.paystack.co https://standard.paystack.com;">
     <title>SafeRide Mobility - Mbombela Driver & Passenger Safety Net</title>
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -1085,7 +1085,7 @@
             });
         }
 
-        // Official Paystack V2 Inline SDK Subscription Checkout (Mapped to Live Plan Codes)
+        // Official Paystack V2 Inline SDK Subscription Checkout (Using exact dashboard plan codes)
         function initiatePaystackSubscription() {
             if (typeof PaystackPop === 'undefined') {
                 alert('Paystack SDK is still loading. Please check your connection.');
@@ -1105,6 +1105,7 @@
             const cleanPhone = driverPhone.replace(/\s+/g, '').replace('+', '');
             const paystackEmail = `driver_${cleanPhone}@saferidemobility.co.za`;
             
+            // Updated with exact live dashboard plan codes from Paystack screenshot
             const subscriptionPlans = {
                 "STANDARD": "PLN_uhz7mwpm753yl6a",
                 "PRO": "PLN_qimhvjmpp7xf6lf",
@@ -1177,32 +1178,19 @@
             new QRCode(container, { text: `https://saferidemobility.co.za/verify?driverId=${driverId}`, width: 180, height: 180 });
             document.getElementById('qr-modal').style.display = 'flex';
         }
-
-        async function writeToNFCTag() {
+async function writeToNFCTag() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (!profile.driverId) {
-                alert('Complete your driver profile before writing an NFC tag.');
-                return;
-            }
-            if (!('NDEFReader' in window)) {
-                alert('NFC writing is not supported by this browser or device.');
-                return;
-            }
-
-            try {
-                const ndef = new NDEFReader();
-                await ndef.write({
-                    records: [{
-                        recordType: 'url',
-                        data: `https://saferidemobility.co.za/verify?driverId=${encodeURIComponent(profile.driverId)}`
-                    }]
-                });
-                alert('NFC tag written successfully.');
-            } catch (error) {
-                alert('Unable to write the NFC tag: ' + error.message);
-            }
+            if (!profile.driverId) { alert('Complete profile registration first.'); return; }
+            if ('NDEFReader' in window) {
+                try {
+                    const ndef = new NDEFReader();
+                    await ndef.write({ records: [{ recordType: "url", data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}` }] });
+                    alert('✅ NFC Tag written successfully!');
+                } catch (err) { alert('NFC write error: ' + err); }
+            } else { alert('Web NFC is not supported on this device/browser.'); }
         }
-function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
+
+        function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
 
         function syncDriverToFirebase() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
