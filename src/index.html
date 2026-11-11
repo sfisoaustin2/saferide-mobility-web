@@ -783,6 +783,7 @@
         let deferredPrompt = null;
         let liveCameraStream = null;
         let capturedSelfieBase64 = '';
+
         document.addEventListener('DOMContentLoaded', () => {
             loadDriverRegistration();
             startLiveGPSWatch();
@@ -790,6 +791,7 @@
             renderTripHistory();
             checkPopiaConsent();
         });
+
         async function startLiveCamera() {
             try {
                 const videoElement = document.getElementById('camera-stream');
@@ -804,6 +806,7 @@
                 console.error(err);
             }
         }
+
         function captureLiveSelfie() {
             const videoElement = document.getElementById('camera-stream');
             const canvas = document.getElementById('camera-canvas');
@@ -824,11 +827,13 @@
             videoElement.style.display = 'none';
             alert('✅ Live selfie captured successfully!');
         }
+
         function openPrivacyModal() { document.getElementById('privacy-modal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacy-modal').style.display = 'none'; }
         function openTermsModal() { document.getElementById('terms-modal').style.display = 'flex'; }
         function closeTermsModal() { document.getElementById('terms-modal').style.display = 'none'; }
         function openProfileTab() { switchTab('tab-profile', null); }
+
         function checkPopiaConsent() {
             if (!localStorage.getItem("popia_consent")) {
                 document.getElementById("popia-cookie-banner").style.display = "block";
@@ -842,13 +847,16 @@
             localStorage.setItem("popia_consent", "declined");
             document.getElementById("popia-cookie-banner").style.display = "none";
         }
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
         });
+
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e => {});
         }
+
         function triggerPWAInstall() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
@@ -857,6 +865,7 @@
                 alert("To install SafeRide, tap browser menu and select 'Add to Home Screen'.");
             }
         }
+
         function checkDriverSubscription(callbackAction) {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const driverId = profile.driverId;
@@ -867,7 +876,6 @@
             }
             db.ref('drivers/' + driverId).once('value', (snapshot) => {
                 const driverData = snapshot.val();
-                
                 if (driverData && driverData.subscriptionStatus === "ACTIVE") {
                     callbackAction();
                 } else {
@@ -876,6 +884,7 @@
                 }
             });
         }
+
         function saveTripRecord() {
             checkDriverSubscription(() => {
                 const pickup = document.getElementById('trip-pickup').value;
@@ -905,6 +914,7 @@
                 alert('✅ Trip record saved successfully!');
             });
         }
+
         function renderTripHistory() {
             const listContainer = document.getElementById('trip-history-list');
             if (!listContainer) return;
@@ -929,6 +939,7 @@
             });
             listContainer.innerHTML = html;
         }
+
         function triggerOfflineSMSFallback() {
             checkDriverSubscription(() => {
                 const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
@@ -938,6 +949,7 @@
                 window.location.href = `sms:+27821234567?body=${encodeURIComponent(`SOS URGENT! Entity ${entityId} (Plate: ${plate}) under threat. GPS: ${mapsUrl}`)}`;
             });
         }
+
         function generateShiftReportCard() {
             checkDriverSubscription(() => {
                 const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
@@ -950,6 +962,7 @@
                 window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
             });
         }
+
         function shareLiveTripWhatsApp() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const shareText = `🛡️ SafeRide Mobility Live Trip Tracking:\n\n` +
@@ -957,6 +970,7 @@
                               `📍 Live GPS: https://maps.google.com/?q=${currentLat},${currentLng}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
         }
+
         function initSatelliteMap() {
             if (!map && document.getElementById('live-satellite-map')) {
                 map = L.map('live-satellite-map', { zoomControl: true, attributionControl: false }).setView([currentLat, currentLng], 15);
@@ -964,6 +978,7 @@
                 driverMarker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Your Position</b>");
             }
         }
+
         function startLiveGPSWatch() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
@@ -984,11 +999,13 @@
                 );
             }
         }
+
         function startLiveGPSNavigation() {
             checkDriverSubscription(() => {
                 window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`, '_blank');
             });
         }
+
         function startCountdown(type) {
             if (type === 'DRIVER') {
                 checkDriverSubscription(() => executeCountdown(type));
@@ -996,6 +1013,7 @@
                 executeCountdown(type);
             }
         }
+
         function executeCountdown(type) {
             if (isSosLocked) {
                 alert('🚨 SOS alert already active! Please wait for control room response.');
@@ -1017,10 +1035,12 @@
                 }
             }, 1000);
         }
+
         function cancelCountdown() {
             if (countdownTimer) clearInterval(countdownTimer);
             document.getElementById('countdown-box').style.display = 'none';
         }
+
         function dispatchEmergencySOS(type) {
             if (isSosLocked) return;
             isSosLocked = true;
@@ -1051,6 +1071,7 @@
                 }
             }, 1000);
         }
+
         async function connectBLEHardwareButton() {
             checkDriverSubscription(async () => {
                 try {
@@ -1062,7 +1083,14 @@
                 } catch (e) { alert('BLE Pairing cancelled or unavailable.'); }
             });
         }
+
         async function initiatePaystackSubscription() {
+            // Safety check for Paystack V2 library
+            if (typeof PaystackPop === 'undefined') {
+                alert('Paystack SDK is still loading or blocked. Please check your connection.');
+                return;
+            }
+
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             const phoneInput = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
             const driverPhone = phoneInput || profile.phone;
@@ -1084,6 +1112,7 @@
                 alert("Please select a valid subscription tier.");
                 return;
             }
+
             const paystack = new PaystackPop();
             paystack.newTransaction({
                 key: 'pk_live_df129cdcb32a49d6b312f17929648c6195a2ab75',
@@ -1117,6 +1146,7 @@
                 }
             });
         }
+
         async function verifyPaymentOnBackend(reference, driverPhone) {
             try {
                 const response = await fetch('/api/create-payment', {
@@ -1134,6 +1164,7 @@
                 window.location.reload();
             }
         }
+
         function showQRCode() {
             const container = document.getElementById('qrcode-canvas');
             container.innerHTML = '';
@@ -1143,18 +1174,37 @@
             new QRCode(container, { text: `https://saferidemobility.co.za/verify?driverId=${driverId}`, width: 180, height: 180 });
             document.getElementById('qr-modal').style.display = 'flex';
         }
+
         async function writeToNFCTag() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
-            if (!profile.driverId) { alert('Complete profile registration first.'); return; }
-            if ('NDEFReader' in window) {
-                try {
-                    const ndef = new NDEFReader();
-                    await ndef.write({ records: [{ recordType: "url", data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}` }] });
-                    alert('✅ NFC Tag written successfully!');
-                } catch (err) { alert('NFC write error: ' + err); }
-            } else { alert('Web NFC is not supported on this device/browser.'); }
+            if (!profile.driverId) {
+                alert('Driver profile not found. Please log in again.');
+                return;
+            }
+
+            try {
+                if (!('NDEFReader' in window)) {
+                    alert('NFC writing is not supported on this device or browser.');
+                    return;
+                }
+
+                const ndef = new NDEFReader();
+                await ndef.write({
+                    records: [
+                        {
+                            recordType: 'url',
+                            data: `https://saferidemobility.co.za/verify?driverId=${profile.driverId}`
+                        }
+                    ]
+                });
+                alert('Driver verification tag updated successfully.');
+            } catch (err) {
+                console.error('NFC write error:', err);
+                alert('Unable to write to NFC tag. Please ensure NFC is enabled and the tag is close to your device.');
+            }
         }
         function closeQRCode() { document.getElementById('qr-modal').style.display = 'none'; }
+
         function syncDriverToFirebase() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (!profile.driverId) return;
@@ -1169,6 +1219,7 @@
                 lastUpdated: Date.now()
             });
         }
+
         function saveDriverRegistration() {
             const consentCheckbox = document.getElementById('popia-consent');
             if (consentCheckbox && !consentCheckbox.checked) {
@@ -1202,6 +1253,7 @@
             });
             alert(`Profile & Live Selfie saved successfully! ID: ${driverId}.`);
         }
+
         function loadDriverRegistration() {
             const profile = JSON.parse(localStorage.getItem('saferide_profile') || '{}');
             if (profile.name && document.getElementById('reg-name')) document.getElementById('reg-name').value = profile.name;
@@ -1214,8 +1266,10 @@
                 capturedSelfieBase64 = profile.selfie;
             }
         }
+
         function toggleDrawer() { document.getElementById('drawer-overlay').classList.toggle('active'); document.getElementById('drawer-menu').classList.toggle('active'); }
         function openDrawerTab(tabId) { toggleDrawer(); switchTab(tabId, null); }
+
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -1227,6 +1281,7 @@
                 }, 150);
             }
         }
+
         function initScanner() {
             if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 200 }, (text) => {
@@ -1236,9 +1291,11 @@
                 }
             }, () => {});
         }
+
         function stopScanner() {
             if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e => {});
         }
+
         function updateShiftStatus() {
             checkDriverSubscription(() => {
                 localStorage.setItem('saferide_shift_status', document.getElementById('driver-shift-status').value);
