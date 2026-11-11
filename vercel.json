@@ -15,7 +15,7 @@
     },
     {
       "source": "/((?!api/).*)",
-      "destination": "/src/$1"
+      "destination": "/src/index.html"
     }
   ]
-}
+}s
