@@ -1,23 +1,43 @@
 export const config = {
-  // This ensures the password prompt ONLY triggers on /admin or /admin.html
-  matcher: ['/admin', '/admin.html', '/src/admin.html'],
+  // Protects admin HTML pages AND any admin backend API routes
+  matcher: [
+    '/admin',
+    '/admin.html',
+    '/src/admin.html',
+    '/api/admin/:path*',
+  ],
 };
 
 export default function middleware(request) {
   const basicAuth = request.headers.get('authorization');
 
-  if (basicAuth) {
-    const authValue = basicAuth.split(' ')[1];
-    // Decode the Base64 "username:password" sent by the browser
-    const [user, pwd] = atob(authValue).split(':');
+  if (basicAuth && basicAuth.startsWith('Basic ')) {
+    try {
+      const authValue = basicAuth.split(' ')[1];
+      const decoded = atob(authValue);
+      
+      // Split only on the first colon so passwords containing ':' still work
+      const separatorIndex = decoded.indexOf(':');
+      if (separatorIndex !== -1) {
+        const user = decoded.slice(0, separatorIndex);
+        const pwd = decoded.slice(separatorIndex + 1);
 
-    // Compare against your Vercel Environment Variables
-    const validUser = process.env.ADMIN_USER;
-    const validPass = process.env.ADMIN_PASSWORD;
+        const validUser = process.env.ADMIN_USER;
+        const validPass = process.env.ADMIN_PASSWORD;
 
-    if (user === validUser && pwd === validPass) {
-      // Password matches: let the staff member view admin.html
-      return;
+        if (validUser && validPass && user === validUser && pwd === validPass) {
+          // Valid staff login: allow access and prevent search engines/browsers from caching sensitive data
+          return new Response(null, {
+            headers: {
+              'x-middleware-next': '1',
+              'X-Robots-Tag': 'noindex, nofollow',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            },
+          });
+        }
+      }
+    } catch (e) {
+      // Ignore malformed Base64 headers and fall through to 401 prompt
     }
   }
 
@@ -26,6 +46,8 @@ export default function middleware(request) {
     status: 401,
     headers: {
       'WWW-Authenticate': 'Basic realm="SafeRide Mobility Staff Portal"',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'Cache-Control': 'no-store',
     },
   });
-}
+}s
