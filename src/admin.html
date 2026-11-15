@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Prevent Search Engine Indexing -->
+    <meta name="robots" content="noindex, nofollow">
     <!-- Content Security Policy: Whitelisting Paystack API and Firebase Realtime Database -->
-    <meta http-equiv="uritContent-Secy-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https://*.paystack.co https://api.paystack.co https://saferide-mobility-c545a-default-rtdb.europe-west1.firebasedatabase.app wss://*.firebaseio.com; img-src 'self' data: https:;">
     <title>SafeRide Mobility - Admin Control Room</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
@@ -51,6 +53,8 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            flex-wrap: wrap;
+            gap: 12px;
             border-bottom: 1px solid var(--border-color); 
             border-radius: 14px;
             margin-bottom: 20px;
@@ -59,6 +63,13 @@
         .brand-title { font-size: 1.35rem; font-weight: 900; color: #ffffff; letter-spacing: -0.02em; }
         .brand-title span { color: var(--accent-amber); }
         .brand-tag { font-size: 0.72rem; color: var(--text-sub); font-weight: 500; }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
         .admin-badge {
             background-color: rgba(245, 158, 11, 0.15);
@@ -74,6 +85,26 @@
         }
         .live-dot { width: 8px; height: 8px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .btn-lock-portal {
+            background: rgba(220, 38, 38, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(220, 38, 38, 0.45);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-lock-portal:hover {
+            background: var(--accent-red);
+            color: #ffffff;
+            border-color: var(--accent-red);
+        }
 
         /* Stats Grid */
         .stat-box-container {
@@ -238,7 +269,7 @@
 </head>
 <body>
 
-    <!-- Admin Header with Official Logo -->
+    <!-- Admin Header with Official Logo & Lock Portal Button -->
     <header>
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="logo.png" alt="SafeRide Logo" style="height: 40px; width: auto; object-fit: contain;">
@@ -247,9 +278,14 @@
                 <div class="brand-tag">Mbombela Operational Intelligence Desk</div>
             </div>
         </div>
-        <div class="admin-badge">
-            <div class="live-dot"></div>
-            <span>FIREBASE CLOUD ACTIVE</span>
+        <div class="header-controls">
+            <div class="admin-badge">
+                <div class="live-dot"></div>
+                <span>FIREBASE CLOUD ACTIVE</span>
+            </div>
+            <button type="button" class="btn-lock-portal" onclick="lockPortal()" title="End staff session and lock portal">
+                🔒 Lock Portal
+            </button>
         </div>
     </header>
 
@@ -494,6 +530,15 @@
         let adminMarkers = {};
         window.adminDrivers = [];
         window.rawSOSAlerts = {};
+
+        /* Lock Portal: Overwrites browser HTTP Basic Auth cache and exits to homepage */
+        function lockPortal() {
+            fetch('/admin.html', {
+                headers: { 'Authorization': 'Basic ' + btoa('logout:logout') }
+            }).finally(() => {
+                window.location.href = '/';
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             initAdminMap();
@@ -854,4 +899,4 @@
         function refreshAdminData() { listenToFirebaseDrivers(); listenToFirebaseArchives(); alert('Control room re-synced!'); }
     </script>
 </body>
-</html>
+</html>s
