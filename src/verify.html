@@ -12,6 +12,7 @@
         :root {
             --bg-main: #090d16;
             --bg-card: #111827;
+            --bg-input: #1f2937;
             --accent-amber: #f59e0b;
             --accent-green: #10b981;
             --accent-red: #dc2626;
@@ -43,6 +44,8 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.8);
         }
 
+        .brand-title span { color: var(--accent-amber); }
+
         .status-badge {
             background: rgba(16, 185, 129, 0.15);
             color: var(--accent-green);
@@ -67,9 +70,23 @@
             font-size: 2rem;
             font-weight: 900;
             color: #000;
-            margin: 0 auto 16px auto;
+            margin: 0 auto 14px auto;
             overflow: hidden;
             border: 2px solid var(--accent-amber);
+        }
+
+        .rating-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--accent-amber);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-top: 8px;
         }
 
         .info-group {
@@ -92,12 +109,115 @@
             text-align: left;
             color: #f87171;
         }
+
+        /* Review & Rating Section */
+        .review-section {
+            background: rgba(31, 41, 55, 0.45);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .role-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .role-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .role-btn.active {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .star-row {
+            font-size: 2rem;
+            cursor: pointer;
+            margin-bottom: 12px;
+            letter-spacing: 6px;
+            user-select: none;
+        }
+
+        .star-row span {
+            color: var(--text-sub);
+            transition: transform 0.15s ease, color 0.15s ease;
+            display: inline-block;
+        }
+
+        .star-row span:hover {
+            transform: scale(1.15);
+        }
+
+        .review-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            margin-bottom: 10px;
+            resize: none;
+        }
+
+        .review-input:focus {
+            outline: none;
+            border-color: var(--accent-amber);
+        }
+
+        .submit-review-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .submit-review-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .recent-reviews-list {
+            margin-top: 14px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .review-item {
+            background: rgba(17, 24, 39, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.78rem;
+        }
     </style>
 </head>
 <body>
 
     <div class="verification-card">
-        <div style="font-size: 1.25rem; font-weight: 900; color: #fff; margin-bottom: 6px;">Safe<span>Ride</span> Mobility</div>
+        <div class="brand-title" style="font-size: 1.25rem; font-weight: 900; color: #fff; margin-bottom: 6px;">Safe<span>Ride</span> Mobility</div>
         <div style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 20px;">Mbombela Official Verification Desk</div>
 
         <div id="loading-state">
@@ -117,6 +237,11 @@
 
             <h2 id="driver-name" style="color: #fff; font-size: 1.3rem;">--</h2>
             <div id="driver-id" style="font-size: 0.78rem; color: var(--accent-amber); font-weight: 700; margin-top: 2px;">--</div>
+            
+            <!-- Live Average Star Score -->
+            <div id="driver-rating-pill" class="rating-summary-pill">
+                ★ New Protected Member
+            </div>
 
             <div class="info-group">
                 <div class="info-label">E-Hailing Platform & Vehicle Plate</div>
@@ -133,7 +258,36 @@
                 <div class="info-value" id="driver-fine" style="color: #f87171;">--</div>
             </div>
 
-            <div style="margin-top: 24px; font-size: 0.72rem; color: var(--text-sub);">
+            <!-- Passenger & Driver Review & Rating Section -->
+            <div class="review-section" id="review-box">
+                <div style="font-size: 0.95rem; font-weight: 800; color: #fff; margin-bottom: 4px;">Rate SafeRide & This Trip</div>
+                <div style="font-size: 0.74rem; color: var(--text-sub); margin-bottom: 12px;">Select your role and tap stars to submit feedback</div>
+
+                <div class="role-toggle">
+                    <button type="button" id="role-passenger" class="role-btn active" onclick="setReviewerRole('PASSENGER')">🧍 I am a Passenger</button>
+                    <button type="button" id="role-driver" class="role-btn" onclick="setReviewerRole('DRIVER')">🚘 I am a Driver</button>
+                </div>
+
+                <div class="star-row" id="star-buttons">
+                    <span onclick="selectStar(1)">☆</span>
+                    <span onclick="selectStar(2)">☆</span>
+                    <span onclick="selectStar(3)">☆</span>
+                    <span onclick="selectStar(4)">☆</span>
+                    <span onclick="selectStar(5)">☆</span>
+                </div>
+
+                <input type="text" id="reviewer-name" class="review-input" placeholder="Your First Name (Optional)">
+                <textarea id="review-comment" class="review-input" rows="2" placeholder="Share feedback on driver safety, vehicle condition, or SafeRide service..."></textarea>
+
+                <button type="button" id="submit-review-btn" class="submit-review-btn" onclick="submitSafeRideReview()">
+                    ⭐ Submit Rating & Review
+                </button>
+
+                <!-- Latest Approved/Submitted Reviews Feed -->
+                <div id="recent-reviews-container" class="recent-reviews-list"></div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.72rem; color: var(--text-sub);">
                 Connected to PSIRA Mbombela Response Network. In case of emergency, trigger SOS inside app.
             </div>
         </div>
@@ -158,6 +312,114 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        let currentDriverId = null;
+        let currentDriverName = '';
+        let selectedRating = 0;
+        let reviewerRole = 'PASSENGER';
+
+        function setReviewerRole(role) {
+            reviewerRole = role;
+            document.getElementById('role-passenger').classList.toggle('active', role === 'PASSENGER');
+            document.getElementById('role-driver').classList.toggle('active', role === 'DRIVER');
+        }
+
+        function selectStar(stars) {
+            selectedRating = stars;
+            const spans = document.querySelectorAll('#star-buttons span');
+            spans.forEach((span, index) => {
+                span.innerText = index < stars ? '★' : '☆';
+                span.style.color = index < stars ? '#f59e0b' : '#9ca3af';
+            });
+        }
+
+        function submitSafeRideReview() {
+            if (!currentDriverId) return;
+            if (selectedRating === 0) {
+                alert('Please tap a star rating from 1 to 5 first.');
+                return;
+            }
+
+            const btn = document.getElementById('submit-review-btn');
+            btn.disabled = true;
+            btn.innerText = 'Submitting...';
+
+            const reviewerName = document.getElementById('reviewer-name').value.trim() || (reviewerRole === 'PASSENGER' ? 'Verified Passenger' : 'SafeRide Driver');
+            const comment = document.getElementById('review-comment').value.trim();
+
+            const reviewData = {
+                driverId: currentDriverId,
+                driverName: currentDriverName,
+                reviewerRole: reviewerRole,
+                reviewerName: reviewerName,
+                rating: selectedRating,
+                comment: comment,
+                timestamp: Date.now(),
+                date: new Date().toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' })
+            };
+
+            db.ref('reviews/' + currentDriverId).push(reviewData, (error) => {
+                if (!error) {
+                    document.getElementById('review-box').innerHTML = `
+                        <div style="padding: 10px 0;">
+                            <div style="font-size: 1.4rem; margin-bottom: 4px;">✅</div>
+                            <div style="color: var(--accent-green); font-weight: 800; font-size: 0.92rem;">Thank You for Your Rating!</div>
+                            <div style="color: var(--text-sub); font-size: 0.76rem; margin-top: 4px;">Your ${selectedRating}-star review helps keep Mbombela e-hailing safe.</div>
+                        </div>
+                    `;
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = '⭐ Submit Rating & Review';
+                    alert('Could not submit review: ' + error.message);
+                }
+            });
+        }
+
+        function loadDriverReviews(driverId) {
+            db.ref('reviews/' + driverId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                const pill = document.getElementById('driver-rating-pill');
+                const listContainer = document.getElementById('recent-reviews-container');
+
+                if (!data) {
+                    pill.innerText = '★ New Protected Member';
+                    if (listContainer) listContainer.innerHTML = '';
+                    return;
+                }
+
+                const reviews = Object.values(data);
+                const totalStars = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+                const avgRating = (totalStars / reviews.length).toFixed(1);
+
+                pill.innerText = `★ ${avgRating} / 5.0 (${reviews.length} ${reviews.length === 1 ? 'Review' : 'Reviews'})`;
+
+                if (listContainer) {
+                    const recent = reviews.slice(-3).reverse();
+                    listContainer.innerHTML = recent.map(r => {
+                        const starsText = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                        const roleTag = r.reviewerRole === 'DRIVER' ? '🚘 Driver' : '🧍 Passenger';
+                        return `
+                            <div class="review-item">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                                    <span style="color: var(--accent-amber); font-weight: 800;">${starsText}</span>
+                                    <span style="font-size: 0.68rem; color: var(--text-sub);">${roleTag} • ${r.date || ''}</span>
+                                </div>
+                                <div style="font-weight: 700; color: #fff; font-size: 0.75rem;">${escapeHtml(r.reviewerName || 'User')}</div>
+                                ${r.comment ? `<div style="color: var(--text-sub); margin-top: 2px; line-height: 1.3;">"${escapeHtml(r.comment)}"</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const driverId = urlParams.get('driverId');
@@ -167,6 +429,8 @@
                 document.getElementById('error-content').style.display = 'block';
                 return;
             }
+
+            currentDriverId = driverId;
 
             db.ref('drivers/' + driverId).once('value')
                 .then((snapshot) => {
@@ -178,7 +442,8 @@
                         return;
                     }
 
-                    document.getElementById('driver-name').innerText = d.name || 'Verified Driver';
+                    currentDriverName = d.name || 'Verified Driver';
+                    document.getElementById('driver-name').innerText = currentDriverName;
                     document.getElementById('driver-id').innerText = `ID: ${d.driverId}`;
                     document.getElementById('driver-vehicle').innerText = `${d.platform || 'Bolt / Uber'} [${d.plate || 'N/A'}]`;
                     document.getElementById('driver-tier').innerText = d.tier || d.protectionTier || 'Standard EVO7B (R300/mo)';
@@ -199,6 +464,7 @@
                         document.getElementById('fine-container').style.display = 'block';
                     }
 
+                    loadDriverReviews(driverId);
                     document.getElementById('verified-content').style.display = 'block';
                 })
                 .catch((err) => {
