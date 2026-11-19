@@ -4,7 +4,7 @@ export const config = {
 
 export default function middleware(request) {
   const expectedUser = process.env.ADMIN_USER;
-  const expectedPass = process.env.ADMIN_PASS;
+  const expectedPass = process.env.ADMIN_PASSWORD;
 
   // Fail closed if Vercel environment variables are not configured
   if (!expectedUser || !expectedPass) {
